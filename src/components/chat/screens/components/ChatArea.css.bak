@@ -1,0 +1,187 @@
+import React, { useState, useEffect, useRef } from 'react';
+import './ChatArea.css';
+import ChatHeader from './ChatHeader';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faPaperPlane } from '@fortawesome/free-solid-svg-icons';
+import { saveChatToLocalStorage, loadChatFromLocalStorage } from './storageUtils';
+
+interface ChatAreaProps {
+  activeChatId: number;
+  isChatFullScreen: boolean;
+  onToggleFullScreen: () => void;
+  onNewChat: () => void;
+}
+
+interface ChatMessage {
+  text: string;
+  sender: 'user' | 'ai';
+  timestamp: string;
+}
+
+const ChatArea: React.FC<ChatAreaProps> = ({
+  activeChatId,
+  isChatFullScreen,
+  onToggleFullScreen,
+  onNewChat,
+}) => {
+  const [inputMessage, setInputMessage] = useState('');
+  const [welcomeMessage, setWelcomeMessage] = useState('');
+  const [isWelcomeActive, setIsWelcomeActive] = useState(true);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (activeChatId) {
+      const loadedMessages = loadChatFromLocalStorage(activeChatId);
+      setMessages(loadedMessages);
+      setIsWelcomeActive(loadedMessages.length === 0);
+    } else {
+      setIsWelcomeActive(true);
+    }
+  }, [activeChatId]);
+
+  useEffect(() => {
+    saveChatToLocalStorage(activeChatId, messages);
+    scrollToBottom();
+  }, [messages, activeChatId]);
+
+  useEffect(() => {
+    const handleStorageEvent = (event: StorageEvent) => {
+      if (event.key === 'chats') {
+        const updatedMessages = loadChatFromLocalStorage(activeChatId);
+        setMessages(updatedMessages);
+        setIsWelcomeActive(updatedMessages.length === 0);
+      }
+    };
+    window.addEventListener('storage', handleStorageEvent);
+    return () => window.removeEventListener('storage', handleStorageEvent);
+  }, [activeChatId]);
+
+  const createMessage = (text: string, sender: 'user' | 'ai'): ChatMessage => ({
+    text,
+    sender,
+    timestamp: new Date().toLocaleString(),
+  });
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setInputMessage(e.target.value);
+    e.target.style.height = 'auto';
+    e.target.style.height = `${Math.min(e.target.scrollHeight, 150)}px`;
+  };
+
+  const getAIResponse = (userMessage: string) => {
+    const responses: { [key: string]: string } = {
+      "I had this interesting dream last night...": "Dreams can be fascinating! Please tell me more about what happened in your dream.",
+      "I could use some advice about...": "I'm here to help. What's on your mind?",
+      "I've been feeling uncertain about...": "It's normal to feel uncertain sometimes. Would you like to talk about what's causing these feelings?",
+      "Hey, can we just chat?": "Of course! I'm always here to chat. How has your day been?",
+    };
+    return responses[userMessage] || "I'm here to listen and chat. Can you tell me more about that?";
+  };
+
+  const handleSendMessage = () => {
+    if (!inputMessage.trim()) return;
+    const userMessage = createMessage(inputMessage.trim(), 'user');
+    setMessages((prev) => [...prev, userMessage]);
+    setInputMessage('');
+
+    const inputElement = document.querySelector('.chat-input') as HTMLTextAreaElement;
+    if (inputElement) {
+      inputElement.style.height = 'auto';
+    }
+
+    setTimeout(() => {
+      const aiResponse = createMessage(getAIResponse(userMessage.text), 'ai');
+      setMessages((prev) => [...prev, aiResponse]);
+    }, 1000);
+  };
+
+  const handleWelcomeSend = () => {
+    if (!welcomeMessage.trim()) return;
+    const userMessage = createMessage(welcomeMessage.trim(), 'user');
+    setMessages([userMessage]);
+    setWelcomeMessage('');
+    setIsWelcomeActive(false);
+
+    const inputElement = document.querySelector('.centered-input') as HTMLTextAreaElement;
+    if (inputElement) {
+      inputElement.style.height = '20px';
+    }
+
+    setTimeout(() => {
+      const aiResponse = createMessage(getAIResponse(userMessage.text), 'ai');
+      setMessages((prev) => [...prev, aiResponse]);
+    }, 1000);
+  };
+
+  const handleSuggestionClick = (suggestionText: string) => {
+    const userMessage = createMessage(suggestionText, 'user');
+    setMessages([userMessage]);
+    setIsWelcomeActive(false);
+    
+    setTimeout(() => {
+      const aiResponse = createMessage(getAIResponse(suggestionText), 'ai');
+      setMessages((prev) => [...prev, aiResponse]);
+    }, 1000);
+  };
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  return (
+    <div className="chat-area">
+      <ChatHeader
+        onNewChat={onNewChat}
+        onToggleFullScreen={onToggleFullScreen}
+        isChatFullScreen={isChatFullScreen}
+      />
+
+      {isWelcomeActive ? (
+        <div className="welcome-container">
+          <h1 className="welcome-heading">What can I help with?</h1>
+          <div className="input-send-container">
+            <input
+              type="text"
+              className="centered-input"
+              placeholder="Hey Mitra, what's up?"
+              value={welcomeMessage}
+              onChange={(e) => setWelcomeMessage(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') handleWelcomeSend();
+              }}
+            />
+            <button className="send-icon-button" onClick={handleWelcomeSend}>
+              <FontAwesomeIcon icon={faPaperPlane} />
+            </button>
+          </div>
+          <div className="suggestion-buttons">
+            <button className="suggestion-button" onClick={() => handleSuggestionClick("I had this interesting dream last night...")}>Talk about a dream</button>
+            <button className="suggestion-button" onClick={() => handleSuggestionClick("I could use some advice about...")}>I need advice</button>
+            <button className="suggestion-button" onClick={() => handleSuggestionClick("I've been feeling uncertain about...")}>Self-doubt</button>
+            <button className="suggestion-button" onClick={() => handleSuggestionClick("Hey, can we just chat?")}>Just talk...</button>
+          </div>
+        </div>
+      ) : (
+        <>
+          <div className="messages-container">
+            {messages.map((message, index) => (
+              <div key={index} className={`message-bubble ${message.sender}-bubble`}>
+                {message.text}
+              </div>
+            ))}
+            <div ref={messagesEndRef} />
+          </div>
+          <div className="input-bar">
+            <div className="input-send-container">
+              <textarea className="chat-input" placeholder="Type your message..." value={inputMessage} onChange={handleInputChange} onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSendMessage(); } }} />
+              <button className="send-icon-button" onClick={handleSendMessage}><FontAwesomeIcon icon={faPaperPlane} /></button>
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+};
+
+export default ChatArea;

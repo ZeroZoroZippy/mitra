@@ -1,0 +1,52 @@
+import {
+  getAuth,
+  signInWithRedirect,
+  GoogleAuthProvider,
+  getRedirectResult,
+  User,
+  onAuthStateChanged
+} from "firebase/auth";
+import { app } from "./firebaseConfig"; 
+
+// Initialize Firebase Authentication
+const auth = getAuth(app);
+const provider = new GoogleAuthProvider();
+
+// Google Sign-In Function using Popup (for development)
+export const signInWithGoogle = async (): Promise<void> => {
+  try {
+    console.log("Google Sign-In Popup Triggered ✅");
+    await signInWithRedirect(auth, provider);
+  } catch (error) {
+    console.error("Sign-in failed:", error);
+  }
+};
+
+// (Optional) Handle Redirect Result if needed later
+export const handleSignInRedirect = async (): Promise<User | null> => {
+  try {
+    const result = await getRedirectResult(auth);
+    console.log("Redirect Result:", result);
+    if (result) {
+      return result.user;
+    }
+  } catch (error) {
+    console.error("Error handling redirect sign-in:", error);
+  }
+  return null;
+};
+
+// This function stores user details in local storage (for now)
+// We later override this in LandingPage to use Firestore's storeUserDetails.
+export async function storeUserDetails(user: User) {
+  localStorage.setItem(
+    "mitraUser",
+    JSON.stringify({
+      uid: user.uid,
+      email: user.email,
+      displayName: user.displayName,
+    })
+  );
+}
+
+export { auth, onAuthStateChanged };

@@ -1,0 +1,72 @@
+.welcome-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    background-color: #f7f7f7;
+    text-align: center;
+  }
+  
+  .welcome-header h1 {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    color: #333;
+  }
+  
+  .welcome-header p {
+    font-size: 1.25rem;
+    color: #555;
+  }
+  
+  .welcome-input-bar {
+    display: flex;
+    margin-top: 2rem;
+    width: 80%;
+    max-width: 600px;
+  }
+  
+  .welcome-input-bar input {
+    flex: 1;
+    padding: 0.75rem;
+    font-size: 1rem;
+    border: 1px solid #ddd;
+    border-radius: 8px 0 0 8px;
+  }
+  
+  .welcome-input-bar button {
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 0 8px 8px 0;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  
+  .welcome-input-bar button:hover {
+    background-color: #0056b3;
+  }
+  
+  .welcome-suggestions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 2rem;
+  }
+  
+  .welcome-suggestions button {
+    padding: 0.75rem 1.25rem;
+    font-size: 1rem;
+    border: 1px solid #007bff;
+    background-color: white;
+    color: #007bff;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+  
+  .welcome-suggestions button:hover {
+    background-color: #007bff;
+    color: white;
+  }

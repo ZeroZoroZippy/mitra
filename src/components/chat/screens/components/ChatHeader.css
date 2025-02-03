@@ -1,0 +1,98 @@
+.chat-header-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 2rem;
+  /* border-bottom: 1px solid #1d1d1d; */
+  background-color: #1d1d1d;
+  position: relative;
+  font-weight: 500;
+}
+
+.chat-header-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem; /* Add space between profile and fullscreen toggle */
+  flex: 1;
+}
+
+.profile-section {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.profile-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.profile-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.profile-name {
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.chat-header-center {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+}
+
+.chat-header-center h3 {
+  margin: 0;
+  font-size: 1rem;
+  color: #fff;
+  font-weight: 500;
+}
+
+.chat-header-right {
+  flex: 1;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.fullscreen-toggle {
+  position: relative;
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 1.25rem;
+  cursor: pointer;
+  transition: transform 0.3s ease-in-out, left 0.3s ease-in-out; /* Smooth icon hover effects */
+  padding: 0.5rem;
+}
+
+.fullscreen-toggle:hover {
+  transform: scale(1.1); /* Slight zoom effect on hover */
+  color: #007bff; /* Change color on hover */
+}
+
+.new-chat-button {
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 1.25rem;
+  cursor: pointer;
+  margin-left: 1rem;
+}
+
+.new-chat-button:hover {
+  transform: scale(1.1); /* Slight zoom effect on hover */
+  color: #28a745; /* Green for hover effect */
+}
+
+@media (max-width: 768px) {
+  .fullscreen-toggle.shift-right {
+    position: absolute;
+    right: 20px; /* Moves button towards the right */
+  }
+}

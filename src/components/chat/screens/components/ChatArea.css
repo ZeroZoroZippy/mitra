@@ -1,0 +1,418 @@
+/* 1) Force border-box on everything for consistent sizing */
+* {
+  box-sizing: border-box;
+}
+
+.chat-area {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background-color: #1d1d1d;
+  color: #fff;
+  transition: all 0.4s ease-in-out; /* Smoothly grow and shrink */
+  height: 100vh; /* Set explicit height */
+  overflow: hidden; /* Prevent outer scrolling */
+  padding-bottom: 50px;
+}
+
+/* Fullscreen mode: make chat area take up full screen */
+.chat-area.fullscreen {
+  width: 100vw;
+  height: 100vh;
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+}
+
+/* Center the chat content with a max-width */
+.chat-content-wrapper {
+  max-width: 800px; /* Set a maximum width */
+  width: 100%;      /* Allow it to shrink on smaller screens */
+  margin: 0 auto;   /* Center horizontally */
+  display: flex;
+  flex-direction: column;
+  height: 100%;     /* Fill the height of the parent container */
+}
+
+/* Welcome container */
+.welcome-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 2rem;
+  background-color: #1d1d1d;
+  gap: 1rem;
+}
+
+.welcome-heading {
+  font-size: 2.5rem;
+  font-weight: 500;
+  color: #fff;
+  margin-bottom: 2rem;
+}
+
+.input-send-container {
+  display: flex;
+  align-items: center;
+  width: 60%;       /* Default width for desktop */
+  max-width: 800px; /* Limit width for larger screens */
+  background-color: #2d2d2d;
+  border: 1px solid #3d3d3d;
+  border-radius: 24px;
+  padding: 0.5rem 1rem;
+  color: #fff;
+  gap: 10px;        /* Space between input and button */
+  overflow: hidden; /* Prevent overflow */
+}
+
+/* 2) Unify .centered-input & .chat-input so they match exactly */
+.input-send-container input.centered-input,
+.input-send-container .chat-input {
+  flex: 1;
+  max-width: 100%;      /* Ensure they don't exceed container width */
+  max-height: 150px;    /* Limit vertical growth before scrolling */
+  min-height: 40px;     /* Ensure a consistent minimum height */
+  resize: none;         /* Prevent manual resizing (especially for textarea) */
+  border: none;
+  background: none;
+  color: #fff;
+  font-family: 'SF Pro Text', Helvetica, Arial, sans-serif;
+  font-size: 1rem;
+  line-height: 1.5;
+  padding: 0.5rem;
+  white-space: pre-wrap;     /* Allows multiline wrapping (textarea) */
+  overflow-wrap: break-word; /* Breaks long words */
+  overflow-y: auto; 
+  word-break: break-word;    /* Ensure no text spills out */
+}
+
+.input-send-container .chat-input:focus,
+.input-send-container input.centered-input:focus {
+  outline: none; /* Remove default focus outline */
+}
+
+/* Placeholder styles */
+.input-send-container input::placeholder,
+.input-send-container .chat-input::placeholder,
+.input-send-container input.centered-input::placeholder {
+  color: #888;
+}
+
+/* Send button inside the input bar */
+.input-send-container .send-icon-button {
+  background: none;
+  border: none;
+  color: #007bff;
+  cursor: pointer;
+  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.input-send-container .send-icon-button:hover {
+  color: #0056b3;
+  transform: translateY(-2px);
+}
+
+.suggestion-buttons {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.suggestion-button {
+  padding: 0.6rem 1.5rem;
+  background-color: #1d1d1d;
+  color: #888;
+  border: solid 1px #2d2d2d;
+  border-radius: 24px;
+  cursor: pointer;
+  font-size: 0.975rem;
+  font-weight: 300;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.suggestion-button:hover {
+  background: linear-gradient(45deg, #FDD844, #FFEC9F);
+  color: #1d1d1d;
+  border-color: #FDD844;
+  transform: scale(1.05);
+}
+
+.messages-container {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding-bottom: 40px;
+  max-height: calc(100vh - 150px); /* ✅ Prevents input bar overlap */
+  margin: 0 auto; /* Center horizontally */
+  width: 100%;
+  max-width: 800px; /* Match chat content wrapper */
+  background-color: #1d1d1d;
+}
+
+.messages-container::-webkit-scrollbar {
+  width: 8px;
+}
+.messages-container::-webkit-scrollbar-thumb {
+  background-color: #1d1d1d;
+  border-radius: 8px;
+  border: 2px solid #1d1d1d;
+}
+.messages-container::-webkit-scrollbar-track {
+  background-color: #1d1d1d;
+}
+
+.message-bubble {
+  max-width: 100%;
+  padding: 0.5rem 1rem;
+  border-radius: 18px;
+  font-size: 0.95rem;
+  white-space: pre-wrap;
+  position: relative;
+  color: #1d1d1d;
+}
+
+.user-bubble {
+  align-self: flex-end;
+  background: linear-gradient(45deg, #FDD844, #FFEC9F);
+  border-bottom-right-radius: 0;
+}
+
+.ai-bubble {
+  align-self: flex-start;
+  background: linear-gradient(45deg, #E3F2FD, #BBDEFB);
+  border-bottom-left-radius: 0;
+}
+
+.input-bar {
+  bottom: 20px;
+  width: 100%;
+  background-color: #1d1d1d;
+  display: flex;
+  justify-content: center;
+  z-index: 20;
+  animation: slideUp 0.3s ease-out;
+  padding: 1rem 0;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeInTyping {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.ai-typing-message {
+  color: #888;
+  display: inline-block;
+  font-style: italic;
+  animation: fadeInTyping 0.3s ease-out;
+}
+
+/* Fade in keyframe */
+@keyframes fadeInTyping {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Ellipsis container styling */
+.ellipsis {
+  display: inline-block;
+  margin-left: 5px;
+}
+
+/* Enhanced ellipsis dot styling */
+.ellipsis span {
+  display: inline-block;
+  margin-right: 2px;
+  opacity: 0;
+  transform: scale(0.8);
+  animation: dotPulse 1.5s cubic-bezier(0.68, -0.55, 0.27, 1.55) infinite;
+}
+
+/* Stagger the dot animations */
+.ellipsis span:nth-child(1) {
+  animation-delay: 0.2s;
+}
+.ellipsis span:nth-child(2) {
+  animation-delay: 0.4s;
+}
+.ellipsis span:nth-child(3) {
+  animation-delay: 0.6s;
+}
+
+/* Keyframes for pulse and fade animation */
+@keyframes dotPulse {
+  0%, 80%, 100% { 
+    opacity: 0; 
+    transform: scale(0.8);
+  }
+  40% { 
+    opacity: 1; 
+    transform: scale(1);
+  }
+}
+
+/* Fade-out effect for when AI responds */
+.ai-typing-message.fade-out {
+  animation: fadeOut 0.5s ease-out forwards;
+}
+
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+.typing-placeholder {
+  min-height: 30px; /* ✅ Reserves space so input bar doesn't overlap */
+  display: flex;
+  align-items: center;
+}
+
+.chat-footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  padding: 5px;
+  /* background-color: #1d; */
+  text-align: center;
+  font-size: 0.8rem;
+  color: #888;
+  z-index: 10;
+}
+
+/* Responsive Styles */
+
+/* Tablet (768px and below) */
+@media (max-width: 768px) {
+  .chat-area {
+    position: relative;
+    padding: 1rem 1rem 100px 1rem; /* Add padding for smaller screens */
+  }
+
+  .messages-container {
+    padding: 1rem 0rem; /* Adjust padding for messages */
+  }
+
+  .message-bubble {
+    max-width: 80%; /* Shrink bubble width for better readability */
+  }
+
+  .input-bar {
+    bottom: 70px; /* Increase this value until it looks right */
+  }
+
+  .input-send-container {
+    width: 80%; /* Shrink width for smaller screens */
+    max-width: 600px; /* Adjust maximum width */
+  }
+
+  .welcome-container {
+    padding: 1rem; /* Adjust padding */
+  }
+
+  .welcome-heading {
+    font-size: 2rem; /* Reduce font size for smaller screens */
+  }
+
+  .suggestion-buttons {
+    flex-direction: column; /* Stack buttons vertically */
+    gap: 0.5rem; /* Reduce gap */
+  }
+
+  .suggestion-button {
+    padding: 0.6rem 1rem; /* Adjust padding */
+    font-size: 0.9rem;    /* Reduce font size */
+  }
+}
+
+/* Mobile (480px and below) */
+@media (max-width: 480px) {
+  .chat-area {
+    padding: 0.5rem; /* Minimal padding for small screens */
+  }
+
+  .messages-container {
+    padding: 0.5rem; /* Compact padding */
+  }
+
+  .message-bubble {
+    max-width: 90%; /* Further shrink bubble width */
+    font-size: 0.875rem; /* Reduce font size */
+    padding: 0.4rem 0.8rem; /* Adjust padding */
+  }
+
+  .input-bar {
+    bottom: 70px; /* Increase this value until it looks right */
+  }
+
+  .input-send-container {
+    width: 100%; /* Full width for small screens */
+    max-width: 100%; /* Remove max-width limit */
+    padding: 0.4rem 0.8rem; /* Compact padding */
+    margin: 0 0 20px 0;
+  }
+
+  .input-send-container input.centered-input,
+  .input-send-container .chat-input {
+    font-size: 0.9rem; /* Reduce font size */
+    padding: 0.4rem;   /* Compact padding */
+    min-height: 32px;  /* For smaller screens, slightly smaller min-height */
+  }
+
+  .input-send-container .send-icon-button {
+    font-size: 1rem; /* Reduce button size */
+    padding: 0.4rem 0.6rem;
+  }
+
+  .chat-input {
+    font-size: 0.9rem; /* Reduce font size */
+    padding: 0.4rem 0.8rem; /* Compact padding */
+  }
+
+  .send-icon-button {
+    font-size: 1rem; /* Reduce icon size */
+    padding: 0.4rem 0.6rem; /* Compact padding */
+  }
+
+  .welcome-container {
+    padding: 0.5rem; /* Minimal padding */
+  }
+
+  .welcome-heading {
+    font-size: 1.8rem; /* Smaller heading */
+  }
+
+  .suggestion-buttons {
+    gap: 0.5rem; /* Reduce gap further */
+  }
+
+  .suggestion-button {
+    font-size: 0.85rem; /* Smaller font size */
+    padding: 0.5rem 0.8rem; /* Compact padding */
+  }
+}
