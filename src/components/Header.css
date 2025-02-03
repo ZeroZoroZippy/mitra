@@ -1,143 +1,143 @@
 /* General Header Styling */
 .header {
-    background: #FAF9F5;
-    position: sticky;
-    top: 0;
-    z-index: 50;
-    padding: 0 16px;
+  background: #d4d3d1;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  padding: 0 16px;
 }
 
 /* Header Container */
 .header-container {
-    max-width: 1440px;
-    margin: 0 auto;
-    padding: 16px 32px;
-    display: flex;
-    align-items: center; /* Vertically align items */
-    justify-content: space-between; /* Space between logo and navigation */
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 16px 32px;
+  display: flex;
+  align-items: center; /* Vertically align items */
+  justify-content: space-between; /* Space between logo and navigation */
 }
 
 /* Logo */
 .header-logo a {
-    font-size: 1.5rem;
-    /* font-weight: bold; */
-    color: #2d2d2d;
-    text-decoration: none;
+  font-size: 1.5rem;
+  /* font-weight: bold; */
+  color: #2d2d2d;
+  text-decoration: none;
 }
 
 .header-logo a:hover {
-    color: gray;
+  color: gray;
 }
 
 /* Desktop Navigation */
 .header-nav {
-    display: flex;
-    gap: 2rem;
-    align-items: center;
+  display: flex;
+  gap: 2rem;
+  align-items: center;
 }
 
 .nav-link {
-    font-size: 1rem;
-    color: #2d2d2d;
-    text-decoration: none;
-    transition: color 0.3s ease;
+  font-size: 1rem;
+  color: #2d2d2d;
+  text-decoration: none;
+  transition: color 0.3s ease;
 }
 
 .nav-link:hover {
-    color: gray;
+  color: gray;
 }
 
 .cta-button {
-    background-color: #2d2d2d;
-    color: white;
-    padding: 10px 16px;
-    border-radius: 8px;
-    font-size: 1rem;
-    font-weight: 500;
-    text-decoration: none;
-    transition: background-color 0.3s ease;
+  background-color: #2d2d2d;
+  color: white;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 500;
+  text-decoration: none;
+  transition: background-color 0.3s ease;
 }
 
 .cta-button:hover {
-    background-color: gray;
+  background-color: gray;
 }
 
 /* Hamburger Icon */
 .menu-icon {
-    background: none;
-    border: none;
-    font-size: 1.5rem;
-    color: #2d2d2d; /* Adjust color for visibility */
-    cursor: pointer;
-    display: none; /* Hide by default */
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #2d2d2d; /* Adjust color for visibility */
+  cursor: pointer;
+  display: none; /* Hide by default */
 }
 
 .menu-icon.open {
-    color: black; /* Optional to differentiate the open state */
+  color: black; /* Optional to differentiate the open state */
 }
 
 /* Mobile Menu */
 .mobile-menu {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    background-color: #faf9f5;
-    padding: 2rem;
-    position: absolute; /* Fixed positioning to cover the full screen */
-    top: 4.5rem; /* Start from the very top */
-    left: 0; /* Start from the very left */
-    width: 100%; /* Full width of the screen */
-    height: 100vh; /* Full height of the viewport */
-    z-index: 1000; /* Ensure it appears above other elements */
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Optional for better visuals */
-    overflow-y: auto; /* Ensure scrollability if content overflows */
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  background-color: #faf9f5;
+  padding: 2rem;
+  position: absolute; /* Fixed positioning to cover the full screen */
+  top: 4.5rem; /* Start from the very top */
+  left: 0; /* Start from the very left */
+  width: 100%; /* Full width of the screen */
+  height: 100vh; /* Full height of the viewport */
+  z-index: 1000; /* Ensure it appears above other elements */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Optional for better visuals */
+  overflow-y: auto; /* Ensure scrollability if content overflows */
 }
 
 /* Mobile Links */
 .mobile-link {
-    font-size: 1.25rem;
-    color: #4a5568;
-    text-decoration: none;
+  font-size: 1.25rem;
+  color: #4a5568;
+  text-decoration: none;
 }
 
 .mobile-link:hover {
-    color: gray;
+  color: gray;
 }
 
 /* Mobile CTA Button */
 .mobile-cta-button {
-    background-color: #2d2d2d;
-    color: white;
-    padding: 12px 16px;
-    border-radius: 4px;
-    text-decoration: none;
-    font-size: 1.25rem;
-    font-weight: 500;
-    transition: background-color 0.3s ease;
-    text-align: center;
-    width: auto;
-    margin: 0; /* Center align the button horizontally */
-    align-self: flex-start;
+  background-color: #2d2d2d;
+  color: white;
+  padding: 12px 16px;
+  border-radius: 4px;
+  text-decoration: none;
+  font-size: 1.25rem;
+  font-weight: 500;
+  transition: background-color 0.3s ease;
+  text-align: center;
+  width: auto;
+  margin: 0; /* Center align the button horizontally */
+  align-self: flex-start;
 }
 
 .mobile-cta-button:hover {
-    background-color: gray;
+  background-color: gray;
 }
 
 /* Responsive Styling */
 @media (max-width: 768px) {
-    .header{
-        padding: 0 2px;
-    }
-    
-    .header-container {
-        padding: 16px 8px 4px 24px;
-    }
-    .menu-icon {
-        display: block; /* Show only on mobile screens */
-    }
+  .header {
+    padding: 0 2px;
+  }
 
-    .header-nav {
-        display: none; /* Hide desktop navigation on mobile screens */
-    }
+  .header-container {
+    padding: 16px 8px 4px 24px;
+  }
+  .menu-icon {
+    display: block; /* Show only on mobile screens */
+  }
+
+  .header-nav {
+    display: none; /* Hide desktop navigation on mobile screens */
+  }
 }

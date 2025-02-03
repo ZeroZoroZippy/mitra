@@ -1,8 +1,8 @@
-import React from 'react';
-import './ChatHeader.css';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faExpand, faCompress, faUserCircle } from '@fortawesome/free-solid-svg-icons';
-
+import React from "react";
+import "./ChatHeader.css";
+import { RiExpandDiagonalFill } from "react-icons/ri";
+import { CgCompressRight } from "react-icons/cg";
+import { FaUserCircle } from "react-icons/fa";
 interface ChatHeaderProps {
   onToggleFullScreen: () => void;
   isChatFullScreen: boolean;
@@ -21,10 +21,13 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
         <button
           className="icon-button fullscreen-toggle"
           onClick={onToggleFullScreen}
-          title={isChatFullScreen ? 'Exit Fullscreen' : 'Enter Fullscreen'}
+          title={isChatFullScreen ? "Exit Fullscreen" : "Enter Fullscreen"}
         >
-          <FontAwesomeIcon icon={(isChatFullScreen || isSidebarOpen) ? faCompress : faExpand // ✅ Show "exit" icon when sidebar is open
-} />
+          {isChatFullScreen || isSidebarOpen ? (
+            <CgCompressRight />
+          ) : (
+            <RiExpandDiagonalFill />
+          )}
         </button>
       </div>
 
@@ -35,7 +38,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
 
       {/* Right Section: Profile Avatar */}
       <div className="chat-header-right">
-        <FontAwesomeIcon icon={faUserCircle} className="profile-avatar" />
+        <FaUserCircle />
       </div>
     </div>
   );

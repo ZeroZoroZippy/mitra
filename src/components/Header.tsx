@@ -1,8 +1,7 @@
-import React, { useState, RefObject } from 'react'; // Explicitly import React
-import { useNavigate } from 'react-router-dom'; // ✅ Import navigation
-// import { signInWithGoogle } from '../../../shared/utils/firebaseAuth'; // ✅ Import Google Sign-In
-import './Header.css';
-import { signInWithGoogle } from '../../../shared/utils/firebaseAuth';
+import React, { useState, RefObject } from "react";
+import { useNavigate } from "react-router-dom";
+import "./Header.css";
+import { signInWithGoogle } from "../utils/firebaseAuth";
 
 interface HeaderProps {
   featuresRef: RefObject<HTMLDivElement>;
@@ -10,7 +9,7 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ featuresRef }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const navigate = useNavigate(); // ✅ For redirection
+  const navigate = useNavigate();
 
   const toggleMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -18,7 +17,7 @@ const Header: React.FC<HeaderProps> = ({ featuresRef }) => {
 
   const scrollToFeatures = () => {
     if (featuresRef.current) {
-      featuresRef.current.scrollIntoView({ behavior: 'smooth' });
+      featuresRef.current.scrollIntoView({ behavior: "smooth" });
     }
   };
 
@@ -26,10 +25,9 @@ const Header: React.FC<HeaderProps> = ({ featuresRef }) => {
   const handleSignIn = async () => {
     try {
       const user = await signInWithGoogle();
-      console.log('User signed in:', user);
-      navigate('/chat'); // ✅ Redirect to Chat after successful login
+      navigate("/chat");
     } catch (error) {
-      console.error('Sign-in failed:', error);
+      console.error("Sign-in failed:", error);
     }
   };
 
@@ -49,18 +47,20 @@ const Header: React.FC<HeaderProps> = ({ featuresRef }) => {
           <a href="#about" className="nav-link">
             About
           </a>
-          <button className="cta-button" onClick={handleSignIn}> {/* ✅ Updated this */}
+          <button className="cta-button" onClick={handleSignIn}>
+            {" "}
+            {/* ✅ Updated this */}
             Try Mitra
           </button>
         </nav>
 
         {/* Hamburger Icon for Mobile */}
         <button
-          className={`menu-icon ${isMobileMenuOpen ? 'open' : ''}`}
+          className={`menu-icon ${isMobileMenuOpen ? "open" : ""}`}
           aria-label="Toggle Mobile Menu"
           onClick={toggleMenu}
         >
-          {isMobileMenuOpen ? '✖' : '☰'}
+          {isMobileMenuOpen ? "✖" : "☰"}
         </button>
       </div>
 
@@ -76,7 +76,9 @@ const Header: React.FC<HeaderProps> = ({ featuresRef }) => {
           <a href="#contact" className="mobile-link">
             Contact
           </a>
-          <button className="mobile-cta-button" onClick={handleSignIn}> {/* ✅ Also updated this */}
+          <button className="mobile-cta-button" onClick={handleSignIn}>
+            {" "}
+            {/* ✅ Also updated this */}
             Try Mitra
           </button>
         </div>

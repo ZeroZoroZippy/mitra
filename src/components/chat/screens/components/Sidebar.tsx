@@ -1,9 +1,8 @@
-import React from 'react';
+import React from "react";
 import { signOut } from "firebase/auth";
-// import { auth } from "../../../shared/utils/firebaseAuth"; // Adjust the relative path if needed
 import { useNavigate } from "react-router-dom";
-import './Sidebar.css';
-import { auth } from '../../../../../../shared/utils/firebaseConfig';
+import "./Sidebar.css";
+import { auth } from "../../../../utils/firebaseAuth";
 
 interface Chat {
   id: number;
@@ -18,8 +17,12 @@ interface SidebarProps {
   onClose: () => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ chatList, activeChatId, onSelectChat, onClose }) => {
-  
+const Sidebar: React.FC<SidebarProps> = ({
+  chatList,
+  activeChatId,
+  onSelectChat,
+  onClose,
+}) => {
   const navigate = useNavigate();
 
   const handleLogout = async () => {
@@ -35,7 +38,7 @@ const Sidebar: React.FC<SidebarProps> = ({ chatList, activeChatId, onSelectChat,
   };
 
   return (
-    <div className="sidebar"> {/* ✅ Remove hardcoded 'open' class */}
+    <div className="sidebar">
       <div className="sidebar-header">
         <h3>Chats</h3>
         <button className="close-sidebar" onClick={onClose}>
@@ -46,7 +49,7 @@ const Sidebar: React.FC<SidebarProps> = ({ chatList, activeChatId, onSelectChat,
         {chatList.map((chat) => (
           <li
             key={chat.id}
-            className={`chat-item ${chat.id === activeChatId ? 'active' : ''}`}
+            className={`chat-item ${chat.id === activeChatId ? "active" : ""}`}
             onClick={() => onSelectChat(chat.id)}
           >
             <span>{chat.title}</span>

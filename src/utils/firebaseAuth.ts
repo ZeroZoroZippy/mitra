@@ -1,19 +1,15 @@
 import {
-  getAuth,
   signInWithPopup,
   GoogleAuthProvider,
   User,
-  browserLocalPersistence
+  browserLocalPersistence,
 } from "firebase/auth";
 import { auth } from "./firebaseConfig";
-// import { app } from "./firebaseConfig";
-
-// const auth = getAuth(app);
 auth.setPersistence(browserLocalPersistence);
 
 const provider = new GoogleAuthProvider();
-provider.addScope('profile');
-provider.addScope('email');
+provider.addScope("profile");
+provider.addScope("email");
 
 export const signInWithGoogle = async (): Promise<User | null> => {
   try {

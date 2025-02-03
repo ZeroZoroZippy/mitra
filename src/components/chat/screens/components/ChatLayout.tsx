@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import './ChatLayout.css';
-import Sidebar from './Sidebar';
-import ChatArea from './ChatArea';
+import React, { useState, useEffect } from "react";
+import "./ChatLayout.css";
+import Sidebar from "./Sidebar";
+import ChatArea from "./ChatArea";
 
 interface Chat {
   id: number;
@@ -11,8 +11,8 @@ interface Chat {
 
 const ChatLayout: React.FC = () => {
   const [activeChatId, setActiveChatId] = useState<number>(() => {
-    const savedChatId = localStorage.getItem('activeChatId');
-    const chatHistory = localStorage.getItem('chats');
+    const savedChatId = localStorage.getItem("activeChatId");
+    const chatHistory = localStorage.getItem("chats");
     return savedChatId && chatHistory ? parseInt(savedChatId, 10) : 0;
   });
   const [isChatFullScreen, setIsChatFullScreen] = useState(true);
@@ -21,13 +21,13 @@ const ChatLayout: React.FC = () => {
   const chatList: Chat[] = [
     {
       id: 1,
-      title: 'Chat with Mitra',
-      timestamp: new Date().toLocaleString('en-US', {
-        hour: 'numeric',
-        minute: 'numeric',
+      title: "Chat with Mitra",
+      timestamp: new Date().toLocaleString("en-US", {
+        hour: "numeric",
+        minute: "numeric",
         hour12: true,
-        month: 'short',
-        day: 'numeric',
+        month: "short",
+        day: "numeric",
       }),
     },
   ];
@@ -55,14 +55,20 @@ const ChatLayout: React.FC = () => {
 
   useEffect(() => {
     if (activeChatId !== 0) {
-      localStorage.setItem('activeChatId', activeChatId.toString());
+      localStorage.setItem("activeChatId", activeChatId.toString());
     }
   }, [activeChatId]);
 
   return (
-    <div className={`chat-layout ${isChatFullScreen ? 'fullscreen' : ''} ${isSidebarOpen ? 'sidebar-visible' : ''}`}>
-      {isSidebarOpen && window.innerWidth <= 768 && <div className="sidebar-overlay" onClick={toggleSidebar}></div>}
-  
+    <div
+      className={`chat-layout ${isChatFullScreen ? "fullscreen" : ""} ${
+        isSidebarOpen ? "sidebar-visible" : ""
+      }`}
+    >
+      {isSidebarOpen && window.innerWidth <= 768 && (
+        <div className="sidebar-overlay" onClick={toggleSidebar}></div>
+      )}
+
       {/* ✅ Always render Sidebar (let CSS handle visibility) */}
       <Sidebar
         chatList={chatList}
@@ -70,7 +76,7 @@ const ChatLayout: React.FC = () => {
         onSelectChat={setActiveChatId}
         onClose={toggleSidebar}
       />
-  
+
       <ChatArea
         activeChatId={activeChatId}
         isChatFullScreen={isChatFullScreen}
