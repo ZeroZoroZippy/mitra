@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { User, onAuthStateChanged } from "firebase/auth";
+import { useNavigate, useLocation } from "react-router-dom";
+import { onAuthStateChanged } from "firebase/auth";
 import { signInWithGoogle, auth } from "../utils/firebaseAuth";
 import { storeUserDetails } from "../utils/firebaseDb";
 import Header from "../components/Header";
@@ -13,17 +13,25 @@ interface LandingPageProps {
 
 const LandingPage: React.FC<LandingPageProps> = ({ featuresRef }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [isLoading, setIsLoading] = useState(false);
+  const [hasRedirected, setHasRedirected] = useState(false); // ✅ Prevents multiple redirects
 
   // Handle authentication state and redirect results
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
+      console.log("Auth state changed. User:", user);
+  
+      // ✅ Only redirect if the user is on "/" and hasn't been redirected before
+      if (user && location.pathname === "/" && !hasRedirected) {
+        console.log("Redirecting to /chat...");
+        setHasRedirected(true); // Prevents multiple redirects
         navigate("/chat");
       }
     });
+  
     return () => unsubscribe();
-  }, [navigate]);
+  }, [navigate, location, hasRedirected]);
 
   // Handle sign-in button click
   const handleSignIn = async () => {

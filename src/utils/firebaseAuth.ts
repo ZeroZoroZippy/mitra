@@ -2,10 +2,11 @@ import {
   signInWithPopup,
   GoogleAuthProvider,
   User,
+  setPersistence,
   browserLocalPersistence,
 } from "firebase/auth";
 import { auth } from "./firebaseConfig";
-auth.setPersistence(browserLocalPersistence);
+await setPersistence(auth, browserLocalPersistence);
 
 const provider = new GoogleAuthProvider();
 provider.addScope("profile");
