@@ -53,7 +53,7 @@ export const saveMessage = async (
 };
 
 /**
- * ✅ Function to Retrieve Messages for a User (Now Fetches AI Messages Too)
+ * ✅ Function to Retrieve Messages for a User (Now Fetches AI Messages Too
  * @param userId - The authenticated user's ID
  * @returns Array of messages sorted by timestamp
  */
