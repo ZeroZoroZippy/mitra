@@ -9,9 +9,9 @@ import {
   getDoc,
   setDoc,
   serverTimestamp,
-  onSnapshot, // ✅ Import onSnapshot for real-time updates
+  onSnapshot,
 } from "firebase/firestore";
-import { app } from "./firebaseConfig"; // ✅ Import Firebase app
+import { app } from "./firebaseConfig"; 
 import type { User } from "firebase/auth";
 
 const db = getFirestore(app);
@@ -29,9 +29,6 @@ interface Message {
 
 /**
  * ✅ Function to Save a Message to Firestore (Now Supports Both User & AI Messages)
- * @param userId - The authenticated user's ID
- * @param text - The message content
- * @param sender - 'user' or 'ai'
  */
 export const saveMessage = async (
   userId: string,
@@ -39,13 +36,13 @@ export const saveMessage = async (
   sender: "user" | "ai"
 ) => {
   try {
-    console.log(`Saving message:`, { userId, text, sender }); // ✅ Debug log
+    console.log(`Saving message:`, { userId, text, sender });
 
     await addDoc(collection(db, "messages"), {
       userId,
       text,
-      sender, // ✅ Saves both user and AI messages
-      timestamp: new Date().toISOString(), // ✅ Ensures correct sorting
+      sender,
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
     console.error("Error saving message:", error);
@@ -53,19 +50,16 @@ export const saveMessage = async (
 };
 
 /**
- * ✅ Function to Retrieve Messages for a User (Now Fetches AI Messages Too
- * @param userId - The authenticated user's ID
- * @returns Array of messages sorted by timestamp
+ * ✅ Function to Retrieve Messages for a User (Optimized Firestore Query)
  */
 export const getMessages = async (userId: string): Promise<Message[]> => {
   try {
-    const q = query(collection(db, "messages")); // ✅ Fetches all messages (both user & AI)
+    const q = query(collection(db, "messages"), where("userId", "==", userId)); // 🔥 Now filters at Firestore level
     const querySnapshot = await getDocs(q);
 
     return querySnapshot.docs
-      .map((doc) => ({ id: doc.id, ...doc.data() } as Message)) // ✅ Properly type Firestore documents
-      .filter((msg) => msg.sender === "user" || msg.sender === "ai") // ✅ Ensures AI messages are included
-      .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()); // ✅ Sorts messages by timestamp
+      .map((doc) => ({ id: doc.id, ...doc.data() } as Message))
+      .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
   } catch (error) {
     console.error("Error fetching messages:", error);
     return [];
@@ -73,29 +67,25 @@ export const getMessages = async (userId: string): Promise<Message[]> => {
 };
 
 /**
- * ✅ Function to Listen for Real-Time Messages (Ensures Live Updates Without Refresh)
- * @param userId - The authenticated user's ID
- * @param callback - Function to update messages in UI
+ * ✅ Function to Listen for Real-Time Messages (Optimized Firestore Query)
  */
 export const listenForMessages = (
   userId: string,
   callback: (messages: Message[]) => void
 ) => {
-  const q = query(collection(db, "messages"));
+  const q = query(collection(db, "messages"), where("userId", "==", userId)); // 🔥 Firestore-level filtering
 
   return onSnapshot(q, (querySnapshot) => {
     const messages = querySnapshot.docs
-      .map((doc) => ({ id: doc.id, ...doc.data() } as Message)) // ✅ Properly type Firestore documents
-      .filter((msg) => msg.userId === userId || msg.sender === "ai") // ✅ Includes AI messages
+      .map((doc) => ({ id: doc.id, ...doc.data() } as Message))
       .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
 
-    callback(messages); // ✅ Updates UI in real-time
+    callback(messages);
   });
 };
 
 /**
- * ✅ Function to Store User Details in Firestore (No Changes Here)
- * @param user - The Firebase User object
+ * ✅ Function to Store User Details in Firestore
  */
 export const storeUserDetails = async (user: User): Promise<void> => {
   if (!user) return;
@@ -115,6 +105,34 @@ export const storeUserDetails = async (user: User): Promise<void> => {
     }
   } catch (error) {
     console.error("Error storing user details:", error);
+  }
+};
+
+/**
+ * ✅ Function to Retrieve User Profile (Including Google Profile Picture)
+ */
+export const getUserProfile = async (userId: string) => {
+  try {
+    const userRef = doc(db, "users", userId);
+    const userSnap = await getDoc(userRef);
+
+    if (userSnap.exists()) {
+      return userSnap.data();
+    } else {
+      console.warn("User profile not found in Firestore. Creating new profile.");
+      const defaultProfile = {
+        uid: userId,
+        displayName: "",  // or a default value if available
+        email: "",
+        photoURL: "",
+        createdAt: serverTimestamp(),
+      };
+      await setDoc(userRef, defaultProfile);
+      return defaultProfile;
+    }
+  } catch (error) {
+    console.error("Error fetching user profile:", error);
+    return null;
   }
 };
 
