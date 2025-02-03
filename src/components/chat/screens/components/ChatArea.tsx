@@ -102,29 +102,28 @@ const ChatArea: React.FC<ChatAreaProps> = ({
 
   const handleSendMessage = async () => {
     if (!inputMessage.trim() || isInputDisabled) return;
-
+  
     const userMessage = createMessage(inputMessage.trim(), "user");
-    setMessages((prev) => [...prev, userMessage]);
+    const user = auth.currentUser;
+    
+    if (user) {
+      console.log("Saving User Message:", userMessage); // ✅ Debugging log
+      await saveMessage(user.uid, userMessage.text, userMessage.sender);
+    }
+  
+    setMessages((prev) => [...prev, userMessage]); // ✅ Update UI after saving
     setInputMessage("");
     setIsWelcomeActive(false);
     setIsInputDisabled(true);
-
+  
     if (inputRef.current) {
       inputRef.current.style.height = "40px";
     }
-
-    const user = auth.currentUser;
-    if (user) {
-      // Fire-and-forget: initiate saving without waiting for it to complete
-      saveMessage(user.uid, userMessage.text, userMessage.sender).catch(
-        (error) => console.error("Failed to save message:", error)
-      );
-    }
-
+  
     setTimeout(() => {
       setShowTypingIndicator(true);
     }, 800);
-
+  
     setTimeout(() => {
       animateAITyping(getAIResponse(userMessage.text));
     }, 1500);
@@ -149,10 +148,10 @@ const ChatArea: React.FC<ChatAreaProps> = ({
 
   const animateAITyping = (aiText: string) => {
     if (!aiText || aiText.length === 0) return;
-
+  
     setAiTypingMessage("");
     setShowTypingIndicator(true);
-
+  
     let index = 0;
     const interval = setInterval(() => {
       if (index < aiText.length) {
@@ -160,18 +159,21 @@ const ChatArea: React.FC<ChatAreaProps> = ({
         index++;
       } else {
         clearInterval(interval);
-        // Optional fade-out: add the fade-out class before removing the indicator
-        const typingElement = document.querySelector(".ai-typing-message");
-        if (typingElement) {
-          typingElement.classList.add("fade-out");
-        }
+  
         setTimeout(() => {
           const aiMessage = createMessage(aiText, "ai");
           setMessages((prev) => [...prev, aiMessage]);
+  
+          const user = auth.currentUser;
+          if (user) {
+            console.log("Saving AI Message:", aiMessage); // ✅ Debugging log
+            saveMessage(user.uid, aiMessage.text, aiMessage.sender);
+          }
+  
           setShowTypingIndicator(false);
           setAiTypingMessage("");
           setIsInputDisabled(false);
-        }, 500); // This should match the fade-out duration in CSS
+        }, 500);
       }
     }, 20);
   };
