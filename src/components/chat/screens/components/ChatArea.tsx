@@ -144,13 +144,15 @@ const groupMessagesByDate = (messages: ChatMessage[]) => {
   
     const userMessage = createMessage(inputMessage.trim(), "user");
     const user = auth.currentUser;
-    
+  
+    console.log("Attempting to save user message:", userMessage); // ✅ Debug log
+  
     if (user) {
-      console.log("Saving User Message:", userMessage); // ✅ Debugging log
-      await saveMessage(user.uid, userMessage.text, userMessage.sender);
+      console.log("User ID before saving:", user.uid); // ✅ Debug log to confirm user authentication
+      await saveMessage(userMessage.text, "user"); // ✅ FIXED: Now correctly calls saveMessage()
     }
   
-    setMessages((prev) => [...prev, userMessage]); // ✅ Update UI after saving
+    setMessages((prev) => [...prev, userMessage]);
     setInputMessage("");
     setIsWelcomeActive(false);
     setIsInputDisabled(true);
@@ -168,18 +170,27 @@ const groupMessagesByDate = (messages: ChatMessage[]) => {
     }, 1500);
   };
 
-  const handleWelcomeSuggestion = (suggestion: string) => {
+  const handleWelcomeSuggestion = async (suggestion: string) => {
     if (isInputDisabled) return;
-
+  
     const userMessage = createMessage(suggestion, "user");
+    const user = auth.currentUser;
+  
+    console.log("Saving suggested message:", userMessage); // ✅ Debugging log
+  
+    if (user) {
+      console.log("User ID before saving:", user.uid); // ✅ Debug log to confirm user authentication
+      await saveMessage(userMessage.text, "user"); // ✅ FIXED: Now correctly saves suggested messages
+    }
+  
     setMessages((prev) => [...prev, userMessage]);
     setIsWelcomeActive(false);
     setIsInputDisabled(true);
-
+  
     setTimeout(() => {
       setShowTypingIndicator(true);
     }, 800);
-
+  
     setTimeout(() => {
       animateAITyping(getAIResponse(userMessage.text));
     }, 1500);
@@ -205,8 +216,8 @@ const groupMessagesByDate = (messages: ChatMessage[]) => {
   
           const user = auth.currentUser;
           if (user) {
-            console.log("Saving AI Message:", aiMessage); // ✅ Debugging log
-            saveMessage(user.uid, aiMessage.text, aiMessage.sender);
+            console.log("Saving AI Message:", aiMessage);
+            saveMessage(aiText, "ai"); // ✅ FIXED!
           }
   
           setShowTypingIndicator(false);
