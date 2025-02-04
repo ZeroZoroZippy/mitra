@@ -53,7 +53,7 @@ const ChatArea: React.FC<ChatAreaProps> = ({
       }
     };
     fetchMessages();
-  }, [activeChatId]); // ✅ Triggers when chat ID changes
+  }, [activeChatId]); // ✅ Triggers when chat ID change
 
   useEffect(() => {
     scrollToBottom();
