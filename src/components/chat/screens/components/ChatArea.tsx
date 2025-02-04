@@ -35,35 +35,74 @@ const ChatArea: React.FC<ChatAreaProps> = ({
   const [isInputDisabled, setIsInputDisabled] = useState(false); // ✅ Prevent multiple user messages
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  // ✅ New State for Floating Date Header
+  const [visibleDate, setVisibleDate] = useState<string | null>(null);
+  const [fadeOut, setFadeOut] = useState(false);
+  const dateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  useEffect(() => {
-    const fetchMessages = async () => {
-      const user = auth.currentUser;
-      if (user) {
-        const loadedMessages = await getMessages(user.uid);
-        const formattedMessages: ChatMessage[] = loadedMessages.map(
-          (doc: any) => ({
-            text: doc.text,
-            sender: doc.sender,
-            timestamp: doc.timestamp,
-          })
-        );
-        setMessages(formattedMessages);
-        setIsWelcomeActive(loadedMessages.length === 0);
+  const handleScroll = () => {
+    const chatContainer = document.querySelector(".messages-container");
+    if (!chatContainer) return;
+  
+    const dateHeaders = document.querySelectorAll(".date-header");
+    let newVisibleDate: string | null = null;
+  
+    for (const header of dateHeaders) {
+      const rect = header.getBoundingClientRect();
+      
+      // ✅ Check if the date header is within the visible viewport
+      if (rect.top >= 0 && rect.top <= 120) {
+        newVisibleDate = header.textContent;
+        break;
       }
-    };
-    fetchMessages();
-  }, [activeChatId]); // ✅ Triggers when chat ID change
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
-  useEffect(() => {
-    if (!isInputDisabled && inputRef.current) {
-      inputRef.current.focus(); // ✅ Restores focus after AI finishes typing
     }
-  }, [isInputDisabled]);
+  
+    // ✅ Update floating header only if a new date is detected
+    if (newVisibleDate && newVisibleDate !== visibleDate) {
+      setVisibleDate(newVisibleDate);
+      setFadeOut(false); // ✅ Reset fade-out when a new date appears
+  
+      if (dateTimeoutRef.current) clearTimeout(dateTimeoutRef.current);
+  
+      // ✅ Delay fade-out by 3 seconds
+      dateTimeoutRef.current = setTimeout(() => {
+        setFadeOut(true);
+      }, 3000);
+    }
+  };
+
+const formatMessageDate = (timestamp: string): string => {
+  const date = new Date(timestamp);
+  const today = new Date();
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+
+  if (date.toDateString() === today.toDateString()) {
+    return "Today";
+  } else if (date.toDateString() === yesterday.toDateString()) {
+    return "Yesterday";
+  } else {
+    return date.toLocaleDateString('en-US', { 
+      month: 'short', 
+      day: 'numeric',
+      year: date.getFullYear() !== today.getFullYear() ? 'numeric' : undefined 
+    });
+  }
+};
+
+const groupMessagesByDate = (messages: ChatMessage[]) => {
+  const groups: { [key: string]: ChatMessage[] } = {};
+  
+  messages.forEach(message => {
+    const dateStr = formatMessageDate(message.timestamp);
+    if (!groups[dateStr]) {
+      groups[dateStr] = [];
+    }
+    groups[dateStr].push(message);
+  });
+
+  return groups;
+};
 
   const createMessage = (text: string, sender: "user" | "ai"): ChatMessage => ({
     text,
@@ -182,6 +221,52 @@ const ChatArea: React.FC<ChatAreaProps> = ({
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
+  //Use Effect to fetch messages//
+  useEffect(() => {
+    const fetchMessages = async () => {
+      const user = auth.currentUser;
+      if (user) {
+        const loadedMessages = await getMessages(user.uid);
+        const formattedMessages: ChatMessage[] = loadedMessages.map(
+          (doc: any) => ({
+            text: doc.text,
+            sender: doc.sender,
+            timestamp: doc.timestamp,
+          })
+        );
+        setMessages(formattedMessages);
+        setIsWelcomeActive(loadedMessages.length === 0);
+      }
+    };
+    fetchMessages();
+  }, [activeChatId]); // ✅ Triggers when chat ID changes
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  useEffect(() => {
+    if (!isInputDisabled && inputRef.current) {
+      inputRef.current.focus(); // ✅ Restores focus after AI finishes typing
+    }
+  }, [isInputDisabled]);
+
+  useEffect(() => {
+    const chatContainer = document.querySelector(".messages-container");
+    
+    if (chatContainer) {
+      chatContainer.addEventListener("scroll", handleScroll);
+    }
+  
+    return () => {
+      if (chatContainer) {
+        chatContainer.removeEventListener("scroll", handleScroll);
+      }
+      if (dateTimeoutRef.current) clearTimeout(dateTimeoutRef.current);
+    };
+  }, []);
+
+
   return (
     <div className="chat-area">
       <ChatHeader
@@ -189,7 +274,14 @@ const ChatArea: React.FC<ChatAreaProps> = ({
         isChatFullScreen={isChatFullScreen}
         isSidebarOpen={isSidebarOpen}
       />
-
+  
+      {/* ✅ Floating Date Header - Updates on Scroll */}
+      {visibleDate && (
+        <div className={`floating-date ${fadeOut ? "fade-out" : ""}`}>
+          {visibleDate}
+        </div>
+      )}
+  
       {isWelcomeActive ? (
         <div className="welcome-container">
           <h1 className="welcome-heading">What can I help with?</h1>
@@ -245,13 +337,20 @@ const ChatArea: React.FC<ChatAreaProps> = ({
         </div>
       ) : (
         <div className="messages-container">
-          {messages.map((message, index) => (
-            <div
-              key={index}
-              className={`message-bubble ${message.sender}-bubble`}
-            >
-              {message.text}
-            </div>
+          {Object.entries(groupMessagesByDate(messages)).map(([date, dateMessages]) => (
+            <React.Fragment key={date}>
+              <div className="date-header">
+                <span className="date-label">{date}</span>
+              </div>
+              {dateMessages.map((message, index) => (
+                <div
+                  key={`${date}-${index}`}
+                  className={`message-bubble ${message.sender}-bubble`}
+                >
+                  {message.text}
+                </div>
+              ))}
+            </React.Fragment>
           ))}
           {showTypingIndicator && (
             <div className="ai-typing-message">
@@ -266,7 +365,7 @@ const ChatArea: React.FC<ChatAreaProps> = ({
           <div ref={messagesEndRef} />
         </div>
       )}
-
+  
       {!isWelcomeActive && (
         <div>
           <div className="input-bar">
