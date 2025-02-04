@@ -1,15 +1,31 @@
+/// <reference types="vite/client" />
+
+interface ImportMetaEnv {
+  readonly VITE_FIREBASE_API_KEY: string
+  readonly VITE_FIREBASE_AUTH_DOMAIN: string
+  readonly VITE_FIREBASE_PROJECT_ID: string
+  readonly VITE_FIREBASE_STORAGE_BUCKET: string
+  readonly VITE_FIREBASE_MESSAGING_SENDER_ID: string
+  readonly VITE_FIREBASE_APP_ID: string
+  readonly VITE_FIREBASE_MEASUREMENT_ID: string
+}
+
+interface ImportMeta {
+  readonly env: ImportMetaEnv
+}
+
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 
-// ✅ Firebase Configuration (Replace with actual values)
+// ✅ Firebase Configuration with fixed environment variables
 const firebaseConfig = {
-  apiKey: "AIzaSyAag0C_xzFpylDSv89eIo3e9B1r_5rwfFs",
-  authDomain: "mitra-a531e.firebaseapp.com",
-  projectId: "mitra-a531e",
-  storageBucket: "mitra-a531e.firebasestorage.app",
-  messagingSenderId: "375657398776",
-  appId: "1:375657398776:web:05f9d4813a60fd518b560d",
-  measurementId: "G-1TN0BWWHD8"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY?.replace(",", ""), // Remove trailing comma
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET, // Fixed env var name
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
 };
 
 // ✅ Initialize Firebase App
