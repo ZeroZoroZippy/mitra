@@ -12,14 +12,14 @@ import {
   serverTimestamp,
   onSnapshot,
 } from "firebase/firestore";
-import { app } from "./firebaseConfig"; 
+import { app } from "./firebaseConfig";
 import type { User } from "firebase/auth";
 import { auth } from "./firebaseConfig";
 
 const db = getFirestore(app);
 
 /**
- * ✅ Define TypeScript Type for Messages (Updated to include likeStatus)
+ * ✅ Define TypeScript Type for Messages
  */
 interface Message {
   id: string;
@@ -27,13 +27,17 @@ interface Message {
   text: string;
   sender: "user" | "ai";
   timestamp: string;
-  likeStatus?: "like" | "dislike" | null; // ✅ NEW FIELD
+  likeStatus?: "like" | "dislike" | null; // ✅ New Field for Like/Dislike
 }
 
 /**
- * ✅ Function to Save a Message to Firestore (Now Stores likeStatus)
+ * ✅ Function to Save a Message to Firestore (Now Supports Like/Dislike)
  */
-export const saveMessage = async (text: string, sender: "user" | "ai") => {
+export const saveMessage = async (
+  text: string,
+  sender: "user" | "ai",
+  likeStatus: "like" | "dislike" | null = null
+) => {
   const user = auth.currentUser;
   if (!user) {
     console.error("No authenticated user found.");
@@ -42,11 +46,11 @@ export const saveMessage = async (text: string, sender: "user" | "ai") => {
 
   try {
     await addDoc(collection(db, "messages"), {
-      userId: user.uid, // ✅ Always uses the correct userId
+      userId: user.uid, // ✅ Ensures correct user mapping
       text,
       sender,
       timestamp: new Date().toISOString(),
-      likeStatus: null, // ✅ Default value for Like/Dislike
+      likeStatus, // ✅ Storing Like/Dislike State
     });
 
     console.log(`✅ Message saved correctly under userId: ${user.uid}`);
@@ -56,18 +60,15 @@ export const saveMessage = async (text: string, sender: "user" | "ai") => {
 };
 
 /**
- * ✅ Function to Retrieve Messages for a User (Now Includes likeStatus)
+ * ✅ Function to Retrieve Messages for a User (Optimized Firestore Query)
  */
 export const getMessages = async (userId: string): Promise<Message[]> => {
   try {
-    const q = query(collection(db, "messages"), where("userId", "==", userId)); // 🔥 Firestore query
+    const q = query(collection(db, "messages"), where("userId", "==", userId)); // 🔥 Now filters at Firestore level
     const querySnapshot = await getDocs(q);
 
     return querySnapshot.docs
-      .map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      } as Message))
+      .map((doc) => ({ id: doc.id, ...doc.data() } as Message))
       .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
   } catch (error) {
     console.error("Error fetching messages:", error);
@@ -76,7 +77,7 @@ export const getMessages = async (userId: string): Promise<Message[]> => {
 };
 
 /**
- * ✅ Function to Listen for Real-Time Messages (Now Includes likeStatus)
+ * ✅ Function to Listen for Real-Time Messages (Optimized Firestore Query)
  */
 export const listenForMessages = (
   userId: string,
@@ -86,10 +87,7 @@ export const listenForMessages = (
 
   return onSnapshot(q, (querySnapshot) => {
     const messages = querySnapshot.docs
-      .map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      } as Message))
+      .map((doc) => ({ id: doc.id, ...doc.data() } as Message))
       .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
 
     callback(messages);
@@ -97,21 +95,23 @@ export const listenForMessages = (
 };
 
 /**
- * ✅ Function to Update Like/Dislike in Firestore
+ * ✅ Function to Toggle Like/Dislike on AI Messages
  */
-export const updateMessageReaction = async (
+export const updateLikeStatus = async (
   messageId: string,
-  reaction: "like" | "dislike" | null
+  newStatus: "like" | "dislike" | null
 ) => {
+  if (!messageId) return;
+
   try {
     const messageRef = doc(db, "messages", messageId);
     await updateDoc(messageRef, {
-      likeStatus: reaction,
+      likeStatus: newStatus,
     });
 
-    console.log(`✅ Reaction Updated: ${messageId} → ${reaction}`);
+    console.log(`✅ Like/Dislike updated: ${messageId} → ${newStatus}`);
   } catch (error) {
-    console.error("Error updating reaction:", error);
+    console.error("❌ Error updating Like/Dislike:", error);
   }
 };
 

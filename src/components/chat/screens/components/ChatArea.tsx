@@ -5,7 +5,7 @@ import { FaPaperPlane } from "react-icons/fa6";
 import { IoCopyOutline } from "react-icons/io5";
 import { SlLike, SlDislike } from "react-icons/sl";
 import { auth } from "../../../../utils/firebaseConfig";
-import { getMessages, saveMessage } from "../../../../utils/firebaseDb";
+import { getMessages, saveMessage, updateLikeStatus } from "../../../../utils/firebaseDb";
 
 interface ChatAreaProps {
   activeChatId: number;
@@ -17,6 +17,7 @@ interface ChatAreaProps {
 }
 
 interface ChatMessage {
+  id?: string; // Add optional id field
   text: string;
   sender: "user" | "ai";
   timestamp: string;
@@ -43,6 +44,7 @@ const ChatArea: React.FC<ChatAreaProps> = ({
   const dateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   // ✅ State to track copy icon fade-in effect
   const [showCopyIcon, setShowCopyIcon] = useState<{ [key: string]: boolean }>({});
+  const [activeMessageId, setActiveMessageId] = useState<string | null>(null);
 
   const handleScroll = () => {
     const chatContainer = document.querySelector(".messages-container");
@@ -109,9 +111,11 @@ const groupMessagesByDate = (messages: ChatMessage[]) => {
 };
 
   const createMessage = (text: string, sender: "user" | "ai"): ChatMessage => ({
+    id: crypto.randomUUID(), // Add unique id
     text,
     sender,
     timestamp: new Date().toISOString(),
+    likeStatus: null
   });
 
   const handleInputChange = (
@@ -153,7 +157,7 @@ const groupMessagesByDate = (messages: ChatMessage[]) => {
   
     if (user) {
       console.log("User ID before saving:", user.uid); // ✅ Debug log to confirm user authentication
-      await saveMessage(userMessage.text, "user"); // ✅ FIXED: Now correctly calls saveMessage()
+    await saveMessage(userMessage.text, userMessage.sender); // Pass user ID to saveMessage
     }
   
     setMessages((prev) => [...prev, userMessage]);
@@ -200,7 +204,7 @@ const groupMessagesByDate = (messages: ChatMessage[]) => {
     }, 1500);
   };
 
-  const animateAITyping = (aiText: string) => {
+  const animateAITyping = async (aiText: string) => {
     if (!aiText || aiText.length === 0) return;
   
     setAiTypingMessage("");
@@ -221,7 +225,7 @@ const groupMessagesByDate = (messages: ChatMessage[]) => {
           const user = auth.currentUser;
           if (user) {
             console.log("Saving AI Message:", aiMessage);
-            saveMessage(aiText, "ai"); // ✅ FIXED!
+            saveMessage(aiText, aiMessage.sender); // ✅ FIXED!
           }
   
           setShowTypingIndicator(false);
@@ -230,6 +234,9 @@ const groupMessagesByDate = (messages: ChatMessage[]) => {
         }, 500);
       }
     }, 20);
+  
+    // Add cleanup
+    return () => clearInterval(interval);
   };
 
   const scrollToBottom = () => {
@@ -241,15 +248,21 @@ const groupMessagesByDate = (messages: ChatMessage[]) => {
     navigator.clipboard.writeText(text);
   };
 
-  // ✅ Delay before showing the copy icon
-  useEffect(() => {
-    messages.forEach((msg, index) => {
-      setTimeout(() => {
-        setShowCopyIcon((prev) => ({ ...prev, [index]: true }));
-      }, 1000);
-    });
-  }, [messages]);
+  // ✅ Function to toggle Like/Dislike
+  const handleLikeDislike = async (messageId: string, currentStatus: "like" | "dislike" | null, action: "like" | "dislike") => {
+    try {
+      const newStatus = currentStatus === action ? null : action;
+      await updateLikeStatus(messageId, newStatus);
+      
+      setMessages(messages.map(msg => 
+        msg.id === messageId ? {...msg, likeStatus: newStatus} : msg
+      ));
+    } catch (error) {
+      console.error("Error updating like status:", error);
+    }
+  };
 
+  // ✅ Delay before showing the copy icon
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
@@ -262,9 +275,11 @@ const groupMessagesByDate = (messages: ChatMessage[]) => {
         const loadedMessages = await getMessages(user.uid);
         const formattedMessages: ChatMessage[] = loadedMessages.map(
           (doc: any) => ({
+            id: doc.id,
             text: doc.text,
             sender: doc.sender,
             timestamp: doc.timestamp,
+            likeStatus: doc.likeStatus
           })
         );
         setMessages(formattedMessages);
@@ -273,10 +288,6 @@ const groupMessagesByDate = (messages: ChatMessage[]) => {
     };
     fetchMessages();
   }, [activeChatId]); // ✅ Triggers when chat ID changes
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
 
   useEffect(() => {
     if (!isInputDisabled && inputRef.current) {
@@ -377,25 +388,42 @@ const groupMessagesByDate = (messages: ChatMessage[]) => {
               </div>
               {dateMessages.map((message, index) => (
                 <div key={`${date}-${index}`} className="message-container">
-                  {/* ✅ Message Bubble */}
-                <div className={`message-bubble ${message.sender}-bubble`}>{message.text}</div>
-
-                {/* ✅ Copy Icon - Fades in smoothly */}
-                <div className="message-actions">
-                  <IoCopyOutline
-                    className="action-icon"
-                    title="Copy Message"
-                    onClick={() => handleCopyMessage(message.text)}
-                  />
-                  {message.sender === 'ai' && (
-                    <>
-                      <SlLike className="action-icon" title="Like" />
-                      <SlDislike className="action-icon" title="Dislike" />
-                    </>
-                  )}
+                  <div className={`message-bubble ${message.sender}-bubble`}>
+                    {message.text}
+                  </div>
+                  <div className={`message-actions ${
+                    message.likeStatus || activeMessageId === message.id ? 'visible' : ''
+                  }`}>
+                    <IoCopyOutline 
+                      className="action-icon"
+                      title="Copy Message" 
+                      onClick={() => handleCopyMessage(message.text)}
+                    />
+                    {message.sender === "ai" && message.id && (
+                      <>
+                        <SlLike
+                          className={`action-icon ${message.likeStatus === "like" ? "active" : ""}`}
+                          title="Like"
+                          onClick={() => {
+                            if (!message.id) return;
+                            setActiveMessageId(message.id);
+                            handleLikeDislike(message.id, message.likeStatus ?? null, "like");
+                          }}
+                        />
+                        <SlDislike
+                          className={`action-icon ${message.likeStatus === "dislike" ? "active" : ""}`}
+                          title="Dislike"
+                          onClick={() => {
+                            if (!message.id) return;
+                            setActiveMessageId(message.id);
+                            handleLikeDislike(message.id, message.likeStatus ?? null, "dislike");
+                          }}
+                        />
+                      </>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
             </React.Fragment>
           ))}
           {showTypingIndicator && (
