@@ -319,7 +319,7 @@ const groupMessagesByDate = (messages: ChatMessage[]) => {
         isSidebarOpen={isSidebarOpen}
       />
   
-      {/* ✅ Floating Date Header - Updates on Scroll */}
+      {/* ✅ Floating Date Header - Updates on Scrol */}
       {visibleDate && (
         <div className={`floating-date ${fadeOut ? "fade-out" : ""}`}>
           {visibleDate}
