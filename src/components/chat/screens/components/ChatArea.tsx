@@ -20,6 +20,7 @@ interface ChatMessage {
   text: string;
   sender: "user" | "ai";
   timestamp: string;
+  likeStatus?: "like" | "dislike" | null; // ✅ Store Like/Dislike status
 }
 
 const ChatArea: React.FC<ChatAreaProps> = ({

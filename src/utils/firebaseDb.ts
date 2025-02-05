@@ -8,6 +8,7 @@ import {
   doc,
   getDoc,
   setDoc,
+  updateDoc,
   serverTimestamp,
   onSnapshot,
 } from "firebase/firestore";
@@ -18,7 +19,7 @@ import { auth } from "./firebaseConfig";
 const db = getFirestore(app);
 
 /**
- * ✅ Define TypeScript Type for Messages
+ * ✅ Define TypeScript Type for Messages (Updated to include likeStatus)
  */
 interface Message {
   id: string;
@@ -26,10 +27,11 @@ interface Message {
   text: string;
   sender: "user" | "ai";
   timestamp: string;
+  likeStatus?: "like" | "dislike" | null; // ✅ NEW FIELD
 }
 
 /**
- * ✅ Function to Save a Message to Firestore (Now Supports Both User & AI Messages)
+ * ✅ Function to Save a Message to Firestore (Now Stores likeStatus)
  */
 export const saveMessage = async (text: string, sender: "user" | "ai") => {
   const user = auth.currentUser;
@@ -44,6 +46,7 @@ export const saveMessage = async (text: string, sender: "user" | "ai") => {
       text,
       sender,
       timestamp: new Date().toISOString(),
+      likeStatus: null, // ✅ Default value for Like/Dislike
     });
 
     console.log(`✅ Message saved correctly under userId: ${user.uid}`);
@@ -53,15 +56,18 @@ export const saveMessage = async (text: string, sender: "user" | "ai") => {
 };
 
 /**
- * ✅ Function to Retrieve Messages for a User (Optimized Firestore Query)
+ * ✅ Function to Retrieve Messages for a User (Now Includes likeStatus)
  */
 export const getMessages = async (userId: string): Promise<Message[]> => {
   try {
-    const q = query(collection(db, "messages"), where("userId", "==", userId)); // 🔥 Now filters at Firestore level
+    const q = query(collection(db, "messages"), where("userId", "==", userId)); // 🔥 Firestore query
     const querySnapshot = await getDocs(q);
 
     return querySnapshot.docs
-      .map((doc) => ({ id: doc.id, ...doc.data() } as Message))
+      .map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      } as Message))
       .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
   } catch (error) {
     console.error("Error fetching messages:", error);
@@ -70,7 +76,7 @@ export const getMessages = async (userId: string): Promise<Message[]> => {
 };
 
 /**
- * ✅ Function to Listen for Real-Time Messages (Optimized Firestore Query)
+ * ✅ Function to Listen for Real-Time Messages (Now Includes likeStatus)
  */
 export const listenForMessages = (
   userId: string,
@@ -80,11 +86,33 @@ export const listenForMessages = (
 
   return onSnapshot(q, (querySnapshot) => {
     const messages = querySnapshot.docs
-      .map((doc) => ({ id: doc.id, ...doc.data() } as Message))
+      .map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      } as Message))
       .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
 
     callback(messages);
   });
+};
+
+/**
+ * ✅ Function to Update Like/Dislike in Firestore
+ */
+export const updateMessageReaction = async (
+  messageId: string,
+  reaction: "like" | "dislike" | null
+) => {
+  try {
+    const messageRef = doc(db, "messages", messageId);
+    await updateDoc(messageRef, {
+      likeStatus: reaction,
+    });
+
+    console.log(`✅ Reaction Updated: ${messageId} → ${reaction}`);
+  } catch (error) {
+    console.error("Error updating reaction:", error);
+  }
 };
 
 /**

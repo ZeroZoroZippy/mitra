@@ -357,7 +357,8 @@
 
 .message-actions {
   display: flex;
-  gap: 8px;
+  padding: 4px;
+  gap: 16px;
   opacity: 0;
   transition: opacity 0.2s ease;
 }
