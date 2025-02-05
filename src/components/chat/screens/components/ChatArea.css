@@ -360,12 +360,28 @@
   padding: 4px;
   gap: 16px;
   opacity: 0;
-  transition: opacity 0.2s ease;
+  transition: opacity 0.2s ease-in-out;
 }
 
 .message-container:hover .message-actions {
   opacity: 1;
 }
+
+/* ✅ Like/Dislike should remain visible after selection */
+.message-actions .action-icon.active {
+  opacity: 1 !important; /* Force visibility */
+}
+
+/* ✅ Keep Like/Dislike visible when selected */
+.message-actions .like-icon.active,
+.message-actions .dislike-icon.active {
+  opacity: 1 !important; /* Forces visibility */
+}
+
+.message-container:hover .message-actions .copy-icon {
+  opacity: 1;
+}
+
 
 .message-actions.fade-in {
   opacity: 1;

@@ -319,7 +319,7 @@ const groupMessagesByDate = (messages: ChatMessage[]) => {
         isSidebarOpen={isSidebarOpen}
       />
   
-      {/* ✅ Floating Date Header - Updates on Scrol */}
+      {/* ✅ Floating Date Header - Updates on Scroll */}
       {visibleDate && (
         <div className={`floating-date ${fadeOut ? "fade-out" : ""}`}>
           {visibleDate}
@@ -391,12 +391,11 @@ const groupMessagesByDate = (messages: ChatMessage[]) => {
                   <div className={`message-bubble ${message.sender}-bubble`}>
                     {message.text}
                   </div>
-                  <div className={`message-actions ${
-                    message.likeStatus || activeMessageId === message.id ? 'visible' : ''
-                  }`}>
-                    <IoCopyOutline 
-                      className="action-icon"
-                      title="Copy Message" 
+                  <div className="message-actions">
+                    {/* ✅ Copy icon - stays hover-only */}
+                    <IoCopyOutline
+                      className={`action-icon copy-icon ${activeMessageId === message.id ? "hide-copy" : ""}`}
+                      title="Copy Message"
                       onClick={() => handleCopyMessage(message.text)}
                     />
                     {message.sender === "ai" && message.id && (
