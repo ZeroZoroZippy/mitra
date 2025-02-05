@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef } from "react";
 import "./ChatArea.css";
 import ChatHeader from "./ChatHeader";
 import { FaPaperPlane } from "react-icons/fa6";
-
+import { IoCopyOutline } from "react-icons/io5";
+import { SlLike, SlDislike } from "react-icons/sl";
 import { auth } from "../../../../utils/firebaseConfig";
 import { getMessages, saveMessage } from "../../../../utils/firebaseDb";
 
@@ -39,6 +40,8 @@ const ChatArea: React.FC<ChatAreaProps> = ({
   const [visibleDate, setVisibleDate] = useState<string | null>(null);
   const [fadeOut, setFadeOut] = useState(false);
   const dateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  // ✅ State to track copy icon fade-in effect
+  const [showCopyIcon, setShowCopyIcon] = useState<{ [key: string]: boolean }>({});
 
   const handleScroll = () => {
     const chatContainer = document.querySelector(".messages-container");
@@ -232,6 +235,24 @@ const groupMessagesByDate = (messages: ChatMessage[]) => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
+  // ✅ Copy message to clipboard
+  const handleCopyMessage = (text: string) => {
+    navigator.clipboard.writeText(text);
+  };
+
+  // ✅ Delay before showing the copy icon
+  useEffect(() => {
+    messages.forEach((msg, index) => {
+      setTimeout(() => {
+        setShowCopyIcon((prev) => ({ ...prev, [index]: true }));
+      }, 1000);
+    });
+  }, [messages]);
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
   //Use Effect to fetch messages//
   useEffect(() => {
     const fetchMessages = async () => {
@@ -354,13 +375,26 @@ const groupMessagesByDate = (messages: ChatMessage[]) => {
                 <span className="date-label">{date}</span>
               </div>
               {dateMessages.map((message, index) => (
-                <div
-                  key={`${date}-${index}`}
-                  className={`message-bubble ${message.sender}-bubble`}
-                >
-                  {message.text}
+                <div key={`${date}-${index}`} className="message-container">
+                  {/* ✅ Message Bubble */}
+                <div className={`message-bubble ${message.sender}-bubble`}>{message.text}</div>
+
+                {/* ✅ Copy Icon - Fades in smoothly */}
+                <div className="message-actions">
+                  <IoCopyOutline
+                    className="action-icon"
+                    title="Copy Message"
+                    onClick={() => handleCopyMessage(message.text)}
+                  />
+                  {message.sender === 'ai' && (
+                    <>
+                      <SlLike className="action-icon" title="Like" />
+                      <SlDislike className="action-icon" title="Dislike" />
+                    </>
+                  )}
                 </div>
-              ))}
+              </div>
+            ))}
             </React.Fragment>
           ))}
           {showTypingIndicator && (

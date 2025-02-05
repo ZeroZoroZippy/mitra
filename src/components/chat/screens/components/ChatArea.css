@@ -347,6 +347,48 @@
   z-index: 10;
 }
 
+.message-container {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  position: relative;
+}
+
+.message-actions {
+  display: flex;
+  gap: 8px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.message-container:hover .message-actions {
+  opacity: 1;
+}
+
+.message-actions.fade-in {
+  opacity: 1;
+}
+
+.action-icon {
+  color: #888;
+  cursor: pointer;
+  font-size: 0.8rem;
+  transition: color 0.2s ease;
+}
+
+.action-icon:hover {
+  color: #3471f4;
+}
+
+.user-bubble + .message-actions {
+  align-self: flex-end;
+}
+
+.ai-bubble + .message-actions {
+  align-self: flex-start;
+}
+
 /* Responsive Styles */
 
 /* Tablet (768px and below) */
