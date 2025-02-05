@@ -32,7 +32,7 @@ const ChatArea: React.FC<ChatAreaProps> = ({
   const [isWelcomeActive, setIsWelcomeActive] = useState(true);
   const [showTypingIndicator, setShowTypingIndicator] = useState(false);
   const [aiTypingMessage, setAiTypingMessage] = useState("");
-  const [isInputDisabled, setIsInputDisabled] = useState(false); // ✅ Prevent multiple user messages
+  const [isInputDisabled, setIsInputDisabled] = useState(false); // ✅ Prevent multiple user messages.
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   // ✅ New State for Floating Date Header
