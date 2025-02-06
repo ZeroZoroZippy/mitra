@@ -35,7 +35,7 @@ interface Message {
  */
 export const saveMessage = async (
   text: string,
-  sender: "user" | "ai",
+  sender: "user" | "system",
   likeStatus: "like" | "dislike" | null = null
 ) => {
   const user = auth.currentUser;

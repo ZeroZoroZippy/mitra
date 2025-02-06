@@ -7,6 +7,7 @@ import { SlLike, SlDislike } from "react-icons/sl";
 import { auth } from "../../../../utils/firebaseConfig";
 import { AiFillLike, AiFillDislike, AiOutlineLike, AiOutlineDislike } from "react-icons/ai";
 import { getMessages, saveMessage, updateLikeStatus } from "../../../../utils/firebaseDb";
+import Groq from "groq-sdk";
 
 interface ChatAreaProps {
   activeChatId: number;
@@ -20,10 +21,12 @@ interface ChatAreaProps {
 interface ChatMessage {
   id?: string; // Add optional id field
   text: string;
-  sender: "user" | "ai";
+  sender: "user" | "system";
   timestamp: string;
   likeStatus?: "like" | "dislike" | null; // ✅ Store Like/Dislike status
 }
+
+const groq = new Groq({apiKey:import.meta.env.VITE_GROQ_API_KEY, dangerouslyAllowBrowser: true});
 
 const ChatArea: React.FC<ChatAreaProps> = ({
   activeChatId,
@@ -42,8 +45,7 @@ const ChatArea: React.FC<ChatAreaProps> = ({
   // ✅ New State for Floating Date Header
   const [visibleDate, setVisibleDate] = useState<string | null>(null);
   const [fadeOut, setFadeOut] = useState(false);
-  const dateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  // ✅ State to track copy icon fade-in effect
+  const dateTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);  // ✅ State to track copy icon fade-in effect
   const [showCopyIcon, setShowCopyIcon] = useState<{ [key: string]: boolean }>({});
   const [activeMessageId, setActiveMessageId] = useState<string | null>(null);
 
@@ -115,12 +117,12 @@ const groupMessagesByDate = (messages: ChatMessage[]) => {
   return groups;
 };
 
-  const createMessage = (text: string, sender: "user" | "ai"): ChatMessage => ({
-    id: crypto.randomUUID(), // Add unique id
+  const createMessage = (text: string, sender: "user" | "system"): ChatMessage => ({
+    id: crypto.randomUUID(), 
     text,
     sender,
     timestamp: new Date().toISOString(),
-    likeStatus: null
+    likeStatus: null,
   });
 
   const handleInputChange = (
@@ -152,7 +154,51 @@ const groupMessagesByDate = (messages: ChatMessage[]) => {
     );
   };
 
+  
+const getGroqChatCompletion = async (messageList) => {
+  return groq.chat.completions.create({
+    messages: [
+      {
+        role: "system",
+        content: "you are a wise friend",
+      },
+      ...messageList
+    ],
+
+    // The language model which will generate the completion.
+    model: "llama-3.3-70b-versatile",
+
+    //
+    // Optional parameters
+    //
+
+    // Controls randomness: lowering results in less random completions.
+    // As the temperature approaches zero, the model will become deterministic
+    // and repetitive.
+    temperature: 0.1,
+
+    // The maximum number of tokens to generate. Requests can use up to
+    // 2048 tokens shared between prompt and completion.
+    max_completion_tokens: 50,
+
+    // Controls diversity via nucleus sampling: 0.5 means half of all
+    // likelihood-weighted options are considered.
+    top_p: 1,
+
+    // A stop sequence is a predefined or user-specified text string that
+    // signals an AI to stop generating content, ensuring its responses
+    // remain focused and concise. Examples include punctuation marks and
+    // markers like "[end]".
+    stop: null,
+
+    // If set, partial message deltas will be sent.
+    stream: false,
+  });
+};
+
+
   const handleSendMessage = async () => {
+   
     if (!inputMessage.trim() || isInputDisabled) return;
   
     const userMessage = createMessage(inputMessage.trim(), "user");
@@ -174,13 +220,31 @@ const groupMessagesByDate = (messages: ChatMessage[]) => {
       inputRef.current.style.height = "40px";
     }
   
-    setTimeout(() => {
-      setShowTypingIndicator(true);
-    }, 800);
-  
-    setTimeout(() => {
-      animateAITyping(getAIResponse(userMessage.text));
-    }, 1500);
+    setTimeout(async() => {
+      // make typring true
+        setShowTypingIndicator(true);
+
+        // create array that modal takes as arg prevoius message 
+        const list = messages.map(({sender,text }) => {
+          return {
+            role:sender, // user/system
+            content: text
+          }
+        })
+        const chatCompletion = await getGroqChatCompletion(list);
+        const message = chatCompletion.choices[0]?.message?.content || ""
+        // create ai message
+        const systemMessage = createMessage(message, "system")
+        // store ai mesage in firebase
+        await saveMessage(message, systemMessage.sender); // Pass user ID to saveMessage
+       // typing off 
+        setShowTypingIndicator(false);
+        setAiTypingMessage("");
+        setIsInputDisabled(false);
+        // ui message
+        setMessages((prev) => [...prev, systemMessage]);
+    }, 1000);
+ 
   };
 
   const handleWelcomeSuggestion = async (suggestion: string) => {
@@ -224,7 +288,7 @@ const groupMessagesByDate = (messages: ChatMessage[]) => {
         clearInterval(interval);
   
         setTimeout(() => {
-          const aiMessage = createMessage(aiText, "ai");
+          const aiMessage = createMessage(aiText, "system");
           setMessages((prev) => [...prev, aiMessage]);
   
           const user = auth.currentUser;
@@ -403,7 +467,7 @@ const groupMessagesByDate = (messages: ChatMessage[]) => {
                       title="Copy Message"
                       onClick={() => handleCopyMessage(message.text)}
                     />
-                    {message.sender === "ai" && message.id && (
+                    {message.sender === "system" && message.id && (
           <>
                     {message.likeStatus === "like" ? (
                       <AiFillLike

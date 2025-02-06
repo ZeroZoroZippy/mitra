@@ -188,7 +188,7 @@
   border-bottom-right-radius: 0;
 }
 
-.ai-bubble {
+.system-bubble {
   align-self: flex-start;
   background: linear-gradient(45deg, #E3F2FD, #BBDEFB);
   border-bottom-left-radius: 0;
@@ -267,7 +267,7 @@
   }
 }
 
-.ai-typing-message {
+.system-typing-message {
   color: #888;
   display: inline-block;
   font-style: italic;
@@ -319,7 +319,7 @@
 }
 
 /* Fade-out effect for when AI responds */
-.ai-typing-message.fade-out {
+.system-typing-message.fade-out {
   animation: fadeOut 0.5s ease-out forwards;
 }
 
@@ -355,7 +355,7 @@
 }
 
 /* Reset alignment for AI messages */
-.message-container .ai-bubble {
+.message-container .system-bubble {
   align-self: flex-start;
 }
 
@@ -374,7 +374,7 @@
 }
 
 /* Specific positioning for AI messages */
-.ai-bubble + .message-actions {
+.system-bubble + .message-actions {
   align-self: flex-start;  /* Align actions to left for AI messages */
 }
 
@@ -436,7 +436,7 @@
 }
 
 /* ✅ Position Copy Icon for AI Messages (Same as Before) */
-.message-actions.ai-message {
+.message-actions.system-message {
   position: absolute;
   right: -35px;
   top: 50%;
