@@ -6,7 +6,10 @@ import { storeUserDetails } from "../utils/firebaseDb";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import "./LandingPage.css";
-import two_friends from "../assets/images/two_male_friends_wobg.png";
+import two_male_friends from "../assets/images/two_male_friends_wobg.png";
+import hand from "../assets/images/hand_wobg.png";
+import scrapbook from "../assets/images/scrapbook_wobg.png";
+import two_friends from "../assets/images/two_friends_wobg.png";
 
 
 interface LandingPageProps {
@@ -71,7 +74,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ featuresRef }) => {
           </div>
           <div className="hero-image">
             <img
-              src={two_friends}
+              src={two_male_friends}
               alt="two-male-friends"
             />
           </div>
@@ -83,7 +86,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ featuresRef }) => {
           <div className="features-grid">
             <div className="feature-item">
               <img
-                src="/src/assets/images/two_friends_wobg.png"
+                src={two_friends}
                 alt="Deep Personalization"
                 className="feature-icon"
               />
@@ -95,7 +98,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ featuresRef }) => {
             </div>
             <div className="feature-item">
               <img
-                src="/src/assets/images/scrapbook_wobg.png"
+                src={scrapbook}
                 alt="Timeless Guidance"
                 className="feature-icon"
               />
@@ -107,7 +110,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ featuresRef }) => {
             </div>
             <div className="feature-item">
               <img
-                src="/src/assets/images/hand_wobg.png"
+                src={hand}
                 alt="Companion, Not a Replacement"
                 className="feature-icon"
               />
