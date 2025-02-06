@@ -46,10 +46,10 @@ export const saveMessage = async (
 
   try {
     await addDoc(collection(db, "messages"), {
-      userId: user.uid, // ✅ Ensures correct user mapping
+      userId: user.uid,
       text,
       sender,
-      timestamp: new Date().toISOString(),
+      timestamp: new Date().toISOString(), // Ensure consistent format
       likeStatus, // ✅ Storing Like/Dislike State
     });
 
@@ -64,11 +64,17 @@ export const saveMessage = async (
  */
 export const getMessages = async (userId: string): Promise<Message[]> => {
   try {
-    const q = query(collection(db, "messages"), where("userId", "==", userId)); // 🔥 Now filters at Firestore level
+    const q = query(collection(db, "messages"), where("userId", "==", userId));
     const querySnapshot = await getDocs(q);
 
-    return querySnapshot.docs
-      .map((doc) => ({ id: doc.id, ...doc.data() } as Message))
+    const messages = querySnapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data()
+    } as Message));
+
+    // Validate timestamps and sort
+    return messages
+      .filter(msg => msg.timestamp && !isNaN(new Date(msg.timestamp).getTime()))
       .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
   } catch (error) {
     console.error("Error fetching messages:", error);

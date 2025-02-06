@@ -5,6 +5,7 @@ import { FaPaperPlane } from "react-icons/fa6";
 import { IoCopyOutline } from "react-icons/io5";
 import { SlLike, SlDislike } from "react-icons/sl";
 import { auth } from "../../../../utils/firebaseConfig";
+import { AiFillLike, AiFillDislike, AiOutlineLike, AiOutlineDislike } from "react-icons/ai";
 import { getMessages, saveMessage, updateLikeStatus } from "../../../../utils/firebaseDb";
 
 interface ChatAreaProps {
@@ -77,24 +78,28 @@ const ChatArea: React.FC<ChatAreaProps> = ({
     }
   };
 
-const formatMessageDate = (timestamp: string): string => {
-  const date = new Date(timestamp);
-  const today = new Date();
-  const yesterday = new Date(today);
-  yesterday.setDate(yesterday.getDate() - 1);
-
-  if (date.toDateString() === today.toDateString()) {
-    return "Today";
-  } else if (date.toDateString() === yesterday.toDateString()) {
-    return "Yesterday";
-  } else {
-    return date.toLocaleDateString('en-US', { 
-      month: 'short', 
-      day: 'numeric',
-      year: date.getFullYear() !== today.getFullYear() ? 'numeric' : undefined 
-    });
-  }
-};
+  const formatMessageDate = (timestamp: string): string => {
+    if (!timestamp) return "Unknown Date";
+    
+    const date = new Date(timestamp);
+    if (isNaN(date.getTime())) return "Unknown Date";
+  
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+  
+    if (date.toDateString() === today.toDateString()) {
+      return "Today";
+    } else if (date.toDateString() === yesterday.toDateString()) {
+      return "Yesterday";
+    } else {
+      return date.toLocaleDateString('en-US', { 
+        month: 'short', 
+        day: 'numeric',
+        year: date.getFullYear() !== today.getFullYear() ? 'numeric' : undefined 
+      });
+    }
+  };
 
 const groupMessagesByDate = (messages: ChatMessage[]) => {
   const groups: { [key: string]: ChatMessage[] } = {};
@@ -399,27 +404,52 @@ const groupMessagesByDate = (messages: ChatMessage[]) => {
                       onClick={() => handleCopyMessage(message.text)}
                     />
                     {message.sender === "ai" && message.id && (
-                      <>
-                        <SlLike
-                          className={`action-icon ${message.likeStatus === "like" ? "active" : ""}`}
-                          title="Like"
-                          onClick={() => {
-                            if (!message.id) return;
-                            setActiveMessageId(message.id);
-                            handleLikeDislike(message.id, message.likeStatus ?? null, "like");
-                          }}
-                        />
-                        <SlDislike
-                          className={`action-icon ${message.likeStatus === "dislike" ? "active" : ""}`}
-                          title="Dislike"
-                          onClick={() => {
-                            if (!message.id) return;
-                            setActiveMessageId(message.id);
-                            handleLikeDislike(message.id, message.likeStatus ?? null, "dislike");
-                          }}
-                        />
-                      </>
+          <>
+                    {message.likeStatus === "like" ? (
+                      <AiFillLike
+                        className="action-icon active"
+                        title="Like"
+                        onClick={() => {
+                          if (!message.id) return;
+                          setActiveMessageId(message.id);
+                          handleLikeDislike(message.id, "like", "like");
+                        }}
+                      />
+                    ) : (
+                      <AiOutlineLike
+                        className="action-icon"
+                        title="Like"
+                        onClick={() => {
+                          if (!message.id) return;
+                          setActiveMessageId(message.id);
+                          handleLikeDislike(message.id, message.likeStatus ?? null, "like");
+                        }}
+                      />
                     )}
+
+                    {message.likeStatus === "dislike" ? (
+                      <AiFillDislike
+                        className="action-icon active"
+                        title="Dislike"
+                        onClick={() => {
+                          if (!message.id) return;
+                          setActiveMessageId(message.id);
+                          handleLikeDislike(message.id, "dislike", "dislike");
+                        }}
+                      />
+                    ) : (
+                      <AiOutlineDislike
+                        className="action-icon"
+                        title="Dislike"
+                        onClick={() => {
+                          if (!message.id) return;
+                          setActiveMessageId(message.id);
+                          handleLikeDislike(message.id, message.likeStatus ?? null, "dislike");
+                        }}
+                      />
+                    )}
+                  </>
+                )}
                   </div>
                 </div>
               ))}
