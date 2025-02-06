@@ -166,7 +166,7 @@ const getGroqChatCompletion = async (messageList) => {
     ],
 
     // The language model which will generate the completion.
-    model: "llama-3.3-70b-versatile",
+    model: "llama-3.2-3b-preview",
 
     //
     // Optional parameters
@@ -175,21 +175,21 @@ const getGroqChatCompletion = async (messageList) => {
     // Controls randomness: lowering results in less random completions.
     // As the temperature approaches zero, the model will become deterministic
     // and repetitive.
-    temperature: 0.1,
+    temperature: 0.7,
 
     // The maximum number of tokens to generate. Requests can use up to
     // 2048 tokens shared between prompt and completion.
-    max_completion_tokens: 50,
+    max_completion_tokens: 150,
 
     // Controls diversity via nucleus sampling: 0.5 means half of all
     // likelihood-weighted options are considered.
-    top_p: 1,
+    top_p: 0.7,
 
     // A stop sequence is a predefined or user-specified text string that
     // signals an AI to stop generating content, ensuring its responses
     // remain focused and concise. Examples include punctuation marks and
     // markers like "[end]".
-    stop: null,
+    stop: ["\n", ".", "end"],
 
     // If set, partial message deltas will be sent.
     stream: false,
