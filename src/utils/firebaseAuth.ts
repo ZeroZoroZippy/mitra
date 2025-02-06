@@ -6,7 +6,11 @@ import {
   browserLocalPersistence,
 } from "firebase/auth";
 import { auth } from "./firebaseConfig";
-await setPersistence(auth, browserLocalPersistence);
+
+const setupAuth = async () => {
+  await setPersistence(auth, browserLocalPersistence);
+};
+setupAuth();
 
 const provider = new GoogleAuthProvider();
 provider.addScope("profile");

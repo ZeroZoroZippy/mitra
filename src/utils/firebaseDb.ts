@@ -8,11 +8,13 @@ import {
   doc,
   getDoc,
   setDoc,
+  updateDoc,
   serverTimestamp,
   onSnapshot,
 } from "firebase/firestore";
-import { app } from "./firebaseConfig"; 
+import { app } from "./firebaseConfig";
 import type { User } from "firebase/auth";
+import { auth } from "./firebaseConfig";
 
 const db = getFirestore(app);
 
@@ -25,25 +27,33 @@ interface Message {
   text: string;
   sender: "user" | "ai";
   timestamp: string;
+  likeStatus?: "like" | "dislike" | null; // ✅ New Field for Like/Dislike
 }
 
 /**
- * ✅ Function to Save a Message to Firestore (Now Supports Both User & AI Messages)
+ * ✅ Function to Save a Message to Firestore (Now Supports Like/Dislike)
  */
 export const saveMessage = async (
-  userId: string,
   text: string,
-  sender: "user" | "ai"
+  sender: "user" | "system",
+  likeStatus: "like" | "dislike" | null = null
 ) => {
-  try {
-    console.log(`Saving message:`, { userId, text, sender });
+  const user = auth.currentUser;
+  if (!user) {
+    console.error("No authenticated user found.");
+    return;
+  }
 
+  try {
     await addDoc(collection(db, "messages"), {
-      userId,
+      userId: user.uid,
       text,
       sender,
-      timestamp: new Date().toISOString(),
+      timestamp: new Date().toISOString(), // Ensure consistent format
+      likeStatus, // ✅ Storing Like/Dislike State
     });
+
+    console.log(`✅ Message saved correctly under userId: ${user.uid}`);
   } catch (error) {
     console.error("Error saving message:", error);
   }
@@ -54,11 +64,17 @@ export const saveMessage = async (
  */
 export const getMessages = async (userId: string): Promise<Message[]> => {
   try {
-    const q = query(collection(db, "messages"), where("userId", "==", userId)); // 🔥 Now filters at Firestore level
+    const q = query(collection(db, "messages"), where("userId", "==", userId));
     const querySnapshot = await getDocs(q);
 
-    return querySnapshot.docs
-      .map((doc) => ({ id: doc.id, ...doc.data() } as Message))
+    const messages = querySnapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data()
+    } as Message));
+
+    // Validate timestamps and sort
+    return messages
+      .filter(msg => msg.timestamp && !isNaN(new Date(msg.timestamp).getTime()))
       .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
   } catch (error) {
     console.error("Error fetching messages:", error);
@@ -82,6 +98,27 @@ export const listenForMessages = (
 
     callback(messages);
   });
+};
+
+/**
+ * ✅ Function to Toggle Like/Dislike on AI Messages
+ */
+export const updateLikeStatus = async (
+  messageId: string,
+  newStatus: "like" | "dislike" | null
+) => {
+  if (!messageId) return;
+
+  try {
+    const messageRef = doc(db, "messages", messageId);
+    await updateDoc(messageRef, {
+      likeStatus: newStatus,
+    });
+
+    console.log(`✅ Like/Dislike updated: ${messageId} → ${newStatus}`);
+  } catch (error) {
+    console.error("❌ Error updating Like/Dislike:", error);
+  }
 };
 
 /**
@@ -122,7 +159,7 @@ export const getUserProfile = async (userId: string) => {
       console.warn("User profile not found in Firestore. Creating new profile.");
       const defaultProfile = {
         uid: userId,
-        displayName: "",  // or a default value if available
+        displayName: "",
         email: "",
         photoURL: "",
         createdAt: serverTimestamp(),

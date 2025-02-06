@@ -188,10 +188,52 @@
   border-bottom-right-radius: 0;
 }
 
-.ai-bubble {
+.system-bubble {
   align-self: flex-start;
   background: linear-gradient(45deg, #E3F2FD, #BBDEFB);
   border-bottom-left-radius: 0;
+}
+
+/* ✅ Floating Date Header (Appears on Scroll) */
+.floating-date {
+  position: fixed;
+  top: 15px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgba(0, 0, 0, 0.85);
+  color: white;
+  font-size: 0.9rem;
+  padding: 6px 14px;
+  border-radius: 12px;
+  z-index: 999;
+  opacity: 1;
+  transition: opacity 0.5s ease-in-out, transform 0.3s ease-in-out;
+  pointer-events: none; /* ✅ Prevent accidental clicks */
+}
+
+/* ✅ Smooth Fade-Out Effect */
+.floating-date.fade-out {
+  opacity: 0;
+  transform: translateX(-50%) translateY(-10px);
+  transition: opacity 0.8s ease-in-out, transform 0.5s ease-in-out;
+}
+
+/* ✅ Date Header (Fixed in Messages) */
+.date-header {
+  text-align: center;
+  margin: 1rem 0;
+  font-size: 0.8rem;
+  font-weight: bold;
+  color: #888;
+  position: relative;
+}
+
+.date-label {
+  background-color: #2d2d2d;
+  color: #888;
+  padding: 4px 12px;
+  border-radius: 12px;
+  display: inline-block;
 }
 
 .input-bar {
@@ -225,7 +267,7 @@
   }
 }
 
-.ai-typing-message {
+.system-typing-message {
   color: #888;
   display: inline-block;
   font-style: italic;
@@ -277,7 +319,7 @@
 }
 
 /* Fade-out effect for when AI responds */
-.ai-typing-message.fade-out {
+.system-typing-message.fade-out {
   animation: fadeOut 0.5s ease-out forwards;
 }
 
@@ -303,6 +345,110 @@
   font-size: 0.8rem;
   color: #888;
   z-index: 10;
+}
+
+.message-container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;  /* Align to right for user messages */
+}
+
+/* Reset alignment for AI messages */
+.message-container .system-bubble {
+  align-self: flex-start;
+}
+
+.message-actions {
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  display: flex;
+  gap: 8px;
+  padding: 4px;
+  margin-top: 4px;
+}
+
+/* Specific positioning for user messages */
+.user-bubble + .message-actions {
+  align-self: flex-end;  /* Align actions to right for user messages */
+}
+
+/* Specific positioning for AI messages */
+.system-bubble + .message-actions {
+  align-self: flex-start;  /* Align actions to left for AI messages */
+}
+
+.message-container:hover .message-actions {
+  opacity: 1;
+}
+
+/* ✅ General Message Actions */
+.message-actions {
+  display: flex;
+  padding: 4px;
+  gap: 16px;
+  opacity: 0;
+  transition: opacity 0.2s ease-in-out;
+}
+
+/* ✅ Keep actions visible on hover */
+.message-container:hover .message-actions {
+  opacity: 1;
+}
+
+/* ✅ Like/Dislike should remain visible after selection */
+.message-actions .action-icon.active {
+  opacity: 1 !important; /* Force visibility */
+}
+
+/* ✅ Ensure Like/Dislike remains visible */
+.message-actions .like-icon.active,
+.message-actions .dislike-icon.active {
+  opacity: 1 !important;
+}
+
+/* ✅ Copy Icon should only appear on hover */
+.message-container:hover .message-actions .copy-icon {
+  opacity: 1;
+}
+
+/* ✅ Fade-in effect */
+.message-actions.fade-in {
+  opacity: 1;
+}
+
+/* ✅ Icon Styling */
+.action-icon {
+  color: #888;
+  cursor: pointer;
+  font-size: 0.8rem;
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.action-icon:hover {
+  color: #3471f4;
+  transform: scale(1.1);
+}
+
+.action-icon.active {
+  color: #3471f4;
+  transform: scale(1.1);
+}
+
+/* ✅ Position Copy Icon for AI Messages (Same as Before) */
+.message-actions.system-message {
+  position: absolute;
+  right: -35px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+/* ✅ Position Copy Icon BELOW User Messages */
+.message-actions.user-message {
+  position: relative;
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 4px; /* Pushes it below the message bubble */
 }
 
 /* Responsive Styles */
