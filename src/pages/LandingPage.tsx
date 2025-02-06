@@ -6,6 +6,8 @@ import { storeUserDetails } from "../utils/firebaseDb";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import "./LandingPage.css";
+import two_friends from "../assets/images/two_male_friends_wobg.png";
+
 
 interface LandingPageProps {
   featuresRef: React.RefObject<HTMLDivElement>;
@@ -69,7 +71,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ featuresRef }) => {
           </div>
           <div className="hero-image">
             <img
-              src="/src/assets/images/two_male_friends_wobg.png"
+              src={two_friends}
               alt="two-male-friends"
             />
           </div>
