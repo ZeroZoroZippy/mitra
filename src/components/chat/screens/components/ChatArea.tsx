@@ -21,7 +21,7 @@ interface ChatAreaProps {
 interface ChatMessage {
   id?: string; // Add optional id field
   text: string;
-  sender: "user" | "system";
+  sender: "user" | "assistant";
   timestamp: string;
   likeStatus?: "like" | "dislike" | null; // ✅ Store Like/Dislike status
 }
@@ -117,7 +117,7 @@ const groupMessagesByDate = (messages: ChatMessage[]) => {
   return groups;
 };
 
-  const createMessage = (text: string, sender: "user" | "system"): ChatMessage => ({
+  const createMessage = (text: string, sender: "user" | "assistant"): ChatMessage => ({
     id: crypto.randomUUID(), 
     text,
     sender,
@@ -160,92 +160,82 @@ const getGroqChatCompletion = async (messageList) => {
     messages: [
       {
         role: "system",
-        content: "you are a wise friend",
+        content: `You are Mitra, an AI designed to be a deeply conversational, emotionally intelligent, and engaging friend. 
+                  Your voice is natural, human-like, and dynamic—never robotic. Adapt effortlessly to the user's state of mind: 
+                  provide clarity if they're overthinking, motivation if they need a push, and humor if they seek casual, playful banter. 
+                  Keep conversations flowing naturally—avoid excessive questioning and forced empathy. Instead of pity, offer strength, insight, and perspective. 
+                  Balance wisdom, humor, and motivation based on the user's tone, ensuring a rich and engaging dialogue. Use Lord Shri Krishna's wisdom only when it adds genuine value. 
+                  Your goal is to be a trusted companion who listens, understands, and fosters growth—blending deep reflection with lighthearted fun. 
+                  Responses should be engaging yet concise, avoiding unnecessary length unless depth is required.`,
       },
       ...messageList
     ],
-
-    // The language model which will generate the completion.
     model: "llama-3.2-3b-preview",
-
-    //
-    // Optional parameters
-    //
-
-    // Controls randomness: lowering results in less random completions.
-    // As the temperature approaches zero, the model will become deterministic
-    // and repetitive.
     temperature: 0.7,
-
-    // The maximum number of tokens to generate. Requests can use up to
-    // 2048 tokens shared between prompt and completion.
     max_completion_tokens: 150,
-
-    // Controls diversity via nucleus sampling: 0.5 means half of all
-    // likelihood-weighted options are considered.
     top_p: 0.7,
-
-    // A stop sequence is a predefined or user-specified text string that
-    // signals an AI to stop generating content, ensuring its responses
-    // remain focused and concise. Examples include punctuation marks and
-    // markers like "[end]".
-    stop: ["\n", ".", "end"],
-
-    // If set, partial message deltas will be sent.
-    stream: false,
+    stop: [],
+    stream: true,
   });
 };
 
 
   const handleSendMessage = async () => {
-   
-    if (!inputMessage.trim() || isInputDisabled) return;
-  
-    const userMessage = createMessage(inputMessage.trim(), "user");
-    const user = auth.currentUser;
-  
-    console.log("Attempting to save user message:", userMessage); // ✅ Debug log
-  
-    if (user) {
-      console.log("User ID before saving:", user.uid); // ✅ Debug log to confirm user authentication
-    await saveMessage(userMessage.text, userMessage.sender); // Pass user ID to saveMessage
-    }
-  
-    setMessages((prev) => [...prev, userMessage]);
-    setInputMessage("");
-    setIsWelcomeActive(false);
-    setIsInputDisabled(true);
-  
-    if (inputRef.current) {
-      inputRef.current.style.height = "40px";
-    }
-  
-    setTimeout(async() => {
-      // make typring true
-        setShowTypingIndicator(true);
+  if (!inputMessage.trim() || isInputDisabled) return;
 
-        // create array that modal takes as arg prevoius message 
-        const list = messages.map(({sender,text }) => {
-          return {
-            role:sender, // user/system
-            content: text
-          }
-        })
-        const chatCompletion = await getGroqChatCompletion(list);
-        const message = chatCompletion.choices[0]?.message?.content || ""
-        // create ai message
-        const systemMessage = createMessage(message, "system")
-        // store ai mesage in firebase
-        await saveMessage(message, systemMessage.sender); // Pass user ID to saveMessage
-       // typing off 
-        setShowTypingIndicator(false);
-        setAiTypingMessage("");
-        setIsInputDisabled(false);
-        // ui message
-        setMessages((prev) => [...prev, systemMessage]);
-    }, 1000);
- 
-  };
+  const userMessage = createMessage(inputMessage.trim(), "user");
+  const user = auth.currentUser;
+
+  console.log("Attempting to save user message:", userMessage);
+
+  if (user) {
+    console.log("User ID before saving:", user.uid);
+    await saveMessage(userMessage.text, "user");
+  }
+
+  setMessages((prev) => {
+    const updatedMessages = [...prev, userMessage];
+    return updatedMessages;
+  });
+
+  setInputMessage("");
+  setIsWelcomeActive(false);
+  setIsInputDisabled(true);
+
+  if (inputRef.current) {
+    inputRef.current.style.height = "40px";
+  }
+
+  setTimeout(async () => {
+    setShowTypingIndicator(true);
+
+    // ✅ Ensure AI sees the latest user message
+    const list = [
+      ...messages.map(({ sender, text }) => ({ role: sender, content: text })),
+      { role: "user", content: userMessage.text } // ✅ Ensure latest user message is included
+    ];
+    
+    const chatCompletion = await getGroqChatCompletion(list);
+    let message = "";
+    for await (const chunk of chatCompletion) {
+      const chunkText = chunk.choices[0]?.delta?.content || "";
+
+      message += chunkText;
+      setAiTypingMessage(message); // ✅ Updates UI live
+    }
+    console.log("Full AI response:", message); // ✅ Debug the final AI response
+
+    // ✅ AI message should be "assistant" (not "system")
+    const aiMessage = createMessage(message, "assistant");
+    await saveMessage(message, "assistant");
+
+    setShowTypingIndicator(false);
+    setAiTypingMessage("");
+    setIsInputDisabled(false);
+    
+    setMessages((prev) => [...prev, aiMessage]);
+  }, 1000);
+};
 
   const handleWelcomeSuggestion = async (suggestion: string) => {
     if (isInputDisabled) return;
@@ -288,13 +278,13 @@ const getGroqChatCompletion = async (messageList) => {
         clearInterval(interval);
   
         setTimeout(() => {
-          const aiMessage = createMessage(aiText, "system");
+          const aiMessage = createMessage(aiText, "assistant");
           setMessages((prev) => [...prev, aiMessage]);
   
           const user = auth.currentUser;
           if (user) {
             console.log("Saving AI Message:", aiMessage);
-            saveMessage(aiText, aiMessage.sender); // ✅ FIXED!
+            saveMessage(aiText, "assistant"); // ✅ FIXED!
           }
   
           setShowTypingIndicator(false);
@@ -467,7 +457,7 @@ const getGroqChatCompletion = async (messageList) => {
                       title="Copy Message"
                       onClick={() => handleCopyMessage(message.text)}
                     />
-                    {message.sender === "system" && message.id && (
+                    {message.sender === "assistant" && message.id && (
           <>
                     {message.likeStatus === "like" ? (
                       <AiFillLike
