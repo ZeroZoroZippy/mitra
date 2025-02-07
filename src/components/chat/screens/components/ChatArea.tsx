@@ -28,12 +28,12 @@ interface ChatMessage {
 
 const groq = new Groq({apiKey:import.meta.env.VITE_GROQ_API_KEY, dangerouslyAllowBrowser: true});
 
-const ChatArea = ({
+const ChatArea: React.FC<ChatAreaProps> = ({
   activeChatId,
   isChatFullScreen,
   onToggleFullScreen,
   isSidebarOpen,
-}: ChatAreaProps) => {
+}) => {
   const [inputMessage, setInputMessage] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isWelcomeActive, setIsWelcomeActive] = useState(true);
@@ -166,34 +166,13 @@ const getGroqChatCompletion = async (messageList) => {
     ],
     model: "llama-3.2-3b-preview",
     temperature: 0.7,
-    max_completion_tokens: 150,
+    max_completion_tokens: 300,
     top_p: 0.7,
     stop: [],
     stream: true,
   });
 };
 
-
-  const handleSendMessage = async () => {
-  if (!inputMessage.trim() || isInputDisabled) return;
-  const userMessage = createMessage(inputMessage.trim(), "user");
-  const user = auth.currentUser;
-
-
-  console.log("Attempting to save user message:", userMessage);
-  if (user) {
-    console.log("User ID before saving:", user.uid);
-    await saveMessage(userMessage.text, "user");
-  }
-
-  setMessages((prev) => {
-    const updatedMessages = [...prev, userMessage];
-    return updatedMessages;
-  });
-
-  setInputMessage("");
-  setIsWelcomeActive(false);
-  setIsInputDisabled(true);
 
   const handleSendMessage = async () => {
    
@@ -253,7 +232,6 @@ const getGroqChatCompletion = async (messageList) => {
  
   };
 
-
   const handleWelcomeSuggestion = async (suggestion: string) => {
     if (isInputDisabled) return;
   
@@ -301,7 +279,7 @@ const getGroqChatCompletion = async (messageList) => {
           const user = auth.currentUser;
           if (user) {
             console.log("Saving AI Message:", aiMessage);
-            saveMessage(aiText, "assistant"); // ✅ FIXED!
+            saveMessage(aiText, aiMessage.sender); // ✅ FIXED!
           }
   
           setShowTypingIndicator(false);
@@ -577,5 +555,5 @@ const getGroqChatCompletion = async (messageList) => {
     </div>
   );
 };
-}
+
 export default ChatArea;
