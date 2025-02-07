@@ -28,12 +28,12 @@ interface ChatMessage {
 
 const groq = new Groq({apiKey:import.meta.env.VITE_GROQ_API_KEY, dangerouslyAllowBrowser: true});
 
-const ChatArea: React.FC<ChatAreaProps> = ({
+const ChatArea = ({
   activeChatId,
   isChatFullScreen,
   onToggleFullScreen,
   isSidebarOpen,
-}) => {
+}: ChatAreaProps) => {
   const [inputMessage, setInputMessage] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isWelcomeActive, setIsWelcomeActive] = useState(true);
@@ -577,5 +577,5 @@ const getGroqChatCompletion = async (messageList) => {
     </div>
   );
 };
-
+}
 export default ChatArea;
