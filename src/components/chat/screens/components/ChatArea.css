@@ -469,7 +469,7 @@
   }
 
   .input-bar {
-    bottom: 70px; /* Increase this value until it looks right */
+    bottom: 90px; /* Increase this value until it looks right */
   }
 
   .input-send-container {
@@ -561,4 +561,32 @@
     font-size: 0.85rem; /* Smaller font size */
     padding: 0.5rem 0.8rem; /* Compact padding */
   }
+
+  /* ✅ iPhone 14, 15, 16 Fix */
+@media screen and (max-width: 430px) {
+  .input-bar {
+    bottom: 0;
+  }
+
+  .input-send-container {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .chat-input {
+    font-size: 1rem;
+    padding: 0.5rem 1rem;
+  }
+
+  .send-icon-button {
+    font-size: 1rem;
+    padding: 0.5rem 0.8rem;
+  }
+}
+
+/* ✅ Prevent iPhone Safari from Zooming on Input Click */
+input,
+textarea {
+  font-size: 16px; /* Fixes iOS auto-zoom issue */
+}
 }
