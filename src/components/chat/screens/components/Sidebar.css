@@ -33,6 +33,13 @@
   cursor: pointer;
 }
 
+/* ✅ Hide .close-sidebar on large screens */
+@media (min-width: 1024px) {
+  .close-sidebar {
+    display: none;
+  }
+}
+
 .chat-list {
   list-style: none;
   padding: 0;
