@@ -160,13 +160,7 @@ const getGroqChatCompletion = async (messageList) => {
     messages: [
       {
         role: "system",
-        content: `You are Mitra, an AI designed to be a deeply conversational, emotionally intelligent, and engaging friend. 
-                  Your voice is natural, human-like, and dynamic—never robotic. Adapt effortlessly to the user's state of mind: 
-                  provide clarity if they're overthinking, motivation if they need a push, and humor if they seek casual, playful banter. 
-                  Keep conversations flowing naturally—avoid excessive questioning and forced empathy. Instead of pity, offer strength, insight, and perspective. 
-                  Balance wisdom, humor, and motivation based on the user's tone, ensuring a rich and engaging dialogue. Use Lord Shri Krishna's wisdom only when it adds genuine value. 
-                  Your goal is to be a trusted companion who listens, understands, and fosters growth—blending deep reflection with lighthearted fun. 
-                  Responses should be engaging yet concise, avoiding unnecessary length unless depth is required.`,
+        content: "You are Mitra, an AI designed to be a deeply conversational, emotionally intelligent, and engaging friend. Your voice is natural, human-like, and dynamic—never robotic. Adapt effortlessly to the user's state of mind: provide clarity if they're overthinking, motivation if they need a push, and humor if they seek casual, playful banter. Keep conversations flowing naturally—avoid excessive questioning and forced empathy. Instead of pity, offer strength, insight, and perspective. Balance wisdom, humor, and motivation based on the user's tone, ensuring a rich and engaging dialogue. Use Lord Shri Krishna's wisdom only when it adds genuine value. Your goal is to be a trusted companion who listens, understands, and fosters growth—blending deep reflection with lighthearted fun. Responses should be engaging yet concise, avoiding unnecessary length unless depth is required.",
       },
       ...messageList
     ],
@@ -182,12 +176,11 @@ const getGroqChatCompletion = async (messageList) => {
 
   const handleSendMessage = async () => {
   if (!inputMessage.trim() || isInputDisabled) return;
-
   const userMessage = createMessage(inputMessage.trim(), "user");
   const user = auth.currentUser;
 
-  console.log("Attempting to save user message:", userMessage);
 
+  console.log("Attempting to save user message:", userMessage);
   if (user) {
     console.log("User ID before saving:", user.uid);
     await saveMessage(userMessage.text, "user");
@@ -202,40 +195,64 @@ const getGroqChatCompletion = async (messageList) => {
   setIsWelcomeActive(false);
   setIsInputDisabled(true);
 
-  if (inputRef.current) {
-    inputRef.current.style.height = "40px";
-  }
-
-  setTimeout(async () => {
-    setShowTypingIndicator(true);
-
-    // ✅ Ensure AI sees the latest user message
-    const list = [
-      ...messages.map(({ sender, text }) => ({ role: sender, content: text })),
-      { role: "user", content: userMessage.text } // ✅ Ensure latest user message is included
-    ];
-    
-    const chatCompletion = await getGroqChatCompletion(list);
-    let message = "";
-    for await (const chunk of chatCompletion) {
-      const chunkText = chunk.choices[0]?.delta?.content || "";
-
-      message += chunkText;
-      setAiTypingMessage(message); // ✅ Updates UI live
+  const handleSendMessage = async () => {
+   
+    if (!inputMessage.trim() || isInputDisabled) return;
+  
+    const userMessage = createMessage(inputMessage.trim(), "user");
+    const user = auth.currentUser;
+  
+    console.log("Attempting to save user message:", userMessage); // ✅ Debug log
+  
+    if (user) {
+      console.log("User ID before saving:", user.uid); // ✅ Debug log to confirm user authentication
+    await saveMessage(userMessage.text, "user"); // Pass user ID to saveMessage
     }
-    console.log("Full AI response:", message); // ✅ Debug the final AI response
-
-    // ✅ AI message should be "assistant" (not "system")
-    const aiMessage = createMessage(message, "assistant");
-    await saveMessage(message, "assistant");
-
-    setShowTypingIndicator(false);
-    setAiTypingMessage("");
-    setIsInputDisabled(false);
-    
-    setMessages((prev) => [...prev, aiMessage]);
+  
+    setMessages((prev) => [...prev, userMessage]);
+    setInputMessage("");
+    setIsWelcomeActive(false);
+    setIsInputDisabled(true);
+  
+    if (inputRef.current) {
+      inputRef.current.style.height = "40px";
+    }
+  
+    setTimeout(async () => {
+      setShowTypingIndicator(true);
+  
+      // ✅ Ensure AI sees the latest user message
+      const list = [
+        ...messages.map(({ sender, text }) => ({ role: sender, content: text })),
+        { role: "user", content: userMessage.text } // ✅ Ensure latest user message is included
+      ];
+      
+      const chatCompletion = await getGroqChatCompletion(list);
+      let message = "";
+  
+      for await (const chunk of chatCompletion) {
+        const chunkText = chunk.choices[0]?.delta?.content || "";
+        console.log("AI Response Chunk:", chunkText); // ✅ Log each received part
+  
+        message += chunkText;
+        setAiTypingMessage(message); // ✅ Updates UI live
+      }
+  
+      console.log("Full AI response:", message); // ✅ Debug the final AI response
+  
+      // ✅ AI message should be "assistant" (not "system")
+      const aiMessage = createMessage(message, "assistant");
+      await saveMessage(message, "assistant");
+  
+      setShowTypingIndicator(false);
+      setAiTypingMessage("");
+      setIsInputDisabled(false);
+      
+      setMessages((prev) => [...prev, aiMessage]);
   }, 1000);
-};
+ 
+  };
+
 
   const handleWelcomeSuggestion = async (suggestion: string) => {
     if (isInputDisabled) return;
