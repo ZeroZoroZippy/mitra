@@ -480,7 +480,7 @@
   }
 
   .input-bar {
-    bottom: 90px; /* Increase this value until it looks right */
+    bottom: 50px; /* Increase this value until it looks right */
   }
 
   .input-send-container {
@@ -542,7 +542,7 @@
   /* ✅ iPhone 14, 15, 16 Fix */
   @media screen and (max-width: 430px) {
     .input-bar {
-      bottom: 0;
+      bottom: 50px;
     }
 
     .messages-container {
