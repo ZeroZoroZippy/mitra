@@ -4,48 +4,52 @@ import { getUserProfile } from "../../../../utils/firebaseDb";
 import { auth } from "../../../../utils/firebaseAuth"; // Import auth to get current user
 import { RiExpandDiagonalFill } from "react-icons/ri";
 import { CgCompressRight } from "react-icons/cg";
-import { FaUserCircle } from "react-icons/fa";
+import { FaUserCircle, FaBars } from "react-icons/fa"; // ✅ Added Menu Icon
 
 interface ChatHeaderProps {
   onToggleFullScreen: () => void;
   isChatFullScreen: boolean;
   isSidebarOpen: boolean;
+  onToggleSidebar: () => void; // ✅ Function to toggle sidebar
 }
 
 const ChatHeader: React.FC<ChatHeaderProps> = ({
   onToggleFullScreen,
   isChatFullScreen,
   isSidebarOpen,
+  onToggleSidebar,
 }) => {
   const [profile, setProfile] = useState<{ photoURL: string } | null>(null);
 
   // ✅ Fetch user profile (including photo) when component mounts
   useEffect(() => {
-    if (auth.currentUser) {
-      getUserProfile(auth.currentUser.uid).then((userData) => {
-        if (userData && userData.photoURL) {
-          setProfile(userData as { photoURL: string });
-        } else {
-          setProfile(null);
-        }
-      });
-    }
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      if (user) {
+        getUserProfile(user.uid).then((userData) => {
+          if (userData && userData.photoURL) {
+            setProfile(userData as { photoURL: string });
+          } else {
+            setProfile(null);
+          }
+        });
+      } else {
+        setProfile(null); // ✅ Clear profile when user logs out
+      }
+    });
+  
+    return () => unsubscribe(); // ✅ Cleanup listener
   }, []);
 
   return (
     <div className="chat-header-bar">
-      {/* Left Section: Fullscreen Toggle Icon */}
+      {/* ✅ Left Section: Menu Icon to Toggle Sidebar */}
       <div className="chat-header-left">
         <button
-          className="icon-button fullscreen-toggle"
-          onClick={onToggleFullScreen}
-          title={isChatFullScreen ? "Exit Fullscreen" : "Enter Fullscreen"}
+          className="icon-button menu-toggle"
+          onClick={onToggleSidebar}
+          title={isSidebarOpen ? "Close Menu" : "Open Menu"}
         >
-          {isChatFullScreen || isSidebarOpen ? (
-            <CgCompressRight />
-          ) : (
-            <RiExpandDiagonalFill />
-          )}
+          <FaBars />
         </button>
       </div>
 

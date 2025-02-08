@@ -241,10 +241,21 @@
   width: 100%;
   background-color: #1d1d1d;
   display: flex;
+  flex-direction: column;
   justify-content: center;
+  align-items: center;
   z-index: 20;
   animation: slideUp 0.3s ease-out;
   padding: 1rem 0;
+}
+
+/* ✅ Ensure the precaution message appears above input-send-container */
+.precaution-message-container {
+  width: 100%;
+  text-align: center;
+  font-size: 0.8rem;
+  color: #888;
+  border-radius: 6px;
 }
 
 @keyframes slideUp {

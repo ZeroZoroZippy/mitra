@@ -15,6 +15,7 @@ interface SidebarProps {
   activeChatId: number;
   onSelectChat: (chatId: number) => void;
   onClose: () => void;
+  isSidebarOpen: boolean; // ✅ Add isSidebarOpen prop
 }
 
 const Sidebar: React.FC<SidebarProps> = ({
@@ -22,6 +23,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   activeChatId,
   onSelectChat,
   onClose,
+  isSidebarOpen,
 }) => {
   const navigate = useNavigate();
 
@@ -43,7 +45,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   };
 
   return (
-    <div className="sidebar">
+    <div className={`sidebar ${isSidebarOpen ? "open" : ""}`}> {/* ✅ Add class conditionally */}
       <div className="sidebar-header">
         <h3>Chats</h3>
         <button className="close-sidebar" onClick={onClose}>
