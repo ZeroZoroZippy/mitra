@@ -526,6 +526,7 @@
 
   .input-bar {
     position: fixed;
+    bottom: 50px;
     width: 100%;
     background-color: #1d1d1d;
     z-index: 1000;
@@ -541,14 +542,11 @@
   /* ✅ iPhone 14, 15, 16 Fix */
   @media screen and (max-width: 430px) {
     .input-bar {
-      position: fixed;
-      width: 100%;
-      background-color: #1d1d1d;
-      z-index: 1000;
+      bottom: 0;
     }
 
     .messages-container {
-      padding-bottom: 130px; /* ✅ Adjust space for input bar */
+      padding-bottom: 100px; /* ✅ Adjust space for input bar */
     }
 
     .input-send-container {
