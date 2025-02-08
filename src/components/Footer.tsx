@@ -1,7 +1,33 @@
-import React, { useRef } from 'react'; // Add this line to fix the error
+import React, { useRef, useEffect, useState } from 'react';
+import { useNavigate } from "react-router-dom";
+import { auth, signInWithGoogle } from "../utils/firebaseAuth";
+import { onAuthStateChanged } from "firebase/auth";
 import './Footer.css';
 
 const Footer = () => {
+  const navigate = useNavigate();
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setIsAuthenticated(!!user);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  const handleCTAClick = async () => {
+    if (isAuthenticated) {
+      navigate("/chat");
+    } else {
+      try {
+        const user = await signInWithGoogle();
+        if (user) navigate("/chat");
+      } catch (error) {
+        console.error("Sign-in failed:", error);
+      }
+    }
+  };
+
   return (
     <footer className="footer">
       <div className="footer-container">
@@ -9,7 +35,9 @@ const Footer = () => {
         <div className="footer-left">
           <h3>Mitra</h3>
           <p>Your trusted 2AM friend.</p>
-          <button className="cta-button-footer">Try Mitra</button>
+          <button className="cta-button-footer" onClick={handleCTAClick}>
+            {isAuthenticated ? "Continue Chat" : "Try Mitra"}
+          </button>
         </div>
 
         {/* Middle Section */}
@@ -23,16 +51,6 @@ const Footer = () => {
             Back to top
           </a>
         </div>
-
-        {/* Optional Right Section */}
-        {/* <div className="footer-right">
-          <p>Follow us:</p>
-          <div className="social-icons">
-            <a href="https://facebook.com" target="_blank" rel="noopener noreferrer">FB</a>
-            <a href="https://twitter.com" target="_blank" rel="noopener noreferrer">TW</a>
-            <a href="https://instagram.com" target="_blank" rel="noopener noreferrer">IG</a>
-          </div>
-        </div> */}
       </div>
 
       <div className="footer-bottom">

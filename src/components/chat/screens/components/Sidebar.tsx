@@ -37,6 +37,11 @@ const Sidebar: React.FC<SidebarProps> = ({
     }
   };
 
+  const handleGoHome = () => {
+    navigate("/home");
+    window.location.reload(); // ✅ Ensures Landing Page refreshes fully
+  };
+
   return (
     <div className="sidebar">
       <div className="sidebar-header">
@@ -45,6 +50,14 @@ const Sidebar: React.FC<SidebarProps> = ({
           ✖
         </button>
       </div>
+
+      {/* ✅ Home Button Placed Above Chat List */}
+      <div className="sidebar-nav">
+        <button className="sidebar-button" onClick={(handleGoHome)}>
+          🏠 Home
+        </button>
+      </div>
+
       <ul className="chat-list">
         {chatList.map((chat) => (
           <li
@@ -57,11 +70,12 @@ const Sidebar: React.FC<SidebarProps> = ({
           </li>
         ))}
       </ul>
-      <div className="sidebar-footer">
+
+      {/* <div className="sidebar-footer">
         <button className="logout-button" onClick={handleLogout}>
-        🚪 Logout
+          🚪 Logout
         </button>
-      </div>
+      </div> */}
     </div>
   );
 };

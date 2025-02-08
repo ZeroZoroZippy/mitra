@@ -23,10 +23,11 @@ const LandingPage: React.FC<LandingPageProps> = ({ featuresRef }) => {
   const [hasRedirected, setHasRedirected] = useState(false); // ✅ Prevents multiple redirects
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
 
-  // Handle authentication state and redirect results
+  // ✅ Handle authentication state and update CTA button
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       console.log("Auth state changed. User:", user);
+      setIsAuthenticated(!!user);
   
       // ✅ Track whether we've already redirected
       setHasRedirected((prevRedirected) => {
@@ -55,6 +56,15 @@ const LandingPage: React.FC<LandingPageProps> = ({ featuresRef }) => {
     }
   };
 
+  // ✅ Dynamic CTA button functionality
+  const handleCTAClick = () => {
+    if (isAuthenticated) {
+      navigate("/chat"); // ✅ If signed in, go to chat
+    } else {
+      window.location.href = "/auth"; // ✅ Redirect to sign-in page
+    }
+  };
+
   return (
     <>
       {/* Pass featuresRef to Header */}
@@ -71,8 +81,8 @@ const LandingPage: React.FC<LandingPageProps> = ({ featuresRef }) => {
               offers a companionship that transcends typical AI interactions.
             </p>
             <div className="button-container">
-              <button className="button button-primary" onClick={handleSignIn}>
-                Start Talking
+              <button className="button button-primary" onClick={handleCTAClick}>
+              {isAuthenticated ? "Continue Chat" : "Start Talking"}
               </button>
             </div>
           </div>

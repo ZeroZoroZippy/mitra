@@ -1,7 +1,8 @@
-import React, { useState, RefObject } from "react";
+import React, { useState, RefObject, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "./Header.css";
-import { signInWithGoogle } from "../utils/firebaseAuth";
+import { signInWithGoogle, auth } from "../utils/firebaseAuth";
+import { onAuthStateChanged } from "firebase/auth";
 
 interface HeaderProps {
   featuresRef: RefObject<HTMLDivElement>;
@@ -9,7 +10,15 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ featuresRef }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setIsAuthenticated(!!user);
+    });
+    return () => unsubscribe();
+  }, []);
 
   const toggleMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -21,13 +30,17 @@ const Header: React.FC<HeaderProps> = ({ featuresRef }) => {
     }
   };
 
-  // ✅ Handle Google Sign-In
-  const handleSignIn = async () => {
-    try {
-      const user = await signInWithGoogle();
-      navigate("/chat");
-    } catch (error) {
-      console.error("Sign-in failed:", error);
+  // ✅ Handle CTA click dynamically
+  const handleCTAClick = async () => {
+    if (isAuthenticated) {
+      navigate("/chat"); // ✅ If signed in, go to chat
+    } else {
+      try {
+        const user = await signInWithGoogle();
+        if (user) navigate("/chat");
+      } catch (error) {
+        console.error("Sign-in failed:", error);
+      }
     }
   };
 
@@ -47,10 +60,8 @@ const Header: React.FC<HeaderProps> = ({ featuresRef }) => {
           <a href="#about" className="nav-link">
             About
           </a>
-          <button className="cta-button" onClick={handleSignIn}>
-            {" "}
-            {/* ✅ Updated this */}
-            Try Mitra
+          <button className="cta-button" onClick={handleCTAClick}>
+            {isAuthenticated ? "Continue Chat" : "Try Mitra"}
           </button>
         </nav>
 
@@ -76,10 +87,8 @@ const Header: React.FC<HeaderProps> = ({ featuresRef }) => {
           <a href="#contact" className="mobile-link">
             Contact
           </a>
-          <button className="mobile-cta-button" onClick={handleSignIn}>
-            {" "}
-            {/* ✅ Also updated this */}
-            Try Mitra
+          <button className="mobile-cta-button" onClick={handleCTAClick}>
+            {isAuthenticated ? "Continue Chat" : "Try Mitra"}
           </button>
         </div>
       )}
