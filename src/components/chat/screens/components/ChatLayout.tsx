@@ -75,6 +75,7 @@ const ChatLayout: React.FC = () => {
         activeChatId={activeChatId}
         onSelectChat={setActiveChatId}
         onClose={toggleSidebar}
+        isSidebarOpen={isSidebarOpen}
       />
 
       <ChatArea

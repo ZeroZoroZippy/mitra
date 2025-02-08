@@ -453,7 +453,7 @@ const getGroqChatCompletion = async (messageList) => {
                       onClick={() => handleCopyMessage(message.text)}
                     />
                     {message.sender === "assistant" && message.id && (
-          <>
+                    <>
                     {message.likeStatus === "like" ? (
                       <AiFillLike
                         className="action-icon active"
