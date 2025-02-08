@@ -480,6 +480,7 @@
   }
 
   .input-bar {
+    bottom: 0;
     padding-bottom: 50px; /* Increase this value until it looks right */
   }
 
@@ -526,6 +527,7 @@
 
   .input-bar {
     position: fixed;
+    bottom: 0;
     padding-bottom: 50px;
     width: 100%;
     background-color: #1d1d1d;
@@ -542,6 +544,7 @@
   /* ✅ iPhone 14, 15, 16 Fix */
   @media screen and (max-width: 430px) {
     .input-bar {
+      bottom: 0;
       padding-bottom: 50px;
     }
 
