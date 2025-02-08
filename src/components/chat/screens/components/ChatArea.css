@@ -542,7 +542,11 @@
   /* ✅ iPhone 14, 15, 16 Fix */
   @media screen and (max-width: 430px) {
     .input-bar {
-      bottom: 0;
+      position: fixed;
+      bottom: 50px;
+      width: 100%;
+      background-color: #1d1d1d;
+      z-index: 1000;
     }
 
     .messages-container {
