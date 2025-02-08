@@ -1,6 +1,7 @@
 .sidebar {
   width: 250px;
   height: 100vh;
+  left: -100%; /* ✅ Keeps it hidden initially */
   background-color: #111;
   color: white;
   overflow-y: auto;
@@ -10,6 +11,12 @@
   flex-direction: column; /* Stack items vertically */
   justify-content: space-between;
   overflow: hidden;
+  transition: left 0.3s ease-in-out; /* ✅ Smooth opening */
+  z-index: 1000; /* ✅ Ensure visibility above other elements */
+}
+
+.sidebar-visible .sidebar {
+  left: 0 !important; /* ✅ Ensure sidebar opens on both mobile & desktop */
 }
 
 /* ✅ Home Button Styling */

@@ -33,6 +33,7 @@ const ChatArea: React.FC<ChatAreaProps> = ({
   isChatFullScreen,
   onToggleFullScreen,
   isSidebarOpen,
+  onToggleSidebar
 }) => {
   const [inputMessage, setInputMessage] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -371,6 +372,7 @@ const getGroqChatCompletion = async (messageList) => {
         onToggleFullScreen={onToggleFullScreen}
         isChatFullScreen={isChatFullScreen}
         isSidebarOpen={isSidebarOpen}
+        onToggleSidebar={onToggleSidebar}
       />
   
       {/* ✅ Floating Date Header - Updates on Scroll */}
@@ -453,7 +455,7 @@ const getGroqChatCompletion = async (messageList) => {
                       onClick={() => handleCopyMessage(message.text)}
                     />
                     {message.sender === "assistant" && message.id && (
-          <>
+                    <>
                     {message.likeStatus === "like" ? (
                       <AiFillLike
                         className="action-icon active"
@@ -521,6 +523,14 @@ const getGroqChatCompletion = async (messageList) => {
       {!isWelcomeActive && (
         <div>
           <div className="input-bar">
+            {/* ✅ Precaution message moved inside input-bar above input-send-container */}
+            {!isWelcomeActive && (
+              <div className="precaution-message-container">
+                <p className="precaution-message">
+                  Your Mitra apologizes for any mistakes made.
+                </p>
+              </div>
+            )}
             <div className="input-send-container">
               <textarea
                 ref={inputRef}
@@ -544,11 +554,6 @@ const getGroqChatCompletion = async (messageList) => {
                 <FaPaperPlane />
               </button>
             </div>
-          </div>
-          <div className="chat-footer">
-            <p className="precaution-message">
-              Your Mitra apologizes for any mistakes made.
-            </p>
           </div>
         </div>
       )}
