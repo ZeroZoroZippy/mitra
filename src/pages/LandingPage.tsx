@@ -57,11 +57,19 @@ const LandingPage: React.FC<LandingPageProps> = ({ featuresRef }) => {
   };
 
   // ✅ Dynamic CTA button functionality
-  const handleCTAClick = () => {
+  const handleCTAClick = async () => {
     if (isAuthenticated) {
-      navigate("/chat"); // ✅ If signed in, go to chat
+      navigate("/chat");
     } else {
-      window.location.href = "/auth"; // ✅ Redirect to sign-in page
+      try {
+        const user = await signInWithGoogle();
+        if (user) {
+          await storeUserDetails(user); // ✅ Ensures user details are stored in Firestore
+          navigate("/chat");
+        }
+      } catch (error) {
+        console.error("Sign-in failed:", error);
+      }
     }
   };
 
