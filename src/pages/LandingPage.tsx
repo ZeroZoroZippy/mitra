@@ -21,22 +21,26 @@ const LandingPage: React.FC<LandingPageProps> = ({ featuresRef }) => {
   const location = useLocation();
   const [isLoading, setIsLoading] = useState(false);
   const [hasRedirected, setHasRedirected] = useState(false); // ✅ Prevents multiple redirects
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
 
   // Handle authentication state and redirect results
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       console.log("Auth state changed. User:", user);
   
-      // ✅ Only redirect if the user is on "/" and hasn't been redirected before
-      if (user && location.pathname === "/" && !hasRedirected) {
-        console.log("Redirecting to /chat...");
-        setHasRedirected(true); // Prevents multiple redirects
-        navigate("/chat");
-      }
+      // ✅ Track whether we've already redirected
+      setHasRedirected((prevRedirected) => {
+        if (user && location.pathname === "/" && !prevRedirected) {
+          console.log("Redirecting to /chat...");
+          navigate("/chat");
+          return true; // ✅ Marks as redirected
+        }
+        return prevRedirected;
+      });
     });
   
     return () => unsubscribe();
-  }, [navigate, location, hasRedirected]);
+  }, [navigate, location.pathname]); // ✅ Added dependencies
 
   // Handle sign-in button click
   const handleSignIn = async () => {
