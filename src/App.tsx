@@ -31,7 +31,7 @@ const App: React.FC = () => {
     <Router>
       <Routes>
         <Route path="/" element={<LandingPage featuresRef={featuresRef} />} />
-        <Route path="/home" element={<LandingPage featuresRef={featuresRef} />} />
+        <Route path="/home" element={<Navigate replace to="/" />} />
         <Route path="/chat" element={<ProtectedRoute element={<ChatLayout />} />} />
         <Route path="*" element={<LandingPage featuresRef={featuresRef} />} />
       </Routes>

@@ -59,7 +59,7 @@ const Sidebar: React.FC<SidebarProps> = ({
       </ul>
       <div className="sidebar-footer">
         <button className="logout-button" onClick={handleLogout}>
-          Logout
+        🚪 Logout
         </button>
       </div>
     </div>
