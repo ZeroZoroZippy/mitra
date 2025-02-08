@@ -36,10 +36,9 @@ const ChatLayout: React.FC = () => {
     setIsChatFullScreen((prev) => {
       const newState = !prev;
       if (!newState && window.innerWidth <= 768) {
-        setIsSidebarOpen(true); // Force sidebar open on exit
-      }
-      if (newState) {
-        setIsSidebarOpen(false);
+        setIsSidebarOpen(true);
+      } else if (window.innerWidth > 768) {
+        setIsSidebarOpen((prev) => prev); // ✅ Prevent accidental sidebar closing on desktop
       }
       return newState;
     });
@@ -65,7 +64,7 @@ const ChatLayout: React.FC = () => {
         isSidebarOpen ? "sidebar-visible" : ""
       }`}
     >
-      {isSidebarOpen && window.innerWidth <= 768 && (
+      {isSidebarOpen && (
         <div className="sidebar-overlay" onClick={toggleSidebar}></div>
       )}
 
@@ -75,6 +74,7 @@ const ChatLayout: React.FC = () => {
         activeChatId={activeChatId}
         onSelectChat={setActiveChatId}
         onClose={toggleSidebar}
+        isSidebarOpen={isSidebarOpen}
       />
 
       <ChatArea

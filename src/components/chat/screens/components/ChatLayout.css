@@ -24,11 +24,22 @@
 }
 
 .sidebar {
-  display: block;
+  position: fixed;
+  top: 0;
+  left: -250px; /* ✅ Keeps it hidden initially on desktop */
+  width: 250px;
+  height: 100vh;
+  background-color: #111;
+  color: white;
+  transition: left 1s ease-in-out; /* ✅ Smooth animation */
+  z-index: 1000;
 }
 
-.sidebar.open {
-  display: block;
+/* ✅ Show sidebar when open */
+.chat-layout.sidebar-visible .sidebar {
+  left: 0;
+  display: block !important;
+  transition: left 1s ease-in-out; /* ✅ Smooth animation */
 }
 
 .sidebar-overlay {
@@ -41,7 +52,7 @@
   z-index: 999;
   opacity: 1;
   pointer-events: all;
-  transition: opacity 0.3s ease-in-out;
+  transition: opacity 1s ease-in-out;
 }
 
 /* ✅ If sidebar is closed, disable overlay */
@@ -55,10 +66,6 @@
   pointer-events: all;
 }
 
-.chat-layout.sidebar-visible .sidebar {
-  display: block;
-}
-
 .chat-layout.fullscreen .sidebar {
   display: none;
 }
@@ -69,7 +76,6 @@
 }
 
 @media (max-width: 768px) {
-
   .chat-layout.fullscreen .sidebar {
     display: block !important;
   }
@@ -121,5 +127,12 @@
   .sidebar.open + .chat-area {
     opacity: 0.3;
     pointer-events: none;
+  }
+}
+
+/* ✅ Sidebar is hidden in fullscreen only on mobile */
+@media (min-width: 769px) {
+  .chat-layout.fullscreen .sidebar {
+    left: -250px; /* ✅ Hide it on desktop but allow toggle */
   }
 }
