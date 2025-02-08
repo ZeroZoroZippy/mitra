@@ -11,6 +11,12 @@
   flex-direction: column; /* Stack items vertically */
   justify-content: space-between;
   overflow: hidden;
+  transition: left 0.3s ease-in-out; /* ✅ Smooth opening */
+  z-index: 1000; /* ✅ Ensure visibility above other elements */
+}
+
+.sidebar-visible .sidebar {
+  left: 0 !important; /* ✅ Ensure sidebar opens on both mobile & desktop */
 }
 
 /* ✅ Home Button Styling */
