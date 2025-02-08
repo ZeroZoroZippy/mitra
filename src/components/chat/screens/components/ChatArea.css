@@ -515,90 +515,49 @@
 
   .messages-container {
     padding: 0.5rem; /* Compact padding */
+    padding-bottom: 80px; /* ✅ Add space for input bar */
   }
 
   .message-bubble {
-    max-width: 90%; /* Further shrink bubble width */
-    font-size: 0.875rem; /* Reduce font size */
-    padding: 0.4rem 0.8rem; /* Adjust padding */
+    max-width: 90%;
+    font-size: 0.875rem;
+    padding: 0.4rem 0.8rem;
   }
 
   .input-bar {
-    position:fixed;
-    bottom: 70px; /* Increase this value until it looks right */
-  }
-
-  .input-send-container {
-    width: 100%; /* Full width for small screens */
-    max-width: 100%; /* Remove max-width limit */
-    padding: 0.4rem 0.8rem; /* Compact padding */
-    margin: 0 0 20px 0;
-  }
-
-  .input-send-container input.centered-input,
-  .input-send-container .chat-input {
-    font-size: 0.9rem; /* Reduce font size */
-    padding: 0.4rem;   /* Compact padding */
-    min-height: 32px;  /* For smaller screens, slightly smaller min-height */
-  }
-
-  .input-send-container .send-icon-button {
-    font-size: 1rem; /* Reduce button size */
-    padding: 0.4rem 0.6rem;
-  }
-
-  .chat-input {
-    font-size: 0.9rem; /* Reduce font size */
-    padding: 0.4rem 0.8rem; /* Compact padding */
-  }
-
-  .send-icon-button {
-    font-size: 1rem; /* Reduce icon size */
-    padding: 0.4rem 0.6rem; /* Compact padding */
-  }
-
-  .welcome-container {
-    padding: 0.5rem; /* Minimal padding */
-  }
-
-  .welcome-heading {
-    font-size: 1.8rem; /* Smaller heading */
-  }
-
-  .suggestion-buttons {
-    gap: 0.5rem; /* Reduce gap further */
-  }
-
-  .suggestion-button {
-    font-size: 0.85rem; /* Smaller font size */
-    padding: 0.5rem 0.8rem; /* Compact padding */
-  }
-
-  /* ✅ iPhone 14, 15, 16 Fix */
-@media screen and (max-width: 430px) {
-  .input-bar {
-    bottom: 0;
+    position: fixed;
+    bottom: 50px;
+    width: 100%;
+    background-color: #1d1d1d;
+    z-index: 1000;
   }
 
   .input-send-container {
     width: 100%;
     max-width: 100%;
+    padding: 0.4rem 0.8rem;
+    margin: 0;
   }
 
-  .chat-input {
-    font-size: 1rem;
-    padding: 0.5rem 1rem;
+  /* ✅ iPhone 14, 15, 16 Fix */
+  @media screen and (max-width: 430px) {
+    .input-bar {
+      bottom: 0;
+    }
+
+    .messages-container {
+      padding-bottom: 70px; /* ✅ Adjust space for input bar */
+    }
+
+    .input-send-container {
+      width: 100%;
+      max-width: 100%;
+    }
   }
 
-  .send-icon-button {
-    font-size: 1rem;
-    padding: 0.5rem 0.8rem;
+  /* ✅ Prevent iPhone Safari from Zooming on Input Click */
+  input,
+  textarea {
+    font-size: 16px;
   }
-}
-
-/* ✅ Prevent iPhone Safari from Zooming on Input Click */
-input,
-textarea {
-  font-size: 16px; /* Fixes iOS auto-zoom issue */
-}
 }
