@@ -526,7 +526,6 @@
 
   .input-bar {
     position: fixed;
-    bottom: 50px;
     width: 100%;
     background-color: #1d1d1d;
     z-index: 1000;
