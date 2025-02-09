@@ -21,16 +21,16 @@
 /* ✅ Home Button Styling */
 .sidebar-nav {
   padding: 12px 0; /* Adds spacing around the Home button */
-  margin-bottom: 10px; /* Creates separation from the chat list */
+  margin-bottom: 0px; /* Creates separation from the chat list */
   text-align: center;
   /* border-bottom: 1px solid #333; Subtle separator for structure */
 }
 
-.sidebar-button {
+.home-button {
   background: none;
   border: none;
   color: white;
-  font-size: 1rem;
+  font-size: 0.85rem;
   cursor: pointer;
   padding: 12px;
   width: 100%;
@@ -42,7 +42,7 @@
   transition: background 0.3s ease-in-out, color 0.2s ease-in-out;
 }
 
-.sidebar-button:hover {
+.home-button:hover {
   background: #222; /* Subtle background on hover */
   color: #00bcd4; /* Slight color change for better UI feedback */
 }
@@ -148,6 +148,24 @@
 
 .logout-button:hover {
   color: #ff1a1a;
+}
+
+.feedback-button {
+  background-color: transparent;
+  border: none;
+  color: white;
+  font-size: 0.85rem;
+  cursor: pointer;
+  width: 100%;
+  padding: 10px;
+  text-align: left;
+  transition: color 0.2s ease;
+}
+
+.feedback-button:hover {
+  background: #222; /* Subtle background on hover */
+  color: #00bcd4; /* Slight color change for better UI feedbac
+  color: #ffcc00; /* ✅ Highlight on hover */
 }
 
 @media (max-width: 768px) {

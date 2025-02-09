@@ -44,6 +44,11 @@ const Sidebar: React.FC<SidebarProps> = ({
     window.location.reload(); // ✅ Ensures Landing Page refreshes fully
   };
 
+  const handleFeedback = () => {
+    window.location.href = "mailto:yourmitra08@gmail.com?subject=Feedback for Mitra&body=Hello, I'd like to share some feedback...";
+  };
+  
+
   return (
     <div className={`sidebar ${isSidebarOpen ? "open" : ""}`}> {/* ✅ Add class conditionally */}
       <div className="sidebar-header">
@@ -55,9 +60,11 @@ const Sidebar: React.FC<SidebarProps> = ({
 
       {/* ✅ Home Button Placed Above Chat List */}
       <div className="sidebar-nav">
-        <button className="sidebar-button" onClick={(handleGoHome)}>
+        <button className="home-button" onClick={(handleGoHome)}>
           🏠 Home
         </button>
+        {/* ✅ Feedback Button */}
+        <button className="sidebar-button feedback-button" onClick={handleFeedback}>✉️ Feedback</button>
       </div>
 
       <ul className="chat-list">
