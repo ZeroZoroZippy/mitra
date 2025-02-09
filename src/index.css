@@ -106,7 +106,7 @@ textarea {
 
 @media screen and (max-width: 768px) {
   .ios-fix .input-bar {
-    height: calc(var(--vh, 1vh) * 10);
+    height: calc(var(--vh, 1vh) * 20);
     bottom: env(safe-area-inset-bottom); /* ✅ Prevent overlap */
   }
 }
