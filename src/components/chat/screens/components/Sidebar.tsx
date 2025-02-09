@@ -45,7 +45,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   };
 
   const handleFeedback = () => {
-    window.location.href = "mailto:support@yourdomain.com?subject=Feedback for Mitra&body=Hello, I’d like to share some feedback...";
+    window.location.href = "mailto:yourmitra08@gmail.com?subject=Feedback for Mitra&body=Hello, I'd like to share some feedback...";
   };
   
 
@@ -60,13 +60,10 @@ const Sidebar: React.FC<SidebarProps> = ({
 
       {/* ✅ Home Button Placed Above Chat List */}
       <div className="sidebar-nav">
-        <button className="sidebar-button" onClick={(handleGoHome)}>
+        <button className="home-button" onClick={(handleGoHome)}>
           🏠 Home
         </button>
-      </div>
-
-      {/* ✅ Feedback Button */}
-      <div className="sidebar-nav">
+        {/* ✅ Feedback Button */}
         <button className="sidebar-button feedback-button" onClick={handleFeedback}>✉️ Feedback</button>
       </div>
 
