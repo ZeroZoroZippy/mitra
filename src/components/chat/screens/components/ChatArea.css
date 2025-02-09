@@ -516,7 +516,7 @@
 
   .messages-container {
     padding: 0.5rem; /* Compact padding */
-    padding-bottom: 60px; /* ✅ Add space for input bar */
+    padding-bottom: 80px; /* ✅ Add space for input bar */
   }
 
   .message-bubble {
