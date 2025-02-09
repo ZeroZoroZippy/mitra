@@ -96,3 +96,17 @@ button:focus-visible {
   justify-content: center;
   align-items: center;
 }
+
+/* ✅ Prevent iOS Safari zooming on input focus */
+input,
+textarea {
+  font-size: 16px !important; /* ✅ Stops Safari auto-zoom */
+  -webkit-text-size-adjust: 100%; /* ✅ Stops Safari auto-zoom */
+}
+
+@media screen and (max-width: 768px) {
+  .ios-fix .input-bar {
+    height: calc(var(--vh, 1vh) * 10);
+    bottom: env(safe-area-inset-bottom); /* ✅ Prevent overlap */
+  }
+}
