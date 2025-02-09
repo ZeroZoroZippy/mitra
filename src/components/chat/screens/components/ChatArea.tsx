@@ -399,6 +399,29 @@ const getGroqChatCompletion = async (messageList) => {
     }
   }, []);
 
+  useEffect(() => {
+    const handleFocus = () => {
+      document.body.classList.add("keyboard-open");
+    };
+  
+    const handleBlur = () => {
+      document.body.classList.remove("keyboard-open");
+    };
+  
+    const inputs = document.querySelectorAll("input, textarea");
+    inputs.forEach((input) => {
+      input.addEventListener("focus", handleFocus);
+      input.addEventListener("blur", handleBlur);
+    });
+  
+    return () => {
+      inputs.forEach((input) => {
+        input.removeEventListener("focus", handleFocus);
+        input.removeEventListener("blur", handleBlur);
+      });
+    };
+  }, []);
+
 
   return (
     <div className="chat-area">

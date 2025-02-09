@@ -106,7 +106,15 @@ textarea {
 
 @media screen and (max-width: 768px) {
   .ios-fix .input-bar {
-    height: calc(var(--vh, 1vh) * 15);
+    height: calc(var(--vh, 1vh) * 20);
     bottom: env(safe-area-inset-bottom); /* ✅ Prevent overlap */
+  }
+
+  .messages-container {
+    padding-bottom: 80px; /* Default padding */
+  }
+  
+  .keyboard-open .messages-container {
+    padding-bottom: calc(var(--vh, 1vh) * 12); /* ✅ Adds space when keyboard opens */
   }
 }
