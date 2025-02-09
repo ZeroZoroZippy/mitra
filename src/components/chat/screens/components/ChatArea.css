@@ -83,7 +83,7 @@
   color: #fff;
   font-family: 'SF Pro Text', Helvetica, Arial, sans-serif;
   font-size: 1rem;
-  line-height: 1.5;
+  /* line-height: 1.5; */
   padding: 0.5rem;
   white-space: pre-wrap;     /* Allows multiline wrapping (textarea) */
   overflow-wrap: break-word; /* Breaks long words */
@@ -246,7 +246,7 @@
   align-items: center;
   z-index: 20;
   animation: slideUp 0.3s ease-out;
-  padding: 1rem 0;
+  /* padding: 1rem 0; */
 }
 
 /* ✅ Ensure the precaution message appears above input-send-container */
@@ -481,7 +481,7 @@
 
   .input-bar {
     bottom: 0;
-    padding-bottom: 50px; /* Increase this value until it looks right */
+    /* padding-bottom: 50px; Increase this value until it looks right */
   }
 
   .input-send-container {
@@ -516,7 +516,7 @@
 
   .messages-container {
     padding: 0.5rem; /* Compact padding */
-    padding-bottom: 110px; /* ✅ Add space for input bar */
+    /* padding-bottom: 110px; ✅ Add space for input bar */
   }
 
   .message-bubble {
@@ -526,9 +526,9 @@
   }
 
   .input-bar {
-    position: fixed;
+    /* position: fixed; */
     bottom: 0;
-    padding-bottom: 25px;
+    /* padding-bottom: 25px; */
     width: 100%;
     background-color: #1d1d1d;
     z-index: 1000;
@@ -546,10 +546,6 @@
     .input-bar {
       bottom: 0;
       padding-bottom: 25px;
-    }
-
-    .messages-container {
-      padding-bottom: 100px; /* ✅ Adjust space for input bar */
     }
 
     .input-send-container {
