@@ -31,7 +31,7 @@
   height: 100vh;
   background-color: #111;
   color: white;
-  transition: left 1s ease-in-out; /* ✅ Smooth animation */
+  transition: left 0.5s ease-in-out; /* ✅ Smooth animation */
   z-index: 1000;
 }
 
@@ -39,7 +39,7 @@
 .chat-layout.sidebar-visible .sidebar {
   left: 0;
   display: block !important;
-  transition: left 1s ease-in-out; /* ✅ Smooth animation */
+  transition: left 0.5s ease-in-out; /* ✅ Smooth animation */
 }
 
 .sidebar-overlay {
