@@ -111,7 +111,7 @@ textarea {
   }
 
   .messages-container {
-    padding-bottom: 100px; /* Default padding */
+    padding-bottom: 120px; /* Default padding */
   }
   
   .keyboard-open .messages-container {
