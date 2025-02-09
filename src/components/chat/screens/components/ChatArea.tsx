@@ -366,6 +366,40 @@ const getGroqChatCompletion = async (messageList) => {
   }, []);
 
 
+  /* Fix Safari Bottom URL Bar Overlapping Input Bar */
+  const isIOS = () => {
+    return (
+      /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+      (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1)
+    );
+  };
+  
+  const [isIOSDevice, setIsIOSDevice] = useState(false);
+  
+  useEffect(() => {
+    if (isIOS()) {
+      setIsIOSDevice(true);
+      document.body.classList.add("ios-fix");
+  
+      // ✅ Dynamically update viewport height to prevent input bar overlap
+      const updateViewportHeight = () => {
+        document.documentElement.style.setProperty(
+          "--vh",
+          `${window.innerHeight * 0.01}px`
+        );
+      };
+  
+      window.addEventListener("resize", updateViewportHeight);
+      updateViewportHeight(); // ✅ Set on first render
+  
+      return () => {
+        window.removeEventListener("resize", updateViewportHeight);
+        document.body.classList.remove("ios-fix"); // ✅ Remove class when component unmounts
+      };
+    }
+  }, []);
+
+
   return (
     <div className="chat-area">
       <ChatHeader

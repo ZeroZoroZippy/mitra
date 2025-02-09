@@ -516,7 +516,7 @@
 
   .messages-container {
     padding: 0.5rem; /* Compact padding */
-    /* padding-bottom: 110px; ✅ Add space for input bar */
+    padding-bottom: 60px; /* ✅ Add space for input bar */
   }
 
   .message-bubble {
@@ -554,11 +554,5 @@
       width: 100%;
       max-width: 100%;
     }
-  }
-
-  /* ✅ Prevent iPhone Safari from Zooming on Input Click */
-  input,
-  textarea {
-    font-size: 16px;
   }
 }
