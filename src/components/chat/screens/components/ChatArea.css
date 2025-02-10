@@ -258,6 +258,15 @@
   border-radius: 6px;
 }
 
+/* ✅ Seen Text Styling */
+.seen-text {
+  font-size: 0.8rem;
+  color: #aaa;
+  margin-top: 2px;
+  text-align: right;
+  opacity: 0.8;
+}
+
 @keyframes slideUp {
   from {
     transform: translateY(100%);

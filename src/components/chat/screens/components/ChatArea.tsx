@@ -49,6 +49,7 @@ const ChatArea: React.FC<ChatAreaProps> = ({
   const dateTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);  // ✅ State to track copy icon fade-in effect
   const [showCopyIcon, setShowCopyIcon] = useState<{ [key: string]: boolean }>({});
   const [activeMessageId, setActiveMessageId] = useState<string | null>(null);
+  const [seenMessageId, setSeenMessageId] = useState<string | null>(null); // ✅ Track last seen message
 
   const handleScroll = () => {
     const chatContainer = document.querySelector(".messages-container");
@@ -165,7 +166,7 @@ const getGroqChatCompletion = async (messageList) => {
       },
       ...messageList
     ],
-    model: "llama-3.2-3b-preview",
+    model: "llama-3.1-8b-instant",
     temperature: 0.7,
     max_completion_tokens: 500,
     top_p: 0.7,
@@ -175,32 +176,41 @@ const getGroqChatCompletion = async (messageList) => {
 };
 
 
-  const handleSendMessage = async () => {
-   
-    if (!inputMessage.trim() || isInputDisabled) return;
-  
-    const userMessage = createMessage(inputMessage.trim(), "user");
-    const user = auth.currentUser;
-  
-    console.log("Attempting to save user message:", userMessage); // ✅ Debug log
-  
-    if (user) {
-      console.log("User ID before saving:", user.uid); // ✅ Debug log to confirm user authentication
-    await saveMessage(userMessage.text, "user"); // Pass user ID to saveMessage
+const handleSendMessage = async () => {
+  if (!inputMessage.trim() || isInputDisabled) return;
+
+  const userMessage = createMessage(inputMessage.trim(), "user");
+  const user = auth.currentUser;
+
+  console.log("Attempting to save user message:", userMessage);
+
+  if (user) {
+    console.log("User ID before saving:", user.uid);
+    await saveMessage(userMessage.text, "user");
+  }
+
+  // ✅ Add message to state BEFORE starting delays
+  setMessages((prev) => [...prev, userMessage]);
+  setInputMessage("");
+  setIsWelcomeActive(false);
+  setIsInputDisabled(true);
+
+  if (inputRef.current) {
+    inputRef.current.style.height = "40px";
+  }
+
+  // ✅ Step 1: Random delay before showing "Seen just now" (Between 1-7 sec)
+  const seenDelay = Math.floor(Math.random() * 7000) + 1000; // 🔥 Random delay between 1-7 sec
+
+  setTimeout(() => {
+    if (userMessage.id) {
+      setSeenMessageId(String(userMessage.id)); // ✅ Ensure it's always a string
     }
-  
-    setMessages((prev) => [...prev, userMessage]);
-    setInputMessage("");
-    setIsWelcomeActive(false);
-    setIsInputDisabled(true);
-  
-    if (inputRef.current) {
-      inputRef.current.style.height = "40px";
-    }
-  
+
+    // ✅ Step 2: Delay before AI starts typing (1 sec after "Seen")
     setTimeout(async () => {
       setShowTypingIndicator(true);
-  
+
       // ✅ Ensure AI sees the latest user message
       const list = [
         ...messages.map(({ sender, text }) => ({ role: sender, content: text })),
@@ -209,30 +219,34 @@ const getGroqChatCompletion = async (messageList) => {
       
       const chatCompletion = await getGroqChatCompletion(list);
       let message = "";
-  
+
       for await (const chunk of chatCompletion) {
         const chunkText = chunk.choices[0]?.delta?.content || "";
-        console.log("AI Response Chunk:", chunkText); // ✅ Log each received part
-  
+
         message += chunkText;
         setAiTypingMessage(message); // ✅ Updates UI live
       }
-  
-      console.log("Full AI response:", message); // ✅ Debug the final AI response
-  
-      // ✅ AI message should be "assistant" (not "system")
+
+      console.log("Full AI response:", message);
+
+      // ✅ AI message should be "assistant"
       const aiMessage = createMessage(message, "assistant");
       await saveMessage(message, "assistant");
-  
+
       setShowTypingIndicator(false);
       setAiTypingMessage("");
       setIsInputDisabled(false);
-      
-      setMessages((prev) => [...prev, aiMessage]);
-  }, 1000);
- 
-  };
 
+      setMessages((prev) => [...prev, aiMessage]);
+
+      // ✅ Step 3: Remove "Seen just now" after AI response
+      setSeenMessageId(null); // ✅ Clears "Seen" text
+
+    }, 1000); // ✅ Delay before AI starts typing (1 sec after "Seen")
+
+  }, seenDelay); // ✅ 🔥 Random delay (1-7 sec) before "Seen just now" appears
+};
+ 
   const handleWelcomeSuggestion = async (suggestion: string) => {
     if (isInputDisabled) return;
   
@@ -502,6 +516,10 @@ const getGroqChatCompletion = async (messageList) => {
                   <div className={`message-bubble ${message.sender}-bubble`}>
                     {message.text}
                   </div>
+                  {/* ✅ Show "Seen just now" for the last sent user message */}
+                  {message.sender === "user" && message.id === seenMessageId && (
+                    <p className="seen-text">Seen just now</p>
+                  )}
                   <div className="message-actions">
                     {/* ✅ Copy icon - stays hover-only */}
                     <IoCopyOutline
