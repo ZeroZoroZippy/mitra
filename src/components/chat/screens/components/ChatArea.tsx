@@ -426,8 +426,6 @@ const getGroqChatCompletion = async (messageList) => {
   return (
     <div className="chat-area">
       <ChatHeader
-        onToggleFullScreen={onToggleFullScreen}
-        isChatFullScreen={isChatFullScreen}
         isSidebarOpen={isSidebarOpen}
         onToggleSidebar={onToggleSidebar}
       />
