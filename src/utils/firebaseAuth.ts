@@ -55,7 +55,6 @@ export const signInWithGoogle = async (): Promise<User | null> => {
 
     // ✅ If it's the user's first sign-in, log details to Google Sheets
     if (true || additionalUserInfo?.isNewUser) { // Force logging for testing
-      console.log("🆕 Attempting to log user to Google Sheets...");
       await logUserToGoogleSheet(user);
     }
 
@@ -106,11 +105,7 @@ const logUserToGoogleSheet = async (user: User) => {
         timestamp: new Date().toISOString(),
       }),
     });
-
-    console.log("✅ User logged in Google Sheets successfully:", user);
-  } catch (error) {
-    console.error("❌ Error logging user to Google Sheets:", error);
-  }
+  } catch (error) {}
 };
 
 export { auth };
