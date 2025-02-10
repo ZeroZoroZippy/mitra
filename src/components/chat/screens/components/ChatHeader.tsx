@@ -1,48 +1,74 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import "./ChatHeader.css";
 import { getUserProfile } from "../../../../utils/firebaseDb";
-import { auth } from "../../../../utils/firebaseAuth"; // Import auth to get current user
-import { RiExpandDiagonalFill } from "react-icons/ri";
-import { CgCompressRight } from "react-icons/cg";
-import { FaUserCircle, FaBars } from "react-icons/fa"; // ✅ Added Menu Icon
+import { auth } from "../../../../utils/firebaseAuth";
+import { FaUserCircle, FaBars } from "react-icons/fa";
+import { signOut } from "firebase/auth";
+import { useNavigate } from "react-router-dom";
 
 interface ChatHeaderProps {
-  onToggleFullScreen: () => void;
-  isChatFullScreen: boolean;
   isSidebarOpen: boolean;
-  onToggleSidebar: () => void; // ✅ Function to toggle sidebar
+  onToggleSidebar: () => void;
 }
 
-const ChatHeader: React.FC<ChatHeaderProps> = ({
-  onToggleFullScreen,
-  isChatFullScreen,
-  isSidebarOpen,
-  onToggleSidebar,
-}) => {
-  const [profile, setProfile] = useState<{ photoURL: string } | null>(null);
+const ChatHeader: React.FC<ChatHeaderProps> = ({ isSidebarOpen, onToggleSidebar }) => {
+  const [profile, setProfile] = useState<{ photoURL: string; displayName: string } | null>(null);
+  const [showLogout, setShowLogout] = useState(false);
+  const navigate = useNavigate();
+  const logoutRef = useRef<HTMLDivElement>(null);
 
-  // ✅ Fetch user profile (including photo) when component mounts
+  // ✅ Fetch user profile (photo + display name)
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
       if (user) {
         getUserProfile(user.uid).then((userData) => {
           if (userData && userData.photoURL) {
-            setProfile(userData as { photoURL: string });
+            setProfile({
+              photoURL: userData.photoURL,
+              displayName: userData.displayName || "User", // ✅ Fallback if name is missing
+            });
           } else {
             setProfile(null);
           }
         });
       } else {
-        setProfile(null); // ✅ Clear profile when user logs out
+        setProfile(null);
       }
     });
-  
-    return () => unsubscribe(); // ✅ Cleanup listener
+
+    return () => unsubscribe();
   }, []);
+
+  // ✅ Detect clicks outside the logout menu
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (logoutRef.current && !logoutRef.current.contains(event.target as Node)) {
+        setShowLogout(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  // ✅ Handle Logout
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      localStorage.clear();
+      sessionStorage.clear();
+      navigate("/");
+      window.location.reload();
+    } catch (error) {
+      console.error("❌ Error logging out:", error);
+    }
+  };
 
   return (
     <div className="chat-header-bar">
-      {/* ✅ Left Section: Menu Icon to Toggle Sidebar */}
+      {/* ✅ Sidebar Toggle */}
       <div className="chat-header-left">
         <button
           className="icon-button menu-toggle"
@@ -53,21 +79,30 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
         </button>
       </div>
 
-      {/* Center Section: Title */}
+      {/* ✅ Chat Title */}
       <div className="chat-header-center">
         <h3>Chat with Mitra</h3>
       </div>
 
-      {/* Right Section: Profile Avatar */}
-      <div className="chat-header-right">
-        {profile && profile.photoURL ? (
-          <img
-            src={profile.photoURL}
-            alt="Profile"
-            className="profile-avatar"
-          />
-        ) : (
-          <FaUserCircle />
+      {/* ✅ Profile Avatar & Logout Menu */}
+      <div className="chat-header-right profile-container" ref={logoutRef}>
+        <div onClick={() => setShowLogout((prev) => !prev)} className="profile-avatar-wrapper">
+          {profile?.photoURL ? (
+            <img src={profile.photoURL} alt="Profile" className="profile-avatar" />
+          ) : (
+            <FaUserCircle className="profile-avatar" />
+          )}
+        </div>
+
+        {/* ✅ Dropdown Menu with Name & Logout */}
+        {showLogout && (
+          <div className="logout-menu">
+            <p className="user-name">{profile?.displayName || "User"}</p>
+            <hr className="divider" /> {/* ✅ Separator */}
+            <button className="logout-button" onClick={handleLogout}>
+              Logout
+            </button>
+          </div>
         )}
       </div>
     </div>
