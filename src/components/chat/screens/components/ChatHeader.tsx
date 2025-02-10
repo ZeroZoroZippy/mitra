@@ -2,8 +2,6 @@ import React, { useState, useEffect } from "react";
 import "./ChatHeader.css";
 import { getUserProfile } from "../../../../utils/firebaseDb";
 import { auth } from "../../../../utils/firebaseAuth"; // Import auth to get current user
-import { RiExpandDiagonalFill } from "react-icons/ri";
-import { CgCompressRight } from "react-icons/cg";
 import { FaUserCircle, FaBars } from "react-icons/fa"; // ✅ Added Menu Icon
 
 interface ChatHeaderProps {
