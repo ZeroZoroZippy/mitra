@@ -5,6 +5,7 @@ import {
   setPersistence,
   browserLocalPersistence,
   updateProfile,
+  getAdditionalUserInfo,
 } from "firebase/auth";
 import { auth } from "./firebaseConfig";
 import { doc, setDoc, serverTimestamp } from "firebase/firestore";
@@ -22,7 +23,9 @@ provider.addScope("profile");
 provider.addScope("email");
 provider.setCustomParameters({ prompt: "select_account" }); // ✅ Forces Google to show account selection
 
-// ✅ Google Sign-In Function with Debugging
+const GOOGLE_SHEETS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzqqfh7nERXJTIqzS51xy1VH-NQuoJUgKY8VHkMlteSWBs0QlCIvJ2dltPPfG5xhlIk/exec"; // ✅ Replace with actual Web App URL
+
+// ✅ Google Sign-In Function with First-Time Sign-In Logging
 export const signInWithGoogle = async (): Promise<User | null> => {
   try {
     const result = await signInWithPopup(auth, provider);
@@ -47,6 +50,14 @@ export const signInWithGoogle = async (): Promise<User | null> => {
         displayName: user.displayName || "New User",
       });
     }
+
+    const additionalUserInfo = getAdditionalUserInfo(result);
+
+    // ✅ If it's the user's first sign-in, log details to Google Sheets
+    if (true || additionalUserInfo?.isNewUser) { // Force logging for testing
+  console.log("🆕 Attempting to log user to Google Sheets...");
+  await logUserToGoogleSheet(user);
+}
 
     await storeUserDetails(user); // ✅ Save user data to Firestore
     return user;
@@ -77,6 +88,29 @@ export const storeUserDetails = async (user: User) => {
     console.log("✅ User details stored in Firestore:", user);
   } catch (error) {
     console.error("❌ Error storing user details:", error);
+  }
+};
+
+// ✅ Function to Log First-Time Users to Google Sheets
+const logUserToGoogleSheet = async (user: User) => {
+  try {
+    const response = await fetch(GOOGLE_SHEETS_WEB_APP_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        userId: user.uid,
+        name: user.displayName || "Anonymous",
+        email: user.email || "No Email",
+        photoURL: user.photoURL || "",
+        timestamp: new Date().toISOString(),
+      }),
+    });
+
+    if (!response.ok) throw new Error("Failed to send data to Google Sheets");
+
+    console.log("✅ User logged in Google Sheets successfully:", user);
+  } catch (error) {
+    console.error("❌ Error logging user to Google Sheets:", error);
   }
 };
 
