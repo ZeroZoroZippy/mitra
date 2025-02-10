@@ -3,7 +3,6 @@ import "./ChatArea.css";
 import ChatHeader from "./ChatHeader";
 import { FaPaperPlane } from "react-icons/fa6";
 import { IoCopyOutline } from "react-icons/io5";
-import { SlLike, SlDislike } from "react-icons/sl";
 import { auth } from "../../../../utils/firebaseConfig";
 import { AiFillLike, AiFillDislike, AiOutlineLike, AiOutlineDislike } from "react-icons/ai";
 import { getMessages, saveMessage, updateLikeStatus } from "../../../../utils/firebaseDb";
