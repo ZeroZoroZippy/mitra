@@ -31,10 +31,7 @@ export const signInWithGoogle = async (): Promise<User | null> => {
     const result = await signInWithPopup(auth, provider);
     const user = result.user;
 
-    console.log("🔥 Full User Data from Firebase:", user);
-
     if (!user) {
-      console.error("❌ No user returned from Firebase.");
       return null;
     }
 
@@ -83,10 +80,7 @@ export const storeUserDetails = async (user: User) => {
       },
       { merge: true }
     );
-
-    console.log("✅ User details stored in Firestore:", user);
   } catch (error) {
-    console.error("❌ Error storing user details:", error);
   }
 };
 
