@@ -3,7 +3,6 @@ import "./ChatArea.css";
 import ChatHeader from "./ChatHeader";
 import { FaPaperPlane } from "react-icons/fa6";
 import { IoCopyOutline } from "react-icons/io5";
-import { SlLike, SlDislike } from "react-icons/sl";
 import { auth } from "../../../../utils/firebaseConfig";
 import { AiFillLike, AiFillDislike, AiOutlineLike, AiOutlineDislike } from "react-icons/ai";
 import { getMessages, saveMessage, updateLikeStatus } from "../../../../utils/firebaseDb";
@@ -50,6 +49,8 @@ const ChatArea: React.FC<ChatAreaProps> = ({
   const [showCopyIcon, setShowCopyIcon] = useState<{ [key: string]: boolean }>({});
   const [activeMessageId, setActiveMessageId] = useState<string | null>(null);
   const [seenMessageId, setSeenMessageId] = useState<string | null>(null); // ✅ Track last seen message
+  // ✅ Get the last AI message ID
+  const lastAiMessageId = messages.filter((msg) => msg.sender === "assistant").slice(-1)[0]?.id || null;
 
   const handleScroll = () => {
     const chatContainer = document.querySelector(".messages-container");
@@ -520,7 +521,13 @@ const handleSendMessage = async () => {
                   {message.sender === "user" && message.id === seenMessageId && (
                     <p className="seen-text">Seen just now</p>
                   )}
-                  <div className="message-actions">
+                  <div
+                    className={`message-actions ${
+                      message.sender === "assistant" && message.id === messages[messages.length - 1]?.id
+                        ? "always-visible"
+                        : "hover-visible"
+                    }`}
+                  >
                     {/* ✅ Copy icon - stays hover-only */}
                     <IoCopyOutline
                       className={`action-icon copy-icon ${activeMessageId === message.id ? "hide-copy" : ""}`}
@@ -528,52 +535,52 @@ const handleSendMessage = async () => {
                       onClick={() => handleCopyMessage(message.text)}
                     />
                     {message.sender === "assistant" && message.id && (
-                    <>
-                    {message.likeStatus === "like" ? (
-                      <AiFillLike
-                        className="action-icon active"
-                        title="Like"
-                        onClick={() => {
-                          if (!message.id) return;
-                          setActiveMessageId(message.id);
-                          handleLikeDislike(message.id, "like", "like");
-                        }}
-                      />
-                    ) : (
-                      <AiOutlineLike
-                        className="action-icon"
-                        title="Like"
-                        onClick={() => {
-                          if (!message.id) return;
-                          setActiveMessageId(message.id);
-                          handleLikeDislike(message.id, message.likeStatus ?? null, "like");
-                        }}
-                      />
-                    )}
+                      <>
+                        {message.likeStatus === "like" ? (
+                          <AiFillLike
+                            className="action-icon active"
+                            title="Like"
+                            onClick={() => {
+                              if (!message.id) return;
+                              setActiveMessageId(message.id);
+                              handleLikeDislike(message.id, "like", "like");
+                            }}
+                          />
+                        ) : (
+                          <AiOutlineLike
+                            className="action-icon"
+                            title="Like"
+                            onClick={() => {
+                              if (!message.id) return;
+                              setActiveMessageId(message.id);
+                              handleLikeDislike(message.id, message.likeStatus ?? null, "like");
+                            }}
+                          />
+                        )}
 
-                    {message.likeStatus === "dislike" ? (
-                      <AiFillDislike
-                        className="action-icon active"
-                        title="Dislike"
-                        onClick={() => {
-                          if (!message.id) return;
-                          setActiveMessageId(message.id);
-                          handleLikeDislike(message.id, "dislike", "dislike");
-                        }}
-                      />
-                    ) : (
-                      <AiOutlineDislike
-                        className="action-icon"
-                        title="Dislike"
-                        onClick={() => {
-                          if (!message.id) return;
-                          setActiveMessageId(message.id);
-                          handleLikeDislike(message.id, message.likeStatus ?? null, "dislike");
-                        }}
-                      />
+                        {message.likeStatus === "dislike" ? (
+                          <AiFillDislike
+                            className="action-icon active"
+                            title="Dislike"
+                            onClick={() => {
+                              if (!message.id) return;
+                              setActiveMessageId(message.id);
+                              handleLikeDislike(message.id, "dislike", "dislike");
+                            }}
+                          />
+                        ) : (
+                          <AiOutlineDislike
+                            className="action-icon"
+                            title="Dislike"
+                            onClick={() => {
+                              if (!message.id) return;
+                              setActiveMessageId(message.id);
+                              handleLikeDislike(message.id, message.likeStatus ?? null, "dislike");
+                            }}
+                          />
+                        )}
+                      </>
                     )}
-                  </>
-                )}
                   </div>
                 </div>
               ))}
