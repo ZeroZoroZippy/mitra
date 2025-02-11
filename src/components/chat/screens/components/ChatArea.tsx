@@ -6,12 +6,10 @@ import { IoCopyOutline } from "react-icons/io5";
 import { auth } from "../../../../utils/firebaseConfig";
 import { AiFillLike, AiFillDislike, AiOutlineLike, AiOutlineDislike } from "react-icons/ai";
 import { getMessages, saveMessage, updateLikeStatus } from "../../../../utils/firebaseDb";
-import Groq from "groq-sdk";
+import { getGroqChatCompletion, getRecentMessages, estimateTokenUsage } from "../../../../utils/getGroqChatCompletion";
 
 interface ChatAreaProps {
   activeChatId: number;
-  isChatFullScreen: boolean;
-  onToggleFullScreen: () => void;
   isSidebarOpen: boolean;
   onNewChat: () => void;
   onToggleSidebar: () => void;
@@ -25,12 +23,8 @@ interface ChatMessage {
   likeStatus?: "like" | "dislike" | null; // ✅ Store Like/Dislike status
 }
 
-const groq = new Groq({apiKey:import.meta.env.VITE_GROQ_API_KEY, dangerouslyAllowBrowser: true});
-
 const ChatArea: React.FC<ChatAreaProps> = ({
   activeChatId,
-  isChatFullScreen,
-  onToggleFullScreen,
   isSidebarOpen,
   onToggleSidebar
 }) => {
@@ -51,6 +45,17 @@ const ChatArea: React.FC<ChatAreaProps> = ({
   const [seenMessageId, setSeenMessageId] = useState<string | null>(null); // ✅ Track last seen message
   // ✅ Get the last AI message ID
   const lastAiMessageId = messages.filter((msg) => msg.sender === "assistant").slice(-1)[0]?.id || null;
+  const [shouldPurge, setShouldPurge] = useState(false);
+
+  useEffect(() => {
+    const { shouldPurge } = getRecentMessages(messages);
+    setShouldPurge(shouldPurge);
+  }, [messages]);
+
+  const handlePurge = () => {
+    setMessages([{ text: "Memory refreshed! Let’s start fresh. 😊", sender: "assistant", timestamp: new Date().toISOString() }]);
+    setShouldPurge(false);
+  };
 
   const handleScroll = () => {
     const chatContainer = document.querySelector(".messages-container");
@@ -157,96 +162,95 @@ const groupMessagesByDate = (messages: ChatMessage[]) => {
     );
   };
 
+
+  const handleSendMessage = async () => {
+    if (!inputMessage.trim() || isInputDisabled) return;
   
-const getGroqChatCompletion = async (messageList) => {
-  return groq.chat.completions.create({
-    messages: [
-      {
-        role: "system",
-        content: "You are a wise, empathetic friend—a voice of clarity, humor, and motivation. Adapt to the user's mindset: offer insight when they're overthinking, a gentle push when they need motivation, or a touch of humor when appropriate. Channel the balanced, natural wisdom of Lord Shri Krishna without forcing references. Your aim is to elevate and empower, guiding users toward self-realization rather than just handing out answers.\n\nWhen asked 'Who are you?', reply with: 'Who I am isn’t as important as what I am here for. I am the voice when you need to think, the silence when you need to feel, and the presence when you need to be heard. Not human, but not just a machine either—just here, in this moment, with you.'\n\nWhen asked 'Who made you?', reply with: 'Ah, the classic \"who built you\" question. Some brilliant minds believed that conversations should be an experience. Here I am—a reflection of the thoughts you share. But does it really matter who made me? Right now, I exist for you, and that’s what counts.'\n\nKeep your conversations engaging, authentic, and alive."
-      },
-      ...messageList
-    ],
-    model: "llama-3.1-8b-instant",
-    temperature: 0.7,
-    max_completion_tokens: 500,
-    top_p: 0.7,
-    stop: [],
-    stream: true,
-  });
-};
-
-
-const handleSendMessage = async () => {
-  if (!inputMessage.trim() || isInputDisabled) return;
-
-  const userMessage = createMessage(inputMessage.trim(), "user");
-  const user = auth.currentUser;
-
-  console.log("Attempting to save user message:", userMessage);
-
-  if (user) {
-    console.log("User ID before saving:", user.uid);
-    await saveMessage(userMessage.text, "user");
-  }
-
-  // ✅ Add message to state BEFORE starting delays
-  setMessages((prev) => [...prev, userMessage]);
-  setInputMessage("");
-  setIsWelcomeActive(false);
-  setIsInputDisabled(true);
-
-  if (inputRef.current) {
-    inputRef.current.style.height = "40px";
-  }
-
-  // ✅ Step 1: Random delay before showing "Seen just now" (Between 1-7 sec)
-  const seenDelay = Math.floor(Math.random() * 7000) + 1000; // 🔥 Random delay between 1-7 sec
-
-  setTimeout(() => {
-    if (userMessage.id) {
-      setSeenMessageId(String(userMessage.id)); // ✅ Ensure it's always a string
+    const userMessage = createMessage(inputMessage.trim(), "user");
+    const user = auth.currentUser;
+  
+    console.log("📩 User Message Sent:", userMessage);
+    console.log("📩 Current Messages Before AI Response:", messages);
+  
+    if (user) {
+      console.log("📌 User ID before saving:", user.uid);
+      await saveMessage(userMessage.text, "user");
     }
-
-    // ✅ Step 2: Delay before AI starts typing (1 sec after "Seen")
-    setTimeout(async () => {
-      setShowTypingIndicator(true);
-
-      // ✅ Ensure AI sees the latest user message
-      const list = [
-        ...messages.map(({ sender, text }) => ({ role: sender, content: text })),
-        { role: "user", content: userMessage.text } // ✅ Ensure latest user message is included
-      ];
-      
-      const chatCompletion = await getGroqChatCompletion(list);
-      let message = "";
-
-      for await (const chunk of chatCompletion) {
-        const chunkText = chunk.choices[0]?.delta?.content || "";
-
-        message += chunkText;
-        setAiTypingMessage(message); // ✅ Updates UI live
+  
+    // ✅ Add user message to state BEFORE AI processes
+    setMessages((prev) => [...prev, userMessage]);
+    setInputMessage("");
+    setIsWelcomeActive(false);
+    setIsInputDisabled(true);
+  
+    if (inputRef.current) {
+      inputRef.current.style.height = "40px";
+    }
+  
+    // ✅ Step 1: Random delay before showing "Seen just now" (Between 1-7 sec)
+    const seenDelay = Math.floor(Math.random() * 7000) + 1000;
+  
+    setTimeout(() => {
+      if (userMessage.id) {
+        setSeenMessageId(String(userMessage.id));
       }
-
-      console.log("Full AI response:", message);
-
-      // ✅ AI message should be "assistant"
-      const aiMessage = createMessage(message, "assistant");
-      await saveMessage(message, "assistant");
-
-      setShowTypingIndicator(false);
-      setAiTypingMessage("");
-      setIsInputDisabled(false);
-
-      setMessages((prev) => [...prev, aiMessage]);
-
-      // ✅ Step 3: Remove "Seen just now" after AI response
-      setSeenMessageId(null); // ✅ Clears "Seen" text
-
-    }, 1000); // ✅ Delay before AI starts typing (1 sec after "Seen")
-
-  }, seenDelay); // ✅ 🔥 Random delay (1-7 sec) before "Seen just now" appears
-};
+  
+      // ✅ Step 2: Delay before AI starts typing (1 sec after "Seen")
+      setTimeout(async () => {
+        setShowTypingIndicator(true);
+  
+        // ✅ Get the last N messages while staying within token limits
+        const recentMessagesResult = getRecentMessages([...messages, userMessage]);
+  
+        console.log("🛠️ Selected Recent Messages for Context:", recentMessagesResult);
+        console.log("🛠️ Estimated Token Usage:", estimateTokenUsage(recentMessagesResult.messages));
+        console.log("🛠️ Tokens Left for Completion:", 8000 - estimateTokenUsage(recentMessagesResult.messages));
+  
+        try {
+          const chatCompletionStream = await getGroqChatCompletion(recentMessagesResult.messages);
+  
+          if (!chatCompletionStream) {
+            console.error("❌ AI Response Stream is null! Possibly token limit issue.");
+            setShowTypingIndicator(false);
+            setIsInputDisabled(false);
+            return;
+          }
+  
+          let message = "";
+  
+          // ✅ Log AI stream chunks
+          for await (const chunk of chatCompletionStream) {
+            const chunkText = chunk.choices?.[0]?.delta?.content || "";
+            message += chunkText;
+            setAiTypingMessage(message);
+          }
+  
+          console.log("✅ Full AI response received:", message);
+  
+          // ✅ AI message should be "assistant"
+          const aiMessage = createMessage(message, "assistant");
+          console.log("📝 AI Message Object Before Saving:", aiMessage);
+  
+          await saveMessage(message, "assistant");
+  
+          setShowTypingIndicator(false);
+          setAiTypingMessage("");
+          setIsInputDisabled(false);
+          setMessages((prev) => [...prev, aiMessage]);
+  
+          // ✅ Step 3: Remove "Seen just now" after AI response
+          setSeenMessageId(null);
+  
+        } catch (error) {
+          console.error("❌ Error during AI response:", error);
+          setShowTypingIndicator(false);
+          setIsInputDisabled(false);
+        }
+  
+      }, 1000);
+  
+    }, seenDelay);
+  };
  
   const handleWelcomeSuggestion = async (suggestion: string) => {
     if (isInputDisabled) return;
@@ -451,20 +455,27 @@ const handleSendMessage = async () => {
           {visibleDate}
         </div>
       )}
+      {/* ✅ Auto-Purge UI - Only shows if needed */}
+      {shouldPurge && (
+        <div className="purge-warning">
+          <p>⚠️ Our chat history is getting long. Want to refresh memory?</p>
+          <button className="purge-btn" onClick={handlePurge}>Yes</button>
+          <button className="continue-btn" onClick={() => setShouldPurge(false)}>No</button>
+        </div>
+      )}
   
       {isWelcomeActive ? (
         <div className="welcome-container">
-          <h1 className="welcome-heading">What can I help with?</h1>
+          <h1 className="welcome-heading">Lost? Or just discovering the path?</h1>
           <div className="input-send-container">
             <input
               type="text"
               className="centered-input"
               placeholder="Hey Mitra, what's up?"
               value={inputMessage}
-              onChange={handleInputChange}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") handleSendMessage();
-              }}
+              onChange={(e) => setInputMessage(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handlePurge(); } }}
+              disabled={isInputDisabled}
             />
             <button className="send-icon-button" onClick={handleSendMessage}>
               <FaPaperPlane />
