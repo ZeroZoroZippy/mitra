@@ -52,10 +52,7 @@ export const saveMessage = async (
       timestamp: new Date().toISOString(), // Ensure consistent format
       likeStatus, // ✅ Storing Like/Dislike State
     });
-
-    console.log(`✅ Message saved correctly under userId: ${user.uid}`);
   } catch (error) {
-    console.error("Error saving message:", error);
   }
 };
 
