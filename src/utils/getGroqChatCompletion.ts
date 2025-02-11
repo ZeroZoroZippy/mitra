@@ -16,10 +16,11 @@ export const estimateTokenUsage = (messages: ChatMessage[]) => {
 /**
  * ✅ Function to Get Last Messages Within Token Limit
  */
+const MAX_TOKENS = 7500; // ✅ Groq's model can handle up to 8192 tokens
+const MIN_TOKENS = 4500; // ✅ Soft limit for warning
+const MAX_MESSAGES = 10; // ✅ Fallback: Max 10 messages if tokens allow
+
 export const getRecentMessages = (messages: ChatMessage[]): ChatMessage[] => {
-  const MAX_TOKENS = 7500; // ✅ Groq's model can handle up to 8192 tokens
-  const MIN_TOKENS = 4500; // ✅ Soft limit for warning
-  const MAX_MESSAGES = 10; // ✅ Fallback: Max 10 messages if tokens allow
 
   let selectedMessages: ChatMessage[] = [];
   let tokenCount = 0;
