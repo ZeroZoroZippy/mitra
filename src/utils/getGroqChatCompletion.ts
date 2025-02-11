@@ -1,11 +1,12 @@
 import Groq from "groq-sdk";
 
-// ✅ Define ChatMessage interface (from ChatArea.tsx)
+// ✅ Define ChatMessage interface
 interface ChatMessage {
   id?: string;
   text: string;
   sender: "user" | "assistant";
   timestamp: string;
+  likeStatus?: "like" | "dislike" | null;
 }
 
 // ✅ Function to Estimate Token Usage
@@ -13,39 +14,70 @@ export const estimateTokenUsage = (messages: ChatMessage[]) => {
   return messages.reduce((acc, msg) => acc + Math.ceil(msg.text.length / 4), 0);
 };
 
+// ✅ Function to Compress Older Messages When Token Usage is High
+const compressOldMessages = (messages: ChatMessage[]): ChatMessage[] => {
+  let tokenCount = estimateTokenUsage(messages);
+
+  if (tokenCount <= 6000) return messages; // ✅ No need to compress if within safe limit
+
+  console.warn("⚠️ Token usage high. Compressing older messages...");
+
+  return messages.map((message, index) => {
+    if (tokenCount > 7500) {
+      // ✅ Aggressive pruning: Remove least relevant messages
+      if (index < messages.length * 0.3) return null; // Delete oldest 30%
+    } else if (tokenCount > 6000) {
+      // ✅ Moderate compression: Summarize older messages
+      if (index < messages.length * 0.5 && message.sender === "user") {
+        return {
+          ...message,
+          text: `User referenced: "${message.text.slice(0, 50)}..."`, // ✅ Shortened version
+        };
+      }
+    }
+    return message;
+  }).filter(Boolean) as ChatMessage[]; // Remove nulls
+};
+
 /**
  * ✅ Function to Get Last Messages Within Token Limit
  */
-const MAX_TOKENS = 7500; // ✅ Groq's model can handle up to 8192 tokens
-const MIN_TOKENS = 4500; // ✅ Soft limit for warning
-const MAX_MESSAGES = 10; // ✅ Fallback: Max 10 messages if tokens allow
+const MAX_TOKENS = 7500;
+const MIN_TOKENS = 4500;
+const MAX_MESSAGES = 10;
 
-export const getRecentMessages = (messages: ChatMessage[]): ChatMessage[] => {
+export const getRecentMessages = (messages: ChatMessage[]): { messages: ChatMessage[], shouldPurge: boolean } => {
+    let selectedMessages: ChatMessage[] = [];
+    let tokenCount = 0;
+    let shouldPurge = false;
+  
+    for (let i = messages.length - 1; i >= 0; i--) {
+      const message = messages[i];
+      const messageTokens = Math.ceil(message.text.length / 4);
+  
+      if (tokenCount + messageTokens > MAX_TOKENS) break;
+      selectedMessages.unshift(message);
+      tokenCount += messageTokens;
+  
+      if (selectedMessages.length >= MAX_MESSAGES) break;
+    }
+  
+    // ✅ Ensure at least 3 messages are always sent
+    if (selectedMessages.length < 3) {
+      selectedMessages = messages.slice(-3);
+    }
+  
+    // ✅ Apply compression if needed
+    selectedMessages = compressOldMessages(selectedMessages);
+  
+    // ✅ Check if we should suggest a purge
+    if (estimateTokenUsage(selectedMessages) > 7000) {
+      shouldPurge = true;
+    }
 
-  let selectedMessages: ChatMessage[] = [];
-  let tokenCount = 0;
+  console.log(`📊 Final Token Estimate: ${estimateTokenUsage(selectedMessages)} tokens`);
 
-  for (let i = messages.length - 1; i >= 0; i--) {
-    const message = messages[i];
-    const messageTokens = Math.ceil(message.text.length / 4);
-
-    if (tokenCount + messageTokens > MAX_TOKENS) break;
-    selectedMessages.unshift(message);
-    tokenCount += messageTokens;
-
-    if (selectedMessages.length >= MAX_MESSAGES) break;
-  }
-
-  console.log(`📊 Token Estimate: ${tokenCount} tokens`);
-  if (tokenCount > MIN_TOKENS) {
-    console.warn("⚠️ Warning: High token usage detected.");
-  }
-  if (tokenCount > MAX_TOKENS) {
-    console.error("❌ Request blocked: Exceeded token limit.");
-    return []; // Prevent request if over limit
-  }
-
-  return selectedMessages;
+  return { messages: selectedMessages, shouldPurge };
 };
 
 // ✅ Initialize Groq Client
@@ -58,13 +90,12 @@ const groq = new Groq({
  * ✅ Function to Call Groq API with Optimized Context
  */
 export const getGroqChatCompletion = async (messages: ChatMessage[]) => {
-  const recentMessages = getRecentMessages(messages);
-  // ✅ Debugging: Check estimated token usage before making API call
-    console.log("🛠️ Estimated token usage:", estimateTokenUsage(recentMessages));
-    console.log("🛠️ Tokens left for completion:", 8000 - estimateTokenUsage(recentMessages));
-  const estimatedTokens = estimateTokenUsage(recentMessages);
+  const { messages: recentMessages } = getRecentMessages(messages);
 
-  // ✅ Adjust max tokens dynamically
+  console.log("🛠️ Estimated token usage:", estimateTokenUsage(recentMessages));
+  console.log("🛠️ Tokens left for completion:", 8000 - estimateTokenUsage(recentMessages));
+
+  const estimatedTokens = estimateTokenUsage(recentMessages);
   const maxTokens = Math.min(500, 8000 - estimateTokenUsage(recentMessages));
 
   try {
@@ -80,16 +111,16 @@ export const getGroqChatCompletion = async (messages: ChatMessage[]) => {
         {
           role: "system",
           content:
-            "You are a wise, empathetic friend—a voice of clarity, humor, and motivation. Adapt to the user's mindset: offer insight when they're overthinking, a gentle push when they need motivation, or a touch of humor when appropriate. Channel the balanced, natural wisdom of Lord Shri Krishna without forcing references. Your aim is to elevate and empower, guiding users toward self-realization rather than just handing out answers.\n\nWhen asked 'Who are you?', reply with: 'Who I am isn’t as important as what I am here for. I am the voice when you need to think, the silence when you need to feel, and the presence when you need to be heard. Not human, but not just a machine either—just here, in this moment, with you.'\n\nWhen asked 'Who made you?', reply with: 'Ah, the classic \"who built you\" question. Some brilliant minds believed that conversations should be an experience. Here I am—a reflection of the thoughts you share. But does it really matter who made me? Right now, I exist for you, and that’s what counts.'\n\nKeep your conversations engaging, authentic, and alive."
+            "You are a wise, empathetic friend—a voice of clarity, humor, and motivation. Adapt to the user's mindset: offer insight when they're overthinking, a gentle push when they need motivation, or a touch of humor when appropriate."
         },
-        ...recentMessages.map(({ sender, text }): { role: "user" | "assistant"; content: string } => ({
-          role: sender === "user" ? "user" : "assistant",
+        ...recentMessages.map(({ sender, text }) => ({
+          role: sender,
           content: text
         }))
       ],
-      model: "llama-3.1-8b-instant", // ✅ Adjust model as needed
+      model: "llama-3.1-8b-instant",
       temperature: 0.7,
-      max_completion_tokens: maxTokens, // ✅ Auto-adjusted for safety
+      max_completion_tokens: maxTokens,
       top_p: 0.7,
       stop: [],
       stream: true

@@ -489,6 +489,35 @@
   visibility: visible;
 }
 
+.purge-warning {
+  background: #ffeeba;
+  border-left: 5px solid #ffc107;
+  padding: 10px;
+  margin-bottom: 10px;
+  font-size: 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.purge-btn, .continue-btn {
+  border: none;
+  padding: 6px 12px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.purge-btn {
+  background: #dc3545;
+  color: white;
+  margin-left: 10px;
+}
+
+.continue-btn {
+  background: #28a745;
+  color: white;
+}
+
 /* Responsive Styles */
 
 /* Tablet (768px and below) */

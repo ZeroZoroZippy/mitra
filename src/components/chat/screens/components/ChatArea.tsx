@@ -45,6 +45,17 @@ const ChatArea: React.FC<ChatAreaProps> = ({
   const [seenMessageId, setSeenMessageId] = useState<string | null>(null); // ✅ Track last seen message
   // ✅ Get the last AI message ID
   const lastAiMessageId = messages.filter((msg) => msg.sender === "assistant").slice(-1)[0]?.id || null;
+  const [shouldPurge, setShouldPurge] = useState(false);
+
+  useEffect(() => {
+    const { shouldPurge } = getRecentMessages(messages);
+    setShouldPurge(shouldPurge);
+  }, [messages]);
+
+  const handlePurge = () => {
+    setMessages([{ text: "Memory refreshed! Let’s start fresh. 😊", sender: "assistant", timestamp: new Date().toISOString() }]);
+    setShouldPurge(false);
+  };
 
   const handleScroll = () => {
     const chatContainer = document.querySelector(".messages-container");
@@ -189,14 +200,14 @@ const groupMessagesByDate = (messages: ChatMessage[]) => {
         setShowTypingIndicator(true);
   
         // ✅ Get the last N messages while staying within token limits
-        const recentMessages = getRecentMessages([...messages, userMessage]);
+        const recentMessagesResult = getRecentMessages([...messages, userMessage]);
   
-        console.log("🛠️ Selected Recent Messages for Context:", recentMessages);
-        console.log("🛠️ Estimated Token Usage:", estimateTokenUsage(recentMessages));
-        console.log("🛠️ Tokens Left for Completion:", 8000 - estimateTokenUsage(recentMessages));
+        console.log("🛠️ Selected Recent Messages for Context:", recentMessagesResult);
+        console.log("🛠️ Estimated Token Usage:", estimateTokenUsage(recentMessagesResult.messages));
+        console.log("🛠️ Tokens Left for Completion:", 8000 - estimateTokenUsage(recentMessagesResult.messages));
   
         try {
-          const chatCompletionStream = await getGroqChatCompletion(recentMessages);
+          const chatCompletionStream = await getGroqChatCompletion(recentMessagesResult.messages);
   
           if (!chatCompletionStream) {
             console.error("❌ AI Response Stream is null! Possibly token limit issue.");
@@ -444,20 +455,27 @@ const groupMessagesByDate = (messages: ChatMessage[]) => {
           {visibleDate}
         </div>
       )}
+      {/* ✅ Auto-Purge UI - Only shows if needed */}
+      {shouldPurge && (
+        <div className="purge-warning">
+          <p>⚠️ Our chat history is getting long. Want to refresh memory?</p>
+          <button className="purge-btn" onClick={handlePurge}>Yes</button>
+          <button className="continue-btn" onClick={() => setShouldPurge(false)}>No</button>
+        </div>
+      )}
   
       {isWelcomeActive ? (
         <div className="welcome-container">
-          <h1 className="welcome-heading">What can I help with?</h1>
+          <h1 className="welcome-heading">Lost? Or just discovering the path?</h1>
           <div className="input-send-container">
             <input
               type="text"
               className="centered-input"
               placeholder="Hey Mitra, what's up?"
               value={inputMessage}
-              onChange={handleInputChange}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") handleSendMessage();
-              }}
+              onChange={(e) => setInputMessage(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handlePurge(); } }}
+              disabled={isInputDisabled}
             />
             <button className="send-icon-button" onClick={handleSendMessage}>
               <FaPaperPlane />
