@@ -7,6 +7,7 @@ import { auth } from "../../../../utils/firebaseConfig";
 import { AiFillLike, AiFillDislike, AiOutlineLike, AiOutlineDislike } from "react-icons/ai";
 import { getMessages, saveMessage, updateLikeStatus } from "../../../../utils/firebaseDb";
 import { getGroqChatCompletion, getRecentMessages, estimateTokenUsage } from "../../../../utils/getGroqChatCompletion";
+import { exportToGoogleSheets, syncFirestoreToGoogleSheets } from "../../../../utils/googleSheets";
 
 interface ChatAreaProps {
   activeChatId: number;
@@ -46,6 +47,7 @@ const ChatArea: React.FC<ChatAreaProps> = ({
   // ✅ Get the last AI message ID
   const lastAiMessageId = messages.filter((msg) => msg.sender === "assistant").slice(-1)[0]?.id || null;
   const [shouldPurge, setShouldPurge] = useState(false);
+  const BACKUP_SYNC_INTERVAL = 900000;
 
   useEffect(() => {
     const { shouldPurge } = getRecentMessages(messages);
@@ -335,6 +337,17 @@ const groupMessagesByDate = (messages: ChatMessage[]) => {
       console.error("Error updating like status:", error);
     }
   };
+
+  useEffect(() => {
+    syncFirestoreToGoogleSheets(); // ✅ Only one real-time listener will be created now
+    
+    const interval = setInterval(() => {
+      console.log("⏳ Running scheduled backup sync...");
+      exportToGoogleSheets(); // ✅ Backup sync ensures no messages are lost
+    }, BACKUP_SYNC_INTERVAL);
+  
+    return () => clearInterval(interval);
+  }, []);
 
   // ✅ Delay before showing the copy icon
   useEffect(() => {
