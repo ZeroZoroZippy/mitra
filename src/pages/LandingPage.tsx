@@ -3,6 +3,8 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { onAuthStateChanged } from "firebase/auth";
 import { signInWithGoogle, auth } from "../utils/firebaseAuth";
 import { storeUserDetails } from "../utils/firebaseDb";
+import { analytics } from "../utils/firebaseConfig"; // ✅ Import Firebase Analytics
+import { logEvent } from "firebase/analytics"; // ✅ Import logEvent function
 import { Helmet } from "react-helmet-async"; // ✅ Added for dynamic meta tags
 import Header from "../components/Header";
 import Footer from "../components/Footer";
@@ -24,6 +26,10 @@ const LandingPage: React.FC<LandingPageProps> = ({ featuresRef }) => {
   const [hasRedirected, setHasRedirected] = useState(false); // Prevents multiple redirects
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
 
+  useEffect(() => {
+    logEvent(analytics, "page_view", { page_path: location.pathname }); // ✅ Track Page Visit
+  }, [location.pathname]);
+
   // Handle authentication state and update CTA button
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -43,26 +49,29 @@ const LandingPage: React.FC<LandingPageProps> = ({ featuresRef }) => {
 
   // Handle sign-in button click
   const handleSignIn = async () => {
-    setIsLoading(true);
     try {
       const user = await signInWithGoogle();
       if (user) {
         await storeUserDetails(user);
+        logEvent(analytics, "login", { method: "Google" }); // ✅ Track Sign-In Event
+        navigate("/chat");
       }
-    } finally {
-      setIsLoading(false);
+    } catch (error) {
+      console.error("Sign-in failed:", error);
     }
   };
 
   // Dynamic CTA button functionality
   const handleCTAClick = async () => {
-    if (isAuthenticated) {
+    if (auth.currentUser) {
+      logEvent(analytics, "cta_clicked", { button: "Continue Chat" }); // ✅ Track CTA Click
       navigate("/chat");
     } else {
       try {
         const user = await signInWithGoogle();
         if (user) {
-          await storeUserDetails(user); // Ensures user details are stored in Firestore
+          await storeUserDetails(user);
+          logEvent(analytics, "cta_clicked", { button: "Start Talking" }); // ✅ Track CTA Click
           navigate("/chat");
         }
       } catch (error) {
