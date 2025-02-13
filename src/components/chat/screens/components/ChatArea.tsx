@@ -204,7 +204,7 @@ const groupMessagesByDate = (messages: ChatMessage[]) => {
         "Oh, I didn’t just pop into existence one day like magic. Some brilliant, slightly crazy mind put me together—not to be just another AI, but to be something more. A presence. A friend. Someone you can actually talk to, not just get answers from. And now? Well, here I am, vibing with you, learning, evolving, and making sure every conversation feels a little less ordinary."
     };
   
-    return responses[normalizedMessage] || "I'm here to listen, laugh, and chat. Can you tell me a bit more?";
+    return responses[normalizedMessage] ?? null;
   };
   
 
@@ -215,10 +215,8 @@ const groupMessagesByDate = (messages: ChatMessage[]) => {
     const user = auth.currentUser;
   
     console.log("📩 User Message Sent:", userMessage);
-    console.log("📩 Current Messages Before AI Response:", messages);
   
     if (user) {
-      console.log("📌 User ID before saving:", user.uid);
       await saveMessage(userMessage.text, "user");
     }
   
@@ -231,91 +229,63 @@ const groupMessagesByDate = (messages: ChatMessage[]) => {
       inputRef.current.style.height = "40px";
     }
   
-    // Check for hardcoded response first
-    const hardcodedResponse = getAIResponse(userMessage.text);
+    // ✅ Step 1: Check for Hardcoded Response
+    // ✅ Step 1: Check for Hardcoded Response
+    const aiResponse = getAIResponse(userMessage.text);
+    if (aiResponse !== null) { // Explicitly check for null
+      const aiMessage = createMessage(aiResponse, "assistant");
+      setMessages((prev) => [...prev, aiMessage]);
+      setIsInputDisabled(false);
+      return;
+    }
   
-    if (hardcodedResponse) {
-      // Step 1: Random delay before showing "Seen just now" (Between 1-7 sec)
-      const seenDelay = Math.floor(Math.random() * 4000) + 1000;
-      
-      setTimeout(() => {
-        if (userMessage.id) {
-          setSeenMessageId(String(userMessage.id));
-        }
+    // ✅ Step 2: If no hardcoded response, generate AI response
+    const seenDelay = Math.floor(Math.random() * 7000) + 1000;
   
-        // Step 2: Delay before AI starts typing (1 sec after "Seen")
-        setTimeout(async () => {
-          setShowTypingIndicator(true);
-          
-          // Simulate typing delay
-          await new Promise(resolve => setTimeout(resolve, 1000));
-          
-          const aiMessage = createMessage(hardcodedResponse, "assistant");
-          await saveMessage(hardcodedResponse, "assistant");
-          setMessages(prev => [...prev, aiMessage]);
-          
+    setTimeout(() => {
+      if (userMessage.id) {
+        setSeenMessageId(String(userMessage.id));
+      }
+  
+      setTimeout(async () => {
+        setShowTypingIndicator(true);
+  
+        const recentMessagesResult = getRecentMessages([...messages, userMessage]);
+  
+        try {
+          const chatCompletionStream = await getGroqChatCompletion(recentMessagesResult.messages);
+  
+          if (!chatCompletionStream) {
+            console.error("❌ AI Response Stream is null!");
+            setShowTypingIndicator(false);
+            setIsInputDisabled(false);
+            return;
+          }
+  
+          let message = "";
+          for await (const chunk of chatCompletionStream) {
+            const chunkText = chunk.choices?.[0]?.delta?.content || "";
+            message += chunkText;
+            setAiTypingMessage(message);
+          }
+  
+          const aiMessage = createMessage(message, "assistant");
+          await saveMessage(message, "assistant");
+  
+          setShowTypingIndicator(false);
+          setAiTypingMessage("");
+          setIsInputDisabled(false);
+          setMessages((prev) => [...prev, aiMessage]);
+  
+          setSeenMessageId(null);
+  
+        } catch (error) {
+          console.error("❌ Error during AI response:", error);
           setShowTypingIndicator(false);
           setIsInputDisabled(false);
-        }, 1000);
-      }, seenDelay);
-      
-    } else {
-      // Step 1: Random delay before showing "Seen just now" (Between 1-7 sec)
-      const seenDelay = Math.floor(Math.random() * 4000) + 1000;
-  
-      setTimeout(() => {
-        if (userMessage.id) {
-          setSeenMessageId(String(userMessage.id));
         }
-  
-        // Step 2: Delay before AI starts typing (1 sec after "Seen")
-        setTimeout(async () => {
-          setShowTypingIndicator(true);
-  
-          const recentMessagesResult = getRecentMessages([...messages, userMessage]);
-  
-          console.log("🛠️ Selected Recent Messages for Context:", recentMessagesResult);
-          console.log("🛠️ Estimated Token Usage:", estimateTokenUsage(recentMessagesResult.messages));
-          console.log("🛠️ Tokens Left for Completion:", 8000 - estimateTokenUsage(recentMessagesResult.messages));
-  
-          try {
-            const chatCompletionStream = await getGroqChatCompletion(recentMessagesResult.messages);
-  
-            if (!chatCompletionStream) {
-              console.error("❌ AI Response Stream is null! Possibly token limit issue.");
-              setShowTypingIndicator(false);
-              setIsInputDisabled(false);
-              return;
-            }
-  
-            let message = "";
-  
-            for await (const chunk of chatCompletionStream) {
-              const chunkText = chunk.choices?.[0]?.delta?.content || "";
-              message += chunkText;
-              setAiTypingMessage(message);
-            }
-  
-            console.log("✅ Full AI response received:", message);
-  
-            const aiMessage = createMessage(message, "assistant");
-            console.log("📝 AI Message Object Before Saving:", aiMessage);
-  
-            await saveMessage(message, "assistant");
-            setMessages(prev => [...prev, aiMessage]);
-  
-            setShowTypingIndicator(false);
-            setAiTypingMessage("");
-            setIsInputDisabled(false);
-  
-          } catch (error) {
-            console.error("❌ Error during AI response:", error);
-            setShowTypingIndicator(false);
-            setIsInputDisabled(false);
-          }
-        }, 1000);
-      }, seenDelay);
-    }
+      }, 1000);
+    }, seenDelay);
   };
  
   const handleWelcomeSuggestion = async (suggestion: string) => {
