@@ -49,7 +49,7 @@ const Header: React.FC<HeaderProps> = ({ featuresRef }) => {
       <div className="header-container">
         {/* Logo */}
         <div className="header-logo">
-          <a href="/">Mitra</a>
+          <a href="/">Saarth</a>
         </div>
 
         {/* Desktop Navigation */}
@@ -61,7 +61,7 @@ const Header: React.FC<HeaderProps> = ({ featuresRef }) => {
             About
           </a>
           <button className="cta-button" onClick={handleCTAClick}>
-            {isAuthenticated ? "Continue Chat" : "Try Mitra"}
+            {isAuthenticated ? "Continue Chat" : "Try Saarth"}
           </button>
         </nav>
 
@@ -88,7 +88,7 @@ const Header: React.FC<HeaderProps> = ({ featuresRef }) => {
             Contact
           </a>
           <button className="mobile-cta-button" onClick={handleCTAClick}>
-            {isAuthenticated ? "Continue Chat" : "Try Mitra"}
+            {isAuthenticated ? "Continue Chat" : "Try Saarth"}
           </button>
         </div>
       )}

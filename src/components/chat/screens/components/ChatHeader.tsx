@@ -81,7 +81,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({ isSidebarOpen, onToggleSidebar 
 
       {/* ✅ Chat Title */}
       <div className="chat-header-center">
-        <h3>Chat with Mitra</h3>
+        <h3>Chat with Saarth</h3>
       </div>
 
       {/* ✅ Profile Avatar & Logout Menu */}

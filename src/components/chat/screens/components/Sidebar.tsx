@@ -45,7 +45,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   };
 
   const handleFeedback = () => {
-    window.location.href = "mailto:yourmitra08@gmail.com?subject=Feedback for Mitra&body=Hello, I'd like to share some feedback...";
+    window.location.href = "mailto:yourSaarth08@gmail.com?subject=Feedback for Saarth&body=Hello, I'd like to share some feedback...";
   };
   
 

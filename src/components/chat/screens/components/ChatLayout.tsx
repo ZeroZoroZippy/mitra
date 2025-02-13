@@ -21,7 +21,7 @@ const ChatLayout: React.FC = () => {
   const chatList: Chat[] = [
     {
       id: 1,
-      title: "Chat with Mitra",
+      title: "Chat with Saarth",
       timestamp: new Date().toLocaleString("en-US", {
         hour: "numeric",
         minute: "numeric",

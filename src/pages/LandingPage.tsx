@@ -137,27 +137,27 @@ const LandingPage: React.FC<LandingPageProps> = ({ featuresRef }) => {
         </section>
   
         {/* Why Saarth Section */}
-        <div className="why-saarth">
-          <div className="why-saarth-header">
-            <h2 className="why-saarth-title">Why Saarth?</h2>
-            <p className="why-saarth-description">
+        <div className="why-Saarth">
+          <div className="why-Saarth-header">
+            <h2 className="why-Saarth-title">Why Saarth?</h2>
+            <p className="why-Saarth-description">
               In a world where genuine connection can sometimes be hard to find, Saarth offers a friendly ear and honest conversation—no gimmicks, just real talk.
             </p>
           </div>
-          <div className="why-saarth-content">
-            <div className="why-saarth-item">
+          <div className="why-Saarth-content">
+            <div className="why-Saarth-item">
               <h3 className="item-title">The Value of Connection</h3>
               <p className="item-description">
                 Feeling truly heard matters. Saarth is here to bridge that gap, providing a warm and supportive presence whenever you need it.
               </p>
             </div>
-            <div className="why-saarth-item">
+            <div className="why-Saarth-item">
               <h3 className="item-title">Empathy in Action</h3>
               <p className="item-description">
                 More than just answering questions, Saarth tunes into your feelings, listening to both your words and your heart.
               </p>
             </div>
-            <div className="why-saarth-item">
+            <div className="why-Saarth-item">
               <h3 className="item-title">Your Late-Night Confidant</h3>
               <p className="item-description">
                 Some thoughts can’t wait until morning. Whether it’s a late-night reflection or an early chat, Saarth is always here to help you find clarity.
