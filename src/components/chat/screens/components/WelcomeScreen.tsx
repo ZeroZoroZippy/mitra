@@ -10,7 +10,7 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onStartChat }) => {
     <div className="welcome-screen">
       {/* Header */}
       <div className="welcome-header">
-        <h1>Hi, I’m Mitra. Let’s chat!</h1>
+        <h1>Hi, I’m Saarth. Let’s chat!</h1>
         <p>What’s on your mind today?</p>
       </div>
 

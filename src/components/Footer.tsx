@@ -33,10 +33,10 @@ const Footer = () => {
       <div className="footer-container">
         {/* Left Section */}
         <div className="footer-left">
-          <h3>Mitra</h3>
+          <h3>Saarth</h3>
           <p>Your trusted 2AM friend.</p>
           <button className="cta-button-footer" onClick={handleCTAClick}>
-            {isAuthenticated ? "Continue Chat" : "Try Mitra"}
+            {isAuthenticated ? "Continue Chat" : "Try Saarth"}
           </button>
         </div>
 
@@ -54,7 +54,7 @@ const Footer = () => {
       </div>
 
       <div className="footer-bottom">
-        <p>&copy; {new Date().getFullYear()} Mitra. All rights reserved.</p>
+        <p>&copy; {new Date().getFullYear()} Saarth. All rights reserved.</p>
       </div>
     </footer>
   );

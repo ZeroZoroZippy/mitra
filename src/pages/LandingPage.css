@@ -127,40 +127,40 @@
     color: #4a5568;
 }
 
-/* Why Mitra Section */
-.why-mitra {
+/* Why Saarth Section */
+.why-Saarth {
     width: 100%;
     padding: 4rem 2rem;
     background-color: #faf9f5;
 }
 
-.why-mitra-header {
+.why-Saarth-header {
     text-align: center;
     margin-bottom: 3rem;
 }
 
-.why-mitra-title {
+.why-Saarth-title {
     font-size: 2.5rem;
     font-weight: bold;
     margin-bottom: 1rem;
     color: #141413;
 }
 
-.why-mitra-description {
+.why-Saarth-description {
     font-size: 1.25rem;
     color: #4a5568;
     margin: 0 auto;
     max-width: 600px;
 }
 
-.why-mitra-content {
+.why-Saarth-content {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
     gap: 2rem;
     margin-top: 2rem;
 }
 
-.why-mitra-item {
+.why-Saarth-item {
     padding: 1.5rem;
     background-color: #fff;
     border-radius: 0.5rem;
@@ -214,19 +214,19 @@
         padding: 2rem 1rem;
     }
 
-    .why-mitra {
+    .why-Saarth {
         padding: 4rem 1rem;
     }
 
-    .why-mitra-title {
+    .why-Saarth-title {
         font-size: 2rem;
     }
 
-    .why-mitra-description {
+    .why-Saarth-description {
         font-size: 1rem;
     }
 
-    .why-mitra-item {
+    .why-Saarth-item {
         padding: 1rem;
     }
 

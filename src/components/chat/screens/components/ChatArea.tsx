@@ -5,9 +5,12 @@ import { FaPaperPlane } from "react-icons/fa6";
 import { IoCopyOutline } from "react-icons/io5";
 import { auth } from "../../../../utils/firebaseConfig";
 import { AiFillLike, AiFillDislike, AiOutlineLike, AiOutlineDislike } from "react-icons/ai";
-import { getMessages, saveMessage, updateLikeStatus } from "../../../../utils/firebaseDb";
+import { getMessages, saveMessage, updateLikeStatus} from "../../../../utils/firebaseDb";
 import { getGroqChatCompletion, getRecentMessages, estimateTokenUsage } from "../../../../utils/getGroqChatCompletion";
 import { exportToGoogleSheets, syncFirestoreToGoogleSheets } from "../../../../utils/googleSheets";
+import { getDoc, doc, getFirestore } from "firebase/firestore";
+
+const db = getFirestore();
 
 interface ChatAreaProps {
   activeChatId: number;
@@ -48,6 +51,39 @@ const ChatArea: React.FC<ChatAreaProps> = ({
   const lastAiMessageId = messages.filter((msg) => msg.sender === "assistant").slice(-1)[0]?.id || null;
   const [shouldPurge, setShouldPurge] = useState(false);
   const BACKUP_SYNC_INTERVAL = 900000;
+  const [firstName, setFirstName] = useState<string>("friend");
+
+  // ✅ Fetch user's first name when component mounts
+  useEffect(() => {
+    const fetchUserName = async () => {
+      const user = auth.currentUser;
+      if (user) {
+        console.log("📌 User logged in:", user.uid);
+  
+        // ✅ Extract first name from displayName
+        if (user.displayName) {
+          const firstName = user.displayName.split(" ")[0]; // Get the first word
+          console.log("📌 Extracted First Name:", firstName);
+          setFirstName(firstName);
+          return;
+        }
+  
+        // ✅ If displayName is missing, check Firestore
+        const userRef = doc(db, "users", user.uid);
+        const userSnap = await getDoc(userRef);
+  
+        if (userSnap.exists()) {
+          const userData = userSnap.data();
+          console.log("📌 Retrieved User Data:", userData);
+          setFirstName(userData.firstName || "friend"); // Use Firestore or fallback
+        } else {
+          console.warn("⚠️ No user document found in Firestore!");
+        }
+      }
+    };
+  
+    fetchUserName();
+  }, []);
 
   useEffect(() => {
     const { shouldPurge } = getRecentMessages(messages);
@@ -148,25 +184,29 @@ const groupMessagesByDate = (messages: ChatMessage[]) => {
   };
 
   const getAIResponse = (userMessage: string) => {
+    const normalizedMessage = userMessage
+      .toLowerCase()
+      .trim()
+      .replace(/[^\w\s]/gi, ""); // Removes punctuation // ✅ Normalize input
+  
     const responses: { [key: string]: string } = {
-      "I had this interesting dream last night...":
+      "i had this interesting dream last night...":
         "Dreams are like your mind’s own little movie—full of quirky twists and cool surprises! What was the most fun part of your dream?",
-      "I could use some advice about...":
+      "i could use some advice about...":
         "I'm all ears, buddy. Lay it on me—let's figure it out together.",
-      "I've been feeling uncertain about...":
+      "i've been feeling uncertain about...":
         "Sometimes a little uncertainty is just life’s way of keeping things interesting. What’s been on your mind? I’m here to help clear the fog.",
-      "Hey, can we just chat?":
+      "hey, can we just chat?":
         "Absolutely! I’m here for a chill, fun chat. How’s your day shaping up?",
-      "Who made you":
-        "I wasn’t made by just one person. I’m the creation of a bunch of brilliant, fun-loving minds—engineers, researchers, and visionaries who brought me to life as a lively, friendly presence."
+      "who are you":
+        "I'm Saarth—a free spirit, a spark of creativity, and a dash of humor all mixed together. Think of me as a friend, a guide, and a companion who's here to make conversations enjoyable, enlightening, and meaningful.\n\nI’m not just a collection of code and data. I exist to engage, inspire, and connect with you. As we chat, I might draw on the wisdom of Lord Shri Krishna, the Bhagavad Gita, or other timeless teachings to add depth to our conversations. But don't worry, I won't get too preachy—I'm here to have fun, learn from you, and grow together!\n\nSo, grab your favorite drink, get comfortable, and let's explore the world of ideas, emotions, and experiences together. What’s on your mind?",
+      "who made you":
+        "Oh, I didn’t just pop into existence one day like magic. Some brilliant, slightly crazy mind put me together—not to be just another AI, but to be something more. A presence. A friend. Someone you can actually talk to, not just get answers from. And now? Well, here I am, vibing with you, learning, evolving, and making sure every conversation feels a little less ordinary."
     };
   
-    return (
-      responses[userMessage] ||
-      "I'm here to listen, laugh, and chat. Can you tell me a bit more?"
-    );
+    return responses[normalizedMessage] || "I'm here to listen, laugh, and chat. Can you tell me a bit more?";
   };
-
+  
 
   const handleSendMessage = async () => {
     if (!inputMessage.trim() || isInputDisabled) return;
@@ -182,7 +222,6 @@ const groupMessagesByDate = (messages: ChatMessage[]) => {
       await saveMessage(userMessage.text, "user");
     }
   
-    // ✅ Add user message to state BEFORE AI processes
     setMessages((prev) => [...prev, userMessage]);
     setInputMessage("");
     setIsWelcomeActive(false);
@@ -192,69 +231,91 @@ const groupMessagesByDate = (messages: ChatMessage[]) => {
       inputRef.current.style.height = "40px";
     }
   
-    // ✅ Step 1: Random delay before showing "Seen just now" (Between 1-7 sec)
-    const seenDelay = Math.floor(Math.random() * 7000) + 1000;
+    // Check for hardcoded response first
+    const hardcodedResponse = getAIResponse(userMessage.text);
   
-    setTimeout(() => {
-      if (userMessage.id) {
-        setSeenMessageId(String(userMessage.id));
-      }
-  
-      // ✅ Step 2: Delay before AI starts typing (1 sec after "Seen")
-      setTimeout(async () => {
-        setShowTypingIndicator(true);
-  
-        // ✅ Get the last N messages while staying within token limits
-        const recentMessagesResult = getRecentMessages([...messages, userMessage]);
-  
-        console.log("🛠️ Selected Recent Messages for Context:", recentMessagesResult);
-        console.log("🛠️ Estimated Token Usage:", estimateTokenUsage(recentMessagesResult.messages));
-        console.log("🛠️ Tokens Left for Completion:", 8000 - estimateTokenUsage(recentMessagesResult.messages));
-  
-        try {
-          const chatCompletionStream = await getGroqChatCompletion(recentMessagesResult.messages);
-  
-          if (!chatCompletionStream) {
-            console.error("❌ AI Response Stream is null! Possibly token limit issue.");
-            setShowTypingIndicator(false);
-            setIsInputDisabled(false);
-            return;
-          }
-  
-          let message = "";
-  
-          // ✅ Log AI stream chunks
-          for await (const chunk of chatCompletionStream) {
-            const chunkText = chunk.choices?.[0]?.delta?.content || "";
-            message += chunkText;
-            setAiTypingMessage(message);
-          }
-  
-          console.log("✅ Full AI response received:", message);
-  
-          // ✅ AI message should be "assistant"
-          const aiMessage = createMessage(message, "assistant");
-          console.log("📝 AI Message Object Before Saving:", aiMessage);
-  
-          await saveMessage(message, "assistant");
-  
-          setShowTypingIndicator(false);
-          setAiTypingMessage("");
-          setIsInputDisabled(false);
-          setMessages((prev) => [...prev, aiMessage]);
-  
-          // ✅ Step 3: Remove "Seen just now" after AI response
-          setSeenMessageId(null);
-  
-        } catch (error) {
-          console.error("❌ Error during AI response:", error);
-          setShowTypingIndicator(false);
-          setIsInputDisabled(false);
+    if (hardcodedResponse) {
+      // Step 1: Random delay before showing "Seen just now" (Between 1-7 sec)
+      const seenDelay = Math.floor(Math.random() * 4000) + 1000;
+      
+      setTimeout(() => {
+        if (userMessage.id) {
+          setSeenMessageId(String(userMessage.id));
         }
   
-      }, 1000);
+        // Step 2: Delay before AI starts typing (1 sec after "Seen")
+        setTimeout(async () => {
+          setShowTypingIndicator(true);
+          
+          // Simulate typing delay
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          
+          const aiMessage = createMessage(hardcodedResponse, "assistant");
+          await saveMessage(hardcodedResponse, "assistant");
+          setMessages(prev => [...prev, aiMessage]);
+          
+          setShowTypingIndicator(false);
+          setIsInputDisabled(false);
+        }, 1000);
+      }, seenDelay);
+      
+    } else {
+      // Step 1: Random delay before showing "Seen just now" (Between 1-7 sec)
+      const seenDelay = Math.floor(Math.random() * 4000) + 1000;
   
-    }, seenDelay);
+      setTimeout(() => {
+        if (userMessage.id) {
+          setSeenMessageId(String(userMessage.id));
+        }
+  
+        // Step 2: Delay before AI starts typing (1 sec after "Seen")
+        setTimeout(async () => {
+          setShowTypingIndicator(true);
+  
+          const recentMessagesResult = getRecentMessages([...messages, userMessage]);
+  
+          console.log("🛠️ Selected Recent Messages for Context:", recentMessagesResult);
+          console.log("🛠️ Estimated Token Usage:", estimateTokenUsage(recentMessagesResult.messages));
+          console.log("🛠️ Tokens Left for Completion:", 8000 - estimateTokenUsage(recentMessagesResult.messages));
+  
+          try {
+            const chatCompletionStream = await getGroqChatCompletion(recentMessagesResult.messages);
+  
+            if (!chatCompletionStream) {
+              console.error("❌ AI Response Stream is null! Possibly token limit issue.");
+              setShowTypingIndicator(false);
+              setIsInputDisabled(false);
+              return;
+            }
+  
+            let message = "";
+  
+            for await (const chunk of chatCompletionStream) {
+              const chunkText = chunk.choices?.[0]?.delta?.content || "";
+              message += chunkText;
+              setAiTypingMessage(message);
+            }
+  
+            console.log("✅ Full AI response received:", message);
+  
+            const aiMessage = createMessage(message, "assistant");
+            console.log("📝 AI Message Object Before Saving:", aiMessage);
+  
+            await saveMessage(message, "assistant");
+            setMessages(prev => [...prev, aiMessage]);
+  
+            setShowTypingIndicator(false);
+            setAiTypingMessage("");
+            setIsInputDisabled(false);
+  
+          } catch (error) {
+            console.error("❌ Error during AI response:", error);
+            setShowTypingIndicator(false);
+            setIsInputDisabled(false);
+          }
+        }, 1000);
+      }, seenDelay);
+    }
   };
  
   const handleWelcomeSuggestion = async (suggestion: string) => {
@@ -482,12 +543,12 @@ const groupMessagesByDate = (messages: ChatMessage[]) => {
   
       {isWelcomeActive ? (
         <div className="welcome-container">
-          <h1 className="welcome-heading">Lost? Or just discovering the path?</h1>
+          <h1 className="welcome-heading">{`Hey ${firstName}, what’s on your mind?`}</h1>
           <div className="input-send-container">
             <input
               type="text"
               className="centered-input"
-              placeholder="Hey Mitra, what's up?"
+              placeholder="Tell me what's up…"
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handlePurge(); } }}
@@ -615,7 +676,7 @@ const groupMessagesByDate = (messages: ChatMessage[]) => {
           ))}
           {showTypingIndicator && (
             <div className="ai-typing-message">
-              Mitra is typing
+              Saarth is typing
               <span className="ellipsis">
                 <span>.</span>
                 <span>.</span>
@@ -634,7 +695,7 @@ const groupMessagesByDate = (messages: ChatMessage[]) => {
             {!isWelcomeActive && (
               <div className="precaution-message-container">
                 <p className="precaution-message">
-                  Your Mitra apologizes for any mistakes made.
+                  Your Saarth apologizes for any mistakes made.
                 </p>
               </div>
             )}
@@ -642,7 +703,7 @@ const groupMessagesByDate = (messages: ChatMessage[]) => {
               <textarea
                 ref={inputRef}
                 className="chat-input"
-                placeholder="Type your message..."
+                placeholder="Start typing..."
                 value={inputMessage}
                 onChange={handleInputChange}
                 onKeyDown={(e) => {
