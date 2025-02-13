@@ -45,6 +45,25 @@
     color: #141414;
 }
 
+/* ✅ Centered Contact Link */
+.footer-contact {
+    text-align: center;
+    margin-top: 1rem;
+    cursor: pointer;
+}
+
+.footer-contact a {
+    font-size: 1rem;
+    color: white;
+    text-decoration: underline;
+    transition: color 0.3s ease;
+}
+
+.footer-contact a:hover {
+    color: gray;
+    cursor: pointer;
+}
+
 /* Middle Section */
 .footer-middle {
     display: flex;
