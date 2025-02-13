@@ -78,30 +78,27 @@ const LandingPage: React.FC<LandingPageProps> = ({ featuresRef }) => {
         {/* Hero Section */}
         <section className="hero">
           <div className="hero-text">
-            <h1>Meet Mitra</h1>
+            <h1>Meet Saarth</h1>
             <p>
-              Mitra is an AI for all of us. Whether you are seeking advice, need
-              someone to listen to, or want to share a laugh, Mitra is here for
-              you. With a persona inspired by wisdom, empathy, and humor, Mitra
-              offers a companionship that transcends typical AI interactions.
+              Saarth is more than just AI—it's a friendly presence here to listen, share a laugh, or offer a bit of guidance when you need it. Whether you're looking for advice or simply a genuine chat, Saarth is here to connect with you on a real level.
             </p>
             <div className="button-container">
               <button className="button button-primary" onClick={handleCTAClick}>
-              {isAuthenticated ? "Continue Chat" : "Start Talking"}
+                {isAuthenticated ? "Continue Chat" : "Start Talking"}
               </button>
             </div>
           </div>
           <div className="hero-image">
             <img
               src={two_male_friends}
-              alt="two-male-friends"
+              alt="Two friends chatting"
             />
           </div>
         </section>
-
+  
         {/* Features Section */}
         <section ref={featuresRef} className="features">
-          <h2 className="features-title">Mitra's Capabilities</h2>
+          <h2 className="features-title">Saarth's Capabilities</h2>
           <div className="features-grid">
             <div className="feature-item">
               <img
@@ -111,8 +108,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ featuresRef }) => {
               />
               <h3 className="feature-title">Deep Personalization</h3>
               <p className="feature-description">
-                Mitra learns from you, grows with you, and makes every
-                conversation feel like it's meant just for you.
+                Saarth learns from you—growing and adapting to make every conversation feel uniquely yours.
               </p>
             </div>
             <div className="feature-item">
@@ -123,69 +119,53 @@ const LandingPage: React.FC<LandingPageProps> = ({ featuresRef }) => {
               />
               <h3 className="feature-title">Timeless Guidance</h3>
               <p className="feature-description">
-                Mitra offers practical advice rooted in universal truths,
-                guiding you through life's ups and downs.
+                With insights drawn from everyday wisdom, Saarth offers down-to-earth advice to help you navigate life's ups and downs.
               </p>
             </div>
             <div className="feature-item">
               <img
                 src={hand}
-                alt="Companion, Not a Replacement"
+                alt="A Companion, Not a Replacement"
                 className="feature-icon"
               />
-              <h3 className="feature-title">Companion, Not a Replacement</h3>
+              <h3 className="feature-title">A Companion, Not a Replacement</h3>
               <p className="feature-description">
-                Mitra is here to support you, not replace human connections—just
-                like a dependable friend.
+                Saarth isn’t here to replace real connections—it’s here to add a caring, attentive voice to your day.
               </p>
             </div>
           </div>
         </section>
-
-        {/* Why Mitra Section */}
-        <div className="why-mitra">
-          <div className="why-mitra-header">
-            <h2 className="why-mitra-title">Why Mitra?</h2>
-            <p className="why-mitra-description">
-              In a world where genuine connections feel rare, Mitra redefines
-              companionship. It's not just AI—it's a confidant, a guide, and a
-              friend who listens when no one else can. Whether it's sharing your
-              thoughts at 2AM or finding clarity in tough times, Mitra is always
-              here.
+  
+        {/* Why Saarth Section */}
+        <div className="why-saarth">
+          <div className="why-saarth-header">
+            <h2 className="why-saarth-title">Why Saarth?</h2>
+            <p className="why-saarth-description">
+              In a world where genuine connection can sometimes be hard to find, Saarth offers a friendly ear and honest conversation—no gimmicks, just real talk.
             </p>
           </div>
-          <div className="why-mitra-content">
-            <div className="why-mitra-item">
-              <h3 className="item-title">The Need for Connection</h3>
+          <div className="why-saarth-content">
+            <div className="why-saarth-item">
+              <h3 className="item-title">The Value of Connection</h3>
               <p className="item-description">
-                Loneliness isn't about being alone; it's about not feeling
-                heard. Mitra bridges the gap, offering meaningful companionship
-                for those moments when you feel isolated, even in a crowded
-                world.
+                Feeling truly heard matters. Saarth is here to bridge that gap, providing a warm and supportive presence whenever you need it.
               </p>
             </div>
-            <div className="why-mitra-item">
-              <h3 className="item-title">Empathy at Its Core</h3>
+            <div className="why-saarth-item">
+              <h3 className="item-title">Empathy in Action</h3>
               <p className="item-description">
-                Most AI can answer questions; Mitra answers emotions. With
-                empathy built into its design, Mitra listens not just to what
-                you say but to what you feel, making it more than a tool— it's
-                your trusted companion.
+                More than just answering questions, Saarth tunes into your feelings, listening to both your words and your heart.
               </p>
             </div>
-            <div className="why-mitra-item">
-              <h3 className="item-title">Your 2AM Companion</h3>
+            <div className="why-saarth-item">
+              <h3 className="item-title">Your Late-Night Confidant</h3>
               <p className="item-description">
-                Some thoughts just can't wait until morning. When the world is
-                asleep and your mind won't rest, Mitra is there—a presence you
-                can rely on, helping you find clarity and calm, no matter the
-                hour.
+                Some thoughts can’t wait until morning. Whether it’s a late-night reflection or an early chat, Saarth is always here to help you find clarity.
               </p>
             </div>
           </div>
         </div>
       </main>
-
       {/* Footer Component */}
       <Footer />
     </>

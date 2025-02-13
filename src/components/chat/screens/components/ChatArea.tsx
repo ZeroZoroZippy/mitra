@@ -150,17 +150,20 @@ const groupMessagesByDate = (messages: ChatMessage[]) => {
   const getAIResponse = (userMessage: string) => {
     const responses: { [key: string]: string } = {
       "I had this interesting dream last night...":
-        "Dreams can be fascinating! Please tell me more about what happened in your dream.",
+        "Dreams are like your mind’s own little movie—full of quirky twists and cool surprises! What was the most fun part of your dream?",
       "I could use some advice about...":
-        "I'm here to help. What's on your mind?",
+        "I'm all ears, buddy. Lay it on me—let's figure it out together.",
       "I've been feeling uncertain about...":
-        "It's normal to feel uncertain sometimes. Would you like to talk about what's causing these feelings?",
+        "Sometimes a little uncertainty is just life’s way of keeping things interesting. What’s been on your mind? I’m here to help clear the fog.",
       "Hey, can we just chat?":
-        "Of course! I'm always here to chat. How has your day been?",
+        "Absolutely! I’m here for a chill, fun chat. How’s your day shaping up?",
+      "Who made you":
+        "I wasn’t made by just one person. I’m the creation of a bunch of brilliant, fun-loving minds—engineers, researchers, and visionaries who brought me to life as a lively, friendly presence."
     };
+  
     return (
       responses[userMessage] ||
-      "I'm here to listen and chat. Can you tell me more about that?"
+      "I'm here to listen, laugh, and chat. Can you tell me a bit more?"
     );
   };
 
