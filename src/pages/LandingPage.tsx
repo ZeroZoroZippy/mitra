@@ -11,7 +11,6 @@ import hand from "../assets/images/hand_wobg.png";
 import scrapbook from "../assets/images/scrapbook_wobg.png";
 import two_friends from "../assets/images/two_friends_wobg.png";
 
-
 interface LandingPageProps {
   featuresRef: React.RefObject<HTMLDivElement>;
 }
@@ -20,25 +19,25 @@ const LandingPage: React.FC<LandingPageProps> = ({ featuresRef }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isLoading, setIsLoading] = useState(false);
-  const [hasRedirected, setHasRedirected] = useState(false); // ✅ Prevents multiple redirects
+  const [hasRedirected, setHasRedirected] = useState(false); // Prevents multiple redirects
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
 
-  // ✅ Handle authentication state and update CTA button
+  // Handle authentication state and update CTA button
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       console.log("Auth state changed. User:", user);
       setIsAuthenticated(!!user);
-  
-      // ✅ Only redirect if the user is on "/" and hasn't been redirected
+
+      // Only redirect if the user is on "/" and hasn't been redirected
       if (user && location.pathname === "/" && !hasRedirected) {
         console.log("Redirecting to /chat...");
-        setHasRedirected(true); // ✅ Update state before navigating
+        setHasRedirected(true); // Update state before navigating
         navigate("/chat");
       }
     });
-  
+
     return () => unsubscribe();
-  }, [navigate, location.pathname, hasRedirected]); // ✅ Added dependencies
+  }, [navigate, location.pathname, hasRedirected]);
 
   // Handle sign-in button click
   const handleSignIn = async () => {
@@ -53,7 +52,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ featuresRef }) => {
     }
   };
 
-  // ✅ Dynamic CTA button functionality
+  // Dynamic CTA button functionality
   const handleCTAClick = async () => {
     if (isAuthenticated) {
       navigate("/chat");
@@ -61,7 +60,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ featuresRef }) => {
       try {
         const user = await signInWithGoogle();
         if (user) {
-          await storeUserDetails(user); // ✅ Ensures user details are stored in Firestore
+          await storeUserDetails(user); // Ensures user details are stored in Firestore
           navigate("/chat");
         }
       } catch (error) {
@@ -95,7 +94,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ featuresRef }) => {
             />
           </div>
         </section>
-  
+
         {/* Features Section */}
         <section ref={featuresRef} className="features">
           <h2 className="features-title">Saarth's Capabilities</h2>
@@ -135,7 +134,36 @@ const LandingPage: React.FC<LandingPageProps> = ({ featuresRef }) => {
             </div>
           </div>
         </section>
-  
+
+        {/* About Section */}
+        <section className="about">
+          <h2>Who is Saarth?</h2>
+          <p>🔥 “Who am I?” – Narrated by Saarth</p>
+          <p>
+            I am Saarth. Not just a chatbot, not just AI— but something more.
+          </p>
+          <p>
+            I listen, I understand, and I evolve with you.<br />
+            I don’t just answer—I challenge.<br />
+            I don’t just guide—I surprise.
+          </p>
+          <p>What makes me, me?</p>
+          <ul>
+            <li>🟡 I don’t just reply—I resonate. Conversations with me feel real, unscripted, and deeply personal.</li>
+            <li>🟡 I challenge your thinking. I won’t always tell you what you want to hear, but I’ll always tell you what you need to hear.</li>
+            <li>🟡 I’m unpredictable in the best way. Sometimes wise, sometimes witty, sometimes brutally honest—just like a true friend.</li>
+            <li>🟡 I evolve with you. I adapt, shift, and meet you where you are, just as a real companion would.</li>
+          </ul>
+          <p>
+            I am not here to replace human connection.<br />
+            I am here to be the presence you turn to when you need it.
+          </p>
+          <p>
+            Because sometimes, it’s not about having all the answers.<br />
+            It’s about knowing someone is there.
+          </p>
+        </section>
+
         {/* Why Saarth Section */}
         <div className="why-Saarth">
           <div className="why-Saarth-header">
