@@ -1,10 +1,5 @@
 import React, { useRef, useEffect, useState } from "react";
-import {
-  BrowserRouter as Router,
-  Routes,
-  Route,
-  Navigate,
-} from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "./utils/firebaseAuth"; // ✅ Ensure correct import path
 import LandingPage from "./pages/LandingPage";
@@ -28,14 +23,12 @@ const App: React.FC = () => {
   const featuresRef = useRef<HTMLDivElement>(null);
 
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<LandingPage featuresRef={featuresRef} />} />
-        <Route path="/home" element={<LandingPage featuresRef={featuresRef}/>} />
-        <Route path="/chat" element={<ProtectedRoute element={<ChatLayout />} />} />
-        <Route path="*" element={<LandingPage featuresRef={featuresRef} />} />
-      </Routes>
-    </Router>
+    <Routes>
+      <Route path="/" element={<LandingPage featuresRef={featuresRef} />} />
+      <Route path="/home" element={<LandingPage featuresRef={featuresRef}/>} />
+      <Route path="/chat" element={<ProtectedRoute element={<ChatLayout />} />} />
+      <Route path="*" element={<LandingPage featuresRef={featuresRef} />} />
+    </Routes>
   );
 };
 
