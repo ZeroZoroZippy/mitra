@@ -44,6 +44,11 @@ const Header: React.FC<HeaderProps> = ({ featuresRef }) => {
     }
   };
 
+  // ✅ Function to open email app
+  const handleContactClick = () => {
+    window.location.href = "mailto:feedback@saarth.com?subject=Contact Saarth&body=Hi Saarth Team,";
+  };
+
   return (
     <header className="header">
       <div className="header-container">
@@ -56,9 +61,6 @@ const Header: React.FC<HeaderProps> = ({ featuresRef }) => {
         <nav className="header-nav">
           <a onClick={scrollToFeatures} className="nav-link" role="button">
             Features
-          </a>
-          <a href="#about" className="nav-link">
-            About
           </a>
           <button className="cta-button" onClick={handleCTAClick}>
             {isAuthenticated ? "Continue Chat" : "Try Saarth"}
@@ -81,10 +83,8 @@ const Header: React.FC<HeaderProps> = ({ featuresRef }) => {
           <a onClick={scrollToFeatures} className="mobile-link" role="button">
             Features
           </a>
-          <a href="#about" className="mobile-link">
-            About
-          </a>
-          <a href="#contact" className="mobile-link">
+          {/* ✅ Contact link opens mail app */}
+          <a className="mobile-link" onClick={handleContactClick} role="button">
             Contact
           </a>
           <button className="mobile-cta-button" onClick={handleCTAClick}>

@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from "react-router-dom";
 import { auth, signInWithGoogle } from "../utils/firebaseAuth";
 import { onAuthStateChanged } from "firebase/auth";
@@ -28,6 +28,11 @@ const Footer = () => {
     }
   };
 
+  // ✅ Feedback Mailto Function
+  const handleFeedbackClick = () => {
+    window.location.href = "mailto:feedback@saarth.com?subject=Feedback for Saarth&body=Hi, I wanted to share my feedback about Saarth...";
+  };
+
   return (
     <footer className="footer">
       <div className="footer-container">
@@ -38,14 +43,17 @@ const Footer = () => {
           <button className="cta-button-footer" onClick={handleCTAClick}>
             {isAuthenticated ? "Continue Chat" : "Try Saarth"}
           </button>
+
+          {/* ✅ Feedback Link */}
+          <div className="footer-contact" onClick={handleFeedbackClick}>
+            Contact
+          </div>
         </div>
 
         {/* Middle Section */}
         <div className="footer-middle">
           <a href="#features" className="footer-link">Features</a>
-          <a href="#about" className="footer-link">About</a>
-          <a href="#contact" className="footer-link">Contact</a>
-
+          
           {/* "Back to top" link with underline */}
           <a href="#top" className="footer-link back-to-top">
             Back to top

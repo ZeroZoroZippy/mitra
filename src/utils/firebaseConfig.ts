@@ -16,6 +16,8 @@ interface ImportMeta {
 
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
+import { getFirestore } from "firebase/firestore";
+import { getAnalytics } from "firebase/analytics";
 
 // ✅ Firebase Configuration with fixed environment variables
 const firebaseConfig = {
@@ -30,7 +32,8 @@ const firebaseConfig = {
 
 // ✅ Initialize Firebase App
 const app = initializeApp(firebaseConfig);
-
 const auth = getAuth(app);
+const db = getFirestore(app);
+const analytics = getAnalytics(app);
 
-export { app, auth }; // ✅ Export Firebase instance for other services to use
+export { app, auth, analytics, db }; // ✅ Export Firebase instance for other services to use
