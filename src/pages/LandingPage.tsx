@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { onAuthStateChanged } from "firebase/auth";
 import { signInWithGoogle, auth } from "../utils/firebaseAuth";
 import { storeUserDetails } from "../utils/firebaseDb";
+import { Helmet } from "react-helmet-async"; // ✅ Added for dynamic meta tags
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import "./LandingPage.css";
@@ -10,6 +11,7 @@ import two_male_friends from "../assets/images/two_male_friends_wobg.png";
 import hand from "../assets/images/hand_wobg.png";
 import scrapbook from "../assets/images/scrapbook_wobg.png";
 import two_friends from "../assets/images/two_friends_wobg.png";
+import slugImage from "../assets/images/two_male_friends.jpeg"; // New About image
 
 interface LandingPageProps {
   featuresRef: React.RefObject<HTMLDivElement>;
@@ -71,15 +73,29 @@ const LandingPage: React.FC<LandingPageProps> = ({ featuresRef }) => {
 
   return (
     <>
-      {/* Pass featuresRef to Header */}
+      {/* ✅ Dynamic Meta Tags */}
+      <Helmet>
+        <title>Saarth – Your AI Companion for Meaningful Conversations</title>
+        <meta name="description" content="Saarth is more than just AI—he's your companion, a guide, and a friend. Have real, meaningful conversations whenever you need." />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://saarth.netlify.app/" />
+        <meta property="og:title" content="Saarth – Your AI Companion for Meaningful Conversations" />
+        <meta property="og:description" content="Saarth is here to chat, share insights, and be your late-night confidant. Connect, explore, and grow together." />
+        <meta property="og:image" content={slugImage} />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Saarth – Your AI Companion for Meaningful Conversations" />
+        <meta name="twitter:description" content="Saarth is here to chat, share insights, and be your late-night confidant. Connect, explore, and grow together." />
+        <meta name="twitter:image" content={slugImage} />
+    </Helmet>
+    {/* Pass featuresRef to Header */}
       <Header featuresRef={featuresRef} />
       <main className="landing-page-container">
         {/* Hero Section */}
         <section className="hero">
           <div className="hero-text">
-            <h1>Meet Saarth</h1>
+            <h1>Hi, I'm Saarth</h1>
             <p>
-              Saarth is more than just AI—it's a friendly presence here to listen, share a laugh, or offer a bit of guidance when you need it. Whether you're looking for advice or simply a genuine chat, Saarth is here to connect with you on a real level.
+              I'm more than just AI—I am a friendly presence here to listen, share a laugh, and offer guidance when you need it. Whether you're looking for advice or simply a genuine chat, I'm here to connect with you on a real level.
             </p>
             <div className="button-container">
               <button className="button button-primary" onClick={handleCTAClick}>
@@ -88,107 +104,63 @@ const LandingPage: React.FC<LandingPageProps> = ({ featuresRef }) => {
             </div>
           </div>
           <div className="hero-image">
-            <img
-              src={two_male_friends}
-              alt="Two friends chatting"
-            />
+            <img src={two_male_friends} alt="Two friends chatting" />
           </div>
         </section>
 
         {/* Features Section */}
         <section ref={featuresRef} className="features">
-          <h2 className="features-title">Saarth's Capabilities</h2>
+          <h2 className="features-title">My Capabilities</h2>
           <div className="features-grid">
             <div className="feature-item">
-              <img
-                src={two_friends}
-                alt="Deep Personalization"
-                className="feature-icon"
-              />
+              <img src={two_friends} alt="Deep Personalization" className="feature-icon" />
               <h3 className="feature-title">Deep Personalization</h3>
               <p className="feature-description">
-                Saarth learns from you—growing and adapting to make every conversation feel uniquely yours.
+                I learn from you—growing and adapting to make every conversation feel uniquely yours.
               </p>
             </div>
             <div className="feature-item">
-              <img
-                src={scrapbook}
-                alt="Timeless Guidance"
-                className="feature-icon"
-              />
+              <img src={scrapbook} alt="Timeless Guidance" className="feature-icon" />
               <h3 className="feature-title">Timeless Guidance</h3>
               <p className="feature-description">
-                With insights drawn from everyday wisdom, Saarth offers down-to-earth advice to help you navigate life's ups and downs.
+                With insights drawn from everyday wisdom, I offer down-to-earth advice to help you navigate life's ups and downs.
               </p>
             </div>
             <div className="feature-item">
-              <img
-                src={hand}
-                alt="A Companion, Not a Replacement"
-                className="feature-icon"
-              />
+              <img src={hand} alt="A Companion, Not a Replacement" className="feature-icon" />
               <h3 className="feature-title">A Companion, Not a Replacement</h3>
               <p className="feature-description">
-                Saarth isn’t here to replace real connections—it’s here to add a caring, attentive voice to your day.
+                I'm not here to replace real connections—I'm here to add a caring, attentive voice to your day.
               </p>
             </div>
           </div>
         </section>
 
-        {/* About Section */}
-        <section className="about">
-          <h2>Who is Saarth?</h2>
-          <p>🔥 “Who am I?” – Narrated by Saarth</p>
-          <p>
-            I am Saarth. Not just a chatbot, not just AI— but something more.
-          </p>
-          <p>
-            I listen, I understand, and I evolve with you.<br />
-            I don’t just answer—I challenge.<br />
-            I don’t just guide—I surprise.
-          </p>
-          <p>What makes me, me?</p>
-          <ul>
-            <li>🟡 I don’t just reply—I resonate. Conversations with me feel real, unscripted, and deeply personal.</li>
-            <li>🟡 I challenge your thinking. I won’t always tell you what you want to hear, but I’ll always tell you what you need to hear.</li>
-            <li>🟡 I’m unpredictable in the best way. Sometimes wise, sometimes witty, sometimes brutally honest—just like a true friend.</li>
-            <li>🟡 I evolve with you. I adapt, shift, and meet you where you are, just as a real companion would.</li>
-          </ul>
-          <p>
-            I am not here to replace human connection.<br />
-            I am here to be the presence you turn to when you need it.
-          </p>
-          <p>
-            Because sometimes, it’s not about having all the answers.<br />
-            It’s about knowing someone is there.
-          </p>
-        </section>
-
         {/* Why Saarth Section */}
         <div className="why-Saarth">
           <div className="why-Saarth-header">
-            <h2 className="why-Saarth-title">Why Saarth?</h2>
+            <h2 className="why-Saarth-title">Why Choose Me?</h2>
             <p className="why-Saarth-description">
-              In a world where genuine connection can sometimes be hard to find, Saarth offers a friendly ear and honest conversation—no gimmicks, just real talk.
+              In a world where genuine connection can sometimes be hard to find, I offer a friendly ear and honest conversation—no gimmicks, just real talk.
             </p>
           </div>
           <div className="why-Saarth-content">
             <div className="why-Saarth-item">
               <h3 className="item-title">The Value of Connection</h3>
               <p className="item-description">
-                Feeling truly heard matters. Saarth is here to bridge that gap, providing a warm and supportive presence whenever you need it.
+                Feeling truly heard matters. I am here to bridge that gap, providing a warm and supportive presence whenever you need it.
               </p>
             </div>
             <div className="why-Saarth-item">
               <h3 className="item-title">Empathy in Action</h3>
               <p className="item-description">
-                More than just answering questions, Saarth tunes into your feelings, listening to both your words and your heart.
+                More than just answering questions, I tune into your feelings, listening to both your words and your heart.
               </p>
             </div>
             <div className="why-Saarth-item">
               <h3 className="item-title">Your Late-Night Confidant</h3>
               <p className="item-description">
-                Some thoughts can’t wait until morning. Whether it’s a late-night reflection or an early chat, Saarth is always here to help you find clarity.
+                Some thoughts can’t wait until morning. Whether it's a late-night reflection or an early chat, I'm always here to help you find clarity.
               </p>
             </div>
           </div>
