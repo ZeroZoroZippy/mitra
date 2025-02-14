@@ -171,17 +171,20 @@ const groupMessagesByDate = (messages: ChatMessage[]) => {
     likeStatus: null,
   });
 
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInputMessage(e.target.value);
 
-    // ✅ If it's a textarea, adjust height dynamically
     if (e.target instanceof HTMLTextAreaElement) {
-      e.target.style.height = "auto";
-      e.target.style.height = `${Math.min(e.target.scrollHeight, 150)}px`;
+        e.target.style.height = "auto"; // ✅ Reset height first
+        e.target.style.height = `${Math.min(e.target.scrollHeight, 150)}px`; // ✅ Recalculate height
+
+        // ✅ Fix for iOS: Force reflow by toggling display
+        if (navigator.userAgent.includes("iPhone") || navigator.userAgent.includes("iPad")) {
+            e.target.style.display = "block";
+            setTimeout(() => e.target.style.display = "", 0);
+        }
     }
-  };
+};
 
   const getAIResponse = (userMessage: string) => {
     const normalizedMessage = userMessage
