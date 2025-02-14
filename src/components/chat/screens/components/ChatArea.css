@@ -76,7 +76,9 @@
   color: #fff;
   gap: 10px;        /* Space between input and button */
   overflow: hidden; /* Prevent overflow */
-  min-height: 50px;
+  min-height: 50px; /* Base height */
+  height: auto; /* Allow dynamic height */
+  max-height: 150px; /* Max height before scrolling */
 }
 
 /* 2) Unify .centered-input & .chat-input so they match exactly */
@@ -115,7 +117,6 @@
 
 /* Send button inside the input bar */
 .input-send-container .send-icon-button {
-  /* position: absolute; */
   right: 12px; /* ✅ Adjust horizontal positioning */
   bottom: 8px;
   background: none;
@@ -251,7 +252,8 @@
 }
 
 .input-bar {
-  bottom: 60px;
+  position: fixed;
+  bottom: 0;
   width: 100%;
   background-color: #1d1d1d;
   display: flex;
@@ -260,7 +262,7 @@
   align-items: center;
   z-index: 20;
   animation: slideUp 0.3s ease-out;
-  /* padding: 1rem 0; */
+  padding-bottom: env(safe-area-inset-bottom); /* iOS safe area */
 }
 
 /* ✅ Ensure the precaution message appears above input-send-container */
@@ -624,5 +626,32 @@
       width: 100%;
       max-width: 100%;
     }
+  }
+}
+
+/* iOS specific fixes */
+@supports (-webkit-touch-callout: none) {
+  .input-send-container {
+    padding-bottom: 20px; /* Extra padding for iOS */
+  }
+
+  .chat-input {
+    max-height: 150px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+  }
+
+  /* Fix viewport height on iOS */
+  .messages-container {
+    height: calc(100vh - 180px - env(safe-area-inset-bottom));
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* Keyboard open state */
+@media screen and (max-height: 500px) {
+  .input-bar {
+    position: sticky;
+    bottom: 0;
   }
 }
