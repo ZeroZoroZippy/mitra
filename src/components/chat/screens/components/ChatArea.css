@@ -59,7 +59,6 @@
 .input-send-container {
   display: flex;
   align-items: flex-end;
-  position: relative;
   width: 60%;       /* Default width for desktop */
   max-width: 800px; /* Limit width for larger screens */
   background-color: #2d2d2d;
