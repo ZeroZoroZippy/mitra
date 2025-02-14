@@ -3,6 +3,13 @@
   box-sizing: border-box;
 }
 
+/* ✅ Fix Safari bottom URL bar shifting issue */
+@supports (-webkit-touch-callout: none) {
+  .input-send-container {
+      min-height: 60px; /* ✅ Extra height for Safari bottom bar */
+  }
+}
+
 .chat-area {
   position: relative;
   flex: 1;
@@ -58,7 +65,8 @@
 
 .input-send-container {
   display: flex;
-  align-items: center;
+  align-items: flex-end;
+  position: relative;
   width: 60%;       /* Default width for desktop */
   max-width: 800px; /* Limit width for larger screens */
   background-color: #2d2d2d;
@@ -79,9 +87,9 @@
   min-height: 40px;     /* Ensure a consistent minimum height */
   resize: none;         /* Prevent manual resizing (especially for textarea) */
   border: none;
-  background: none;
+  background: transparent;
   color: #fff;
-  font-family: 'SF Pro Text', Helvetica, Arial, sans-serif;
+  font-family: 'Poppins', 'SF Pro Text', Helvetica, Arial, sans-serif;
   font-size: 1rem;
   /* line-height: 1.5; */
   padding: 0.5rem;
@@ -89,6 +97,7 @@
   overflow-wrap: break-word; /* Breaks long words */
   overflow-y: auto; 
   word-break: break-word;    /* Ensure no text spills out */
+  outline: none;             /* Remove default focus outline */
 }
 
 .input-send-container .chat-input:focus,
@@ -105,6 +114,9 @@
 
 /* Send button inside the input bar */
 .input-send-container .send-icon-button {
+  position: absolute;
+  right: 12px; /* ✅ Adjust horizontal positioning */
+  bottom: 8px;
   background: none;
   border: none;
   color: #007bff;
@@ -114,6 +126,7 @@
   align-items: center;
   justify-content: center;
   transition: color 0.2s ease, transform 0.2s ease;
+  cursor: pointer;
 }
 
 .input-send-container .send-icon-button:hover {
