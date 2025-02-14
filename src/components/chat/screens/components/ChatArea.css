@@ -76,6 +76,7 @@
   color: #fff;
   gap: 10px;        /* Space between input and button */
   overflow: hidden; /* Prevent overflow */
+  min-height: 50px;
 }
 
 /* 2) Unify .centered-input & .chat-input so they match exactly */
