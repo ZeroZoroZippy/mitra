@@ -3,13 +3,6 @@
   box-sizing: border-box;
 }
 
-/* ✅ Fix Safari bottom URL bar shifting issue */
-/* @supports (-webkit-touch-callout: none) {
-  .input-send-container {
-      min-height: 60px;
-  }
-} */
-
 .chat-area {
   position: relative;
   flex: 1;
@@ -66,7 +59,7 @@
 .input-send-container {
   display: flex;
   align-items: flex-end;
-  /* position: relative; */
+  position: relative;
   width: 60%;       /* Default width for desktop */
   max-width: 800px; /* Limit width for larger screens */
   background-color: #2d2d2d;
@@ -76,9 +69,6 @@
   color: #fff;
   gap: 10px;        /* Space between input and button */
   overflow: hidden; /* Prevent overflow */
-  min-height: 50px; /* Base height */
-  height: auto; /* Allow dynamic height */
-  max-height: 150px; /* Max height before scrolling */
 }
 
 /* 2) Unify .centered-input & .chat-input so they match exactly */
@@ -117,6 +107,7 @@
 
 /* Send button inside the input bar */
 .input-send-container .send-icon-button {
+  position: absolute;
   right: 12px; /* ✅ Adjust horizontal positioning */
   bottom: 8px;
   background: none;
@@ -252,8 +243,7 @@
 }
 
 .input-bar {
-  position: fixed;
-  bottom: 0;
+  bottom: 60px;
   width: 100%;
   background-color: #1d1d1d;
   display: flex;
@@ -262,7 +252,7 @@
   align-items: center;
   z-index: 20;
   animation: slideUp 0.3s ease-out;
-  padding-bottom: env(safe-area-inset-bottom); /* iOS safe area */
+  /* padding: 1rem 0; */
 }
 
 /* ✅ Ensure the precaution message appears above input-send-container */
@@ -626,32 +616,5 @@
       width: 100%;
       max-width: 100%;
     }
-  }
-}
-
-/* iOS specific fixes */
-@supports (-webkit-touch-callout: none) {
-  .input-send-container {
-    padding-bottom: 20px; /* Extra padding for iOS */
-  }
-
-  .chat-input {
-    max-height: 150px;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
-  }
-
-  /* Fix viewport height on iOS */
-  .messages-container {
-    height: calc(100vh - 180px - env(safe-area-inset-bottom));
-    padding-bottom: env(safe-area-inset-bottom);
-  }
-}
-
-/* Keyboard open state */
-@media screen and (max-height: 500px) {
-  .input-bar {
-    position: sticky;
-    bottom: 0;
   }
 }
