@@ -4,11 +4,11 @@
 }
 
 /* ✅ Fix Safari bottom URL bar shifting issue */
-@supports (-webkit-touch-callout: none) {
+/* @supports (-webkit-touch-callout: none) {
   .input-send-container {
-      min-height: 60px; /* ✅ Extra height for Safari bottom bar */
+      min-height: 60px;
   }
-}
+} */
 
 .chat-area {
   position: relative;
