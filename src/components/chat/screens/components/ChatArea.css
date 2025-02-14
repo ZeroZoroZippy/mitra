@@ -90,7 +90,6 @@
   overflow-wrap: break-word; /* Breaks long words */
   overflow-y: auto; 
   word-break: break-word;    /* Ensure no text spills out */
-  outline: none;             /* Remove default focus outline */
 }
 
 .input-send-container .chat-input:focus,
@@ -107,9 +106,6 @@
 
 /* Send button inside the input bar */
 .input-send-container .send-icon-button {
-  position: absolute;
-  right: 12px; /* ✅ Adjust horizontal positioning */
-  bottom: 8px;
   background: none;
   border: none;
   color: #007bff;
@@ -119,7 +115,6 @@
   align-items: center;
   justify-content: center;
   transition: color 0.2s ease, transform 0.2s ease;
-  cursor: pointer;
 }
 
 .input-send-container .send-icon-button:hover {
