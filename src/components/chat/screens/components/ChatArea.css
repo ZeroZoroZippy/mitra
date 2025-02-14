@@ -115,7 +115,7 @@
 
 /* Send button inside the input bar */
 .input-send-container .send-icon-button {
-  position: absolute;
+  /* position: absolute; */
   right: 12px; /* ✅ Adjust horizontal positioning */
   bottom: 8px;
   background: none;
