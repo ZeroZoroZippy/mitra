@@ -9,7 +9,7 @@ import {
 } from "firebase/auth";
 import { auth } from "./firebaseConfig";
 import { doc, setDoc, serverTimestamp } from "firebase/firestore";
-import { db } from "./firebaseDb";
+import { db, storeUserDetails } from "./firebaseDb"; // Importing the encryption-enabled storeUserDetails
 
 // ✅ Set authentication persistence
 const setupAuth = async () => {
@@ -55,32 +55,11 @@ export const signInWithGoogle = async (): Promise<User | null> => {
       await logUserToGoogleSheet(user);
     }
 
-    await storeUserDetails(user); // ✅ Save user data to Firestore
+    await storeUserDetails(user); // ✅ Save user data to Firestore with encryption
     return user;
   } catch (error) {
     console.error("❌ Sign-in error:", error);
     return null;
-  }
-};
-
-// ✅ Function to Store User Details in Firestore
-export const storeUserDetails = async (user: User) => {
-  if (!user) return;
-
-  try {
-    const userRef = doc(db, "users", user.uid);
-    await setDoc(
-      userRef,
-      {
-        uid: user.uid,
-        displayName: user.displayName || "Anonymous",
-        email: user.email || "No Email",
-        photoURL: user.photoURL || "",
-        createdAt: serverTimestamp(),
-      },
-      { merge: true }
-    );
-  } catch (error) {
   }
 };
 

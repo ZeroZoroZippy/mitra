@@ -21,6 +21,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({ isSidebarOpen, onToggleSidebar 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
       if (user) {
+        // getUserProfile already decrypts the displayName & email
         getUserProfile(user.uid).then((userData) => {
           if (userData && userData.photoURL) {
             setProfile({
