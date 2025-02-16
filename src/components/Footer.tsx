@@ -30,7 +30,7 @@ const Footer = () => {
 
   // ✅ Feedback Mailto Function
   const handleFeedbackClick = () => {
-    window.location.href = "mailto:feedback@saarth.com?subject=Feedback for Saarth&body=Hi, I wanted to share my feedback about Saarth...";
+    window.location.href = "mailto:yourmitra08@gmeil.com?subject=Feedback for Saarth&body=Hi, I wanted to share my feedback about Saarth...";
   };
 
   return (
@@ -56,10 +56,6 @@ const Footer = () => {
           <a onClick={() => navigate("/privacy-policy")} className="footer-link">Privacy Policy</a> {/* ✅ Only this link added */}
           <a href="#top" className="footer-link back-to-top">Back to top</a>
         </div>
-      </div>
-
-      <div className="footer-bottom">
-        <p>&copy; {new Date().getFullYear()} Saarth. All rights reserved.</p>
       </div>
     </footer>
   );
