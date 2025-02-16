@@ -56,14 +56,7 @@ const PrivacyPolicy = () => {
         <li>For complete account deletion, you can contact us, and we will remove your profile and messages permanently.</li>
       </ul>
 
-      <h2>5. Your Privacy Choices</h2>
-      <ul>
-        <li>🔸 Modify Your Data – You can update your name & profile details via Google.</li>
-        <li>🔸 Delete Your Chats – You can manually delete messages from the UI.</li>
-        <li>🔸 Request Data Removal – For complete data deletion, contact us at <strong>yourmitra08@gmail.com</strong>.</li>
-      </ul>
-
-      <h2>6. Contact Us</h2>
+      <h2>5. Contact Us</h2>
       <p>If you have any questions about this Privacy Policy, please contact us at:</p>
       <p>📧 <strong>Email:</strong> yourmitra08@gmail.com</p>
     </div>
