@@ -225,7 +225,7 @@ const groupMessagesByDate = (messages: ChatMessage[]) => {
     const user = auth.currentUser;
   
     if (user) {
-      await saveMessage(userMessage.text, "user");
+      await saveMessage(userMessage.text, "user", "user");
     }
     
   
@@ -279,7 +279,7 @@ const groupMessagesByDate = (messages: ChatMessage[]) => {
           }
   
           const aiMessage = createMessage(message, "assistant");
-          await saveMessage(message, "assistant");
+          await saveMessage(message, "assistant", "assistant");
           setMessages(prev => [...prev, aiMessage]);
   
           setShowTypingIndicator(false);
@@ -305,7 +305,7 @@ const groupMessagesByDate = (messages: ChatMessage[]) => {
   
     if (user) {
       console.log("User ID before saving:", user.uid); // ✅ Debug log to confirm user authentication
-      await saveMessage(userMessage.text, "user"); // ✅ FIXED: Now correctly saves suggested messages
+      await saveMessage(userMessage.text, "user", "user"); // ✅ FIXED: Now correctly saves suggested messages
     }
   
     setMessages((prev) => [...prev, userMessage]);
@@ -342,7 +342,7 @@ const groupMessagesByDate = (messages: ChatMessage[]) => {
           const user = auth.currentUser;
           if (user) {
             console.log("Saving AI Message:", aiMessage);
-            saveMessage(aiText, aiMessage.sender); // ✅ FIXED!
+            saveMessage(aiText, aiMessage.sender, aiMessage.sender); // ✅ FIXED!
           }
   
           setShowTypingIndicator(false);
