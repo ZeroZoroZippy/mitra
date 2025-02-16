@@ -53,11 +53,8 @@ const Footer = () => {
         {/* Middle Section */}
         <div className="footer-middle">
           <a href="#features" className="footer-link">Features</a>
-          
-          {/* "Back to top" link with underline */}
-          <a href="#top" className="footer-link back-to-top">
-            Back to top
-          </a>
+          <a onClick={() => navigate("/privacy-policy")} className="footer-link">Privacy Policy</a> {/* ✅ Only this link added */}
+          <a href="#top" className="footer-link back-to-top">Back to top</a>
         </div>
       </div>
 
