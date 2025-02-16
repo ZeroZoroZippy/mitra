@@ -41,20 +41,20 @@ const PrivacyPolicy = () => {
       </ul>
 
       <h2>3. How We Protect Your Data</h2>
-      <ul>
-        <li>✅ User details (name, email) are AES-256 encrypted before being stored in Firestore.</li>
-        <li>✅ Messages remain unencrypted but are stored without being linked to personally identifiable information.</li>
-        <li>✅ Firestore security rules ensure that only authenticated users can access their own chat history.</li>
-        <li>✅ We do not share, sell, or expose any user data to third parties.</li>
-      </ul>
+        <ul>
+            <li>✅ User details (name, email) are AES-256 encrypted before being stored in Firestore.</li>
+            <li>✅ Messages remain unencrypted but are stored without being linked to personally identifiable information.</li>
+            <li>✅ Even we cannot determine which user sent a specific message, ensuring full privacy and anonymity.</li>
+            <li>✅ Firestore security rules ensure that only authenticated users can access their own chat history.</li>
+            <li>✅ We do not share, sell, or expose any user data to third parties.</li>
+        </ul>
 
-      <h2>4. Data Retention & Deletion Policy</h2>
-      <p>🗂️ We store your chat history indefinitely to maintain Saarth’s conversational memory. However, you <strong>control your data</strong>:</p>
-      <ul>
-        <li>You may delete individual messages from your chat, which removes them from your UI.</li>
-        <li>Soft deletion is implemented, meaning deleted messages are hidden from UI but may be retained for system improvements.</li>
-        <li>For complete account deletion, you can contact us, and we will remove your profile and messages permanently.</li>
-      </ul>
+      <h2>4. Data Retention & Storage Policy</h2>
+        <p>🗂️ We store your chat history indefinitely to maintain Saarth’s conversational memory.</p>
+        <ul>
+            <li>Messages remain stored in plaintext to ensure context-awareness for AI responses.</li>
+            <li>User details (name, email) are encrypted for security.</li>
+        </ul>
 
       <h2>5. Contact Us</h2>
       <p>If you have any questions about this Privacy Policy, please contact us at:</p>
