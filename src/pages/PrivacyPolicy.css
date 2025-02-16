@@ -1,0 +1,108 @@
+/* ✅ General Styling */
+.privacy-policy-container {
+    max-width: 800px;
+    margin: 40px auto;
+    padding: 20px;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* ✅ Back Button Styling */
+.back-button {
+    background-color: #2d2d2d;
+    color: white;
+    padding: 10px 15px;
+    font-size: 1rem;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    margin-bottom: 20px;
+    display: inline-block;
+}
+
+.back-button:hover {
+    background-color: #444;
+}
+
+/* ✅ Headings */
+.privacy-policy-container h1 {
+    font-size: 2rem;
+    color: #2d2d2d;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.privacy-policy-container h2 {
+    font-size: 1.5rem;
+    color: #444;
+    margin-top: 30px;
+}
+
+.privacy-policy-container h3 {
+    font-size: 1.25rem;
+    color: #555;
+    margin-top: 20px;
+}
+
+/* ✅ Paragraphs */
+.privacy-policy-container p {
+    font-size: 1rem;
+    color: #333;
+    line-height: 1.6;
+    margin-bottom: 15px;
+}
+
+/* ✅ Lists */
+.privacy-policy-container ul {
+    padding-left: 20px;
+    margin-bottom: 20px;
+}
+
+.privacy-policy-container li {
+    font-size: 1rem;
+    color: #333;
+    margin-bottom: 10px;
+}
+
+/* ✅ Contact Email Link */
+.privacy-policy-container a {
+    color: #007bff;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.privacy-policy-container a:hover {
+    text-decoration: underline;
+}
+
+/* ✅ Responsive Design */
+@media (max-width: 1024px) {
+    .privacy-policy-container {
+        max-width: 90%;
+    }
+}
+
+@media (max-width: 768px) {
+    .privacy-policy-container {
+        padding: 15px;
+    }
+
+    .privacy-policy-container h1 {
+        font-size: 1.8rem;
+    }
+
+    .privacy-policy-container h2 {
+        font-size: 1.3rem;
+    }
+
+    .privacy-policy-container h3 {
+        font-size: 1.2rem;
+    }
+
+    .privacy-policy-container p,
+    .privacy-policy-container li {
+        font-size: 0.95rem;
+    }
+}
