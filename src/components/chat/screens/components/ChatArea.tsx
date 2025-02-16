@@ -4,8 +4,9 @@ import ChatHeader from "./ChatHeader";
 import { FaPaperPlane } from "react-icons/fa6";
 import { IoCopyOutline } from "react-icons/io5";
 import { auth } from "../../../../utils/firebaseConfig";
+import { onAuthStateChanged } from "firebase/auth";
 import { AiFillLike, AiFillDislike, AiOutlineLike, AiOutlineDislike } from "react-icons/ai";
-import { getMessages, saveMessage, updateLikeStatus} from "../../../../utils/firebaseDb";
+import { getMessages, saveMessage, updateLikeStatus, decryptMessage} from "../../../../utils/firebaseDb";
 import { getGroqChatCompletion, getRecentMessages, estimateTokenUsage } from "../../../../utils/getGroqChatCompletion";
 import { exportToGoogleSheets, syncFirestoreToGoogleSheets } from "../../../../utils/googleSheets";
 import { getDoc, doc, getFirestore } from "firebase/firestore";
@@ -25,6 +26,7 @@ interface ChatMessage {
   sender: "user" | "assistant";
   timestamp: string;
   likeStatus?: "like" | "dislike" | null; // ✅ Store Like/Dislike status
+  encrypted: boolean; // Remove optional flag
 }
 
 const ChatArea: React.FC<ChatAreaProps> = ({
@@ -52,6 +54,7 @@ const ChatArea: React.FC<ChatAreaProps> = ({
   const [shouldPurge, setShouldPurge] = useState(false);
   const BACKUP_SYNC_INTERVAL = 900000;
   const [firstName, setFirstName] = useState<string>("friend");
+  const [formattedMessages, setFormattedMessages] = useState<ChatMessage[]>([]);
 
   // ✅ Fetch user's first name when component mounts
   useEffect(() => {
@@ -91,7 +94,10 @@ const ChatArea: React.FC<ChatAreaProps> = ({
   }, [messages]);
 
   const handlePurge = () => {
-    setMessages([{ text: "Memory refreshed! Let’s start fresh. 😊", sender: "assistant", timestamp: new Date().toISOString() }]);
+    setMessages([{
+      text: "Memory refreshed! Let’s start fresh. 😊", sender: "assistant", timestamp: new Date().toISOString(),
+      encrypted: false
+    }]);
     setShouldPurge(false);
   };
 
@@ -169,6 +175,7 @@ const groupMessagesByDate = (messages: ChatMessage[]) => {
     sender,
     timestamp: new Date().toISOString(),
     likeStatus: null,
+    encrypted: sender === "user"
   });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -217,12 +224,12 @@ const groupMessagesByDate = (messages: ChatMessage[]) => {
     const userMessage = createMessage(inputMessage.trim(), "user");
     const user = auth.currentUser;
   
-    console.log("📩 User Message Sent:", userMessage);
-  
     if (user) {
       await saveMessage(userMessage.text, "user");
     }
+    
   
+    // Append the new message
     setMessages((prev) => [...prev, userMessage]);
     setInputMessage("");
     setIsWelcomeActive(false);
@@ -232,18 +239,7 @@ const groupMessagesByDate = (messages: ChatMessage[]) => {
       inputRef.current.style.height = "40px";
     }
   
-    // ✅ Step 1: Check for Hardcoded Response
-    // ✅ Step 1: Check for Hardcoded Response
-    const aiResponse = getAIResponse(userMessage.text);
-    if (aiResponse !== null) { // Explicitly check for null
-      const aiMessage = createMessage(aiResponse, "assistant");
-      setMessages((prev) => [...prev, aiMessage]);
-      setIsInputDisabled(false);
-      return;
-    }
-  
-    // ✅ Step 2: If no hardcoded response, generate AI response
-    const seenDelay = Math.floor(Math.random() * 7000) + 1000;
+    const seenDelay = Math.floor(Math.random() * 4000) + 1000;
   
     setTimeout(() => {
       if (userMessage.id) {
@@ -253,7 +249,17 @@ const groupMessagesByDate = (messages: ChatMessage[]) => {
       setTimeout(async () => {
         setShowTypingIndicator(true);
   
-        const recentMessagesResult = getRecentMessages([...messages, userMessage]);
+        // Update the local user message to mark it as decrypted
+        const updatedMessages = messages.map(msg => 
+          msg.id === userMessage.id ? { ...msg, encrypted: false } : msg
+        );
+        // Or just force the new message to be decrypted since you know it’s plain text:
+        const contextMessages = [...messages, { ...userMessage, encrypted: false }].map(msg => ({
+          ...msg,
+          text: msg.encrypted ? decryptMessage(msg.text, true) : msg.text
+        }));
+  
+        const recentMessagesResult = getRecentMessages(contextMessages);
   
         try {
           const chatCompletionStream = await getGroqChatCompletion(recentMessagesResult.messages);
@@ -274,13 +280,11 @@ const groupMessagesByDate = (messages: ChatMessage[]) => {
   
           const aiMessage = createMessage(message, "assistant");
           await saveMessage(message, "assistant");
+          setMessages(prev => [...prev, aiMessage]);
   
           setShowTypingIndicator(false);
           setAiTypingMessage("");
           setIsInputDisabled(false);
-          setMessages((prev) => [...prev, aiMessage]);
-  
-          setSeenMessageId(null);
   
         } catch (error) {
           console.error("❌ Error during AI response:", error);
@@ -391,27 +395,46 @@ const groupMessagesByDate = (messages: ChatMessage[]) => {
     scrollToBottom();
   }, [messages]);
 
-  //Use Effect to fetch messages//
-  useEffect(() => {
-    const fetchMessages = async () => {
-      const user = auth.currentUser;
-      if (user) {
-        const loadedMessages = await getMessages(user.uid);
-        const formattedMessages: ChatMessage[] = loadedMessages.map(
-          (doc: any) => ({
-            id: doc.id,
-            text: doc.text,
-            sender: doc.sender,
-            timestamp: doc.timestamp,
-            likeStatus: doc.likeStatus
-          })
-        );
-        setMessages(formattedMessages);
-        setIsWelcomeActive(loadedMessages.length === 0);
-      }
-    };
-    fetchMessages();
-  }, [activeChatId]); // ✅ Triggers when chat ID changes
+// Use Effect to fetch messages
+const fetchMessages = async () => {
+  const user = auth.currentUser;
+  if (!user) return;
+
+  try {
+    console.log("🔍 Fetching messages for user:", user.uid);
+    const loadedMessages = await getMessages(user.uid);
+    
+    const formatted = loadedMessages.map(msg => ({
+      id: msg.id,
+      text: msg.text,
+      sender: msg.sender === "ai" ? "assistant" : msg.sender === "user" ? "user" : "assistant",
+      timestamp: msg.timestamp,
+      likeStatus: msg.likeStatus,
+      encrypted: msg.encrypted ?? false
+    })) as ChatMessage[];
+
+    console.log("✅ Formatted messages:", formatted);
+    setMessages(formatted);
+    setFormattedMessages(formatted);
+    setIsWelcomeActive(formatted.length === 0);
+  } catch (error) {
+    console.error("❌ Error loading messages:", error);
+  }
+};
+
+// Update useEffect
+useEffect(() => {
+  const unsubscribe = onAuthStateChanged(auth, (user) => {
+    if (user) {
+      console.log(`✅ User authenticated: ${user.uid}`);
+      fetchMessages();
+    } else {
+      console.warn("⚠️ No authenticated user.");
+    }
+  });
+
+  return () => unsubscribe();
+}, []);
 
   useEffect(() => {
     if (!isInputDisabled && inputRef.current) {
@@ -524,14 +547,14 @@ const groupMessagesByDate = (messages: ChatMessage[]) => {
               placeholder="Tell me what's up…"
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
-              onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handlePurge(); } }}
+              onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSendMessage(); } }}
               disabled={isInputDisabled}
             />
             <button className="send-icon-button" onClick={handleSendMessage}>
               <FaPaperPlane />
             </button>
           </div>
-          <div className="suggestion-buttons">
+          {/* <div className="suggestion-buttons">
             <button
               className="suggestion-button"
               onClick={() =>
@@ -564,7 +587,7 @@ const groupMessagesByDate = (messages: ChatMessage[]) => {
             >
               Just talk...
             </button>
-          </div>
+          </div> */}
         </div>
       ) : (
         <div className="messages-container">
