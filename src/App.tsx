@@ -4,6 +4,7 @@ import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "./utils/firebaseAuth"; // ✅ Ensure correct import path
 import LandingPage from "./pages/LandingPage";
 import ChatLayout from "./components/chat/screens/components/ChatLayout";
+import PrivacyPolicy from "./pages/PrivacyPolicy"; // ✅ Import Privacy Policy Page
 
 const ProtectedRoute: React.FC<{ element: JSX.Element }> = ({ element }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
@@ -27,6 +28,7 @@ const App: React.FC = () => {
       <Route path="/" element={<LandingPage featuresRef={featuresRef} />} />
       <Route path="/home" element={<LandingPage featuresRef={featuresRef}/>} />
       <Route path="/chat" element={<ProtectedRoute element={<ChatLayout />} />} />
+      <Route path="/privacy-policy" element={<PrivacyPolicy />} /> {/* ✅ Only this line added */}
       <Route path="*" element={<LandingPage featuresRef={featuresRef} />} />
     </Routes>
   );
