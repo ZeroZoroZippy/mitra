@@ -58,7 +58,7 @@ const PrivacyPolicy = () => {
 
       <h2>5. Got Questions? Need Help?</h2>
       <p>If you have any concerns about privacy, feel free to reach out to us. We’re here to help.</p>
-      <p>📧 <strong>Email:</strong> yourmitra08@gmail.com</p>
+      <p>📧 <strong>Email:</strong> feedbackforsaarth@gmail.com</p>
     </div>
   );
 };
