@@ -30,7 +30,7 @@ const Footer = () => {
 
   // ✅ Feedback Mailto Function
   const handleFeedbackClick = () => {
-    window.location.href = "mailto:yourmitra08@gmeil.com?subject=Feedback for Saarth&body=Hi, I wanted to share my feedback about Saarth...";
+    window.location.href = "mailto:feedbackforsaarth@gmail.com?subject=Feedback for Saarth&body=Hi, I wanted to share my feedback about Saarth...";
   };
 
   return (
