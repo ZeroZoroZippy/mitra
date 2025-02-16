@@ -77,7 +77,6 @@ export const decryptMessage = (encryptedText: string, isEncrypted: boolean): str
  * ✅ Use the existing function name for saving messages
  */
 export const saveMessage = async (
-  id: string,
   text: string,
   sender: "user" | "assistant",
   likeStatus: "like" | "dislike" | null = null
@@ -88,7 +87,7 @@ export const saveMessage = async (
     return;
   }
 
-  await setDoc(doc(db, `users/${user.uid}/messages`, id), {
+  await addDoc(collection(db, `users/${user.uid}/messages`), {
     text: text,
     sender,
     timestamp: new Date().toISOString(),
