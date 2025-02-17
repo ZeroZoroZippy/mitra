@@ -87,16 +87,18 @@ export const getGroqChatCompletion = async (messages: ChatMessage[]) => {
 
   const estimatedTokens = estimateTokenUsage(recentMessages);
   const isInitialConversation = recentMessages.length <= 3;
-  
+
   // Define additional keywords to detect stress or similar feelings.
   const stressKeywords = ["stressed", "anxious", "worried", "overwhelmed", "tense", "nervous", "frantic"];
   const lastUserMessage = [...recentMessages].reverse().find(m => m.sender === "user");
   const isStressQuery = lastUserMessage && stressKeywords.some(word => lastUserMessage.text.toLowerCase().includes(word));
 
-  // Force a lower token limit (e.g., 200) if it's an initial conversation or if the latest user message includes any stress keywords.
+  // Increase max tokens for longer responses.
+  // For initial conversations or stress queries, allow up to 300 tokens.
+  // Otherwise, allow up to 800 tokens.
   const maxTokens = (isStressQuery || isInitialConversation)
-    ? Math.min(200, 8000 - estimatedTokens)
-    : Math.min(500, 8000 - estimatedTokens);
+    ? Math.min(300, 8000 - estimatedTokens)
+    : Math.min(800, 8000 - estimatedTokens);
 
   try {
     if (estimatedTokens > 6000) {
