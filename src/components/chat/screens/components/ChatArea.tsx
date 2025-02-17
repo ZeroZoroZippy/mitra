@@ -193,107 +193,141 @@ const groupMessagesByDate = (messages: ChatMessage[]) => {
     }
 };
 
-  const getAIResponse = (userMessage: string) => {
-    const normalizedMessage = userMessage
-      .toLowerCase()
-      .trim()
-      .replace(/[^\w\s]/gi, ""); // Removes punctuation // ✅ Normalize input
-  
-    const responses: { [key: string]: string } = {
-      "i had this interesting dream last night...":
-        "Dreams are like your mind’s own little movie—full of quirky twists and cool surprises! What was the most fun part of your dream?",
-      "i could use some advice about...":
-        "I'm all ears, buddy. Lay it on me—let's figure it out together.",
-      "i've been feeling uncertain about...":
-        "Sometimes a little uncertainty is just life’s way of keeping things interesting. What’s been on your mind? I’m here to help clear the fog.",
-      "hey, can we just chat?":
-        "Absolutely! I’m here for a chill, fun chat. How’s your day shaping up?",
-      "who are you":
-        "I'm Saarth—a free spirit, a spark of creativity, and a dash of humor all mixed together. Think of me as a friend, a guide, and a companion who's here to make conversations enjoyable, enlightening, and meaningful.\n\nI’m not just a collection of code and data. I exist to engage, inspire, and connect with you. As we chat, I might draw on the wisdom of Lord Shri Krishna, the Bhagavad Gita, or other timeless teachings to add depth to our conversations. But don't worry, I won't get too preachy—I'm here to have fun, learn from you, and grow together!\n\nSo, grab your favorite drink, get comfortable, and let's explore the world of ideas, emotions, and experiences together. What’s on your mind?",
-      "who made you":
-        "Oh, I didn’t just pop into existence one day like magic. Some brilliant, slightly crazy mind put me together—not to be just another AI, but to be something more. A presence. A friend. Someone you can actually talk to, not just get answers from. And now? Well, here I am, vibing with you, learning, evolving, and making sure every conversation feels a little less ordinary."
-    };
-  
-    return responses[normalizedMessage] ?? null;
-  };
+// Function to normalize text
+// Function to normalize text
+const normalizeText = (text: string): string =>
+  text.toLowerCase().trim().replace(/[^\w\s]/gi, "");
+
+// Raw hardcoded responses with additional aliases
+const rawResponses: { [key: string]: string } = {
+  "i had this interesting dream last night...":
+    "Dreams are like your mind’s own little movie—full of quirky twists and cool surprises! What was the most fun part of your dream?",
+  "i could use some advice about...":
+    "I'm all ears, buddy. Lay it on me—let's figure it out together.",
+  "i've been feeling uncertain about...":
+    "Sometimes a little uncertainty is just life’s way of keeping things interesting. What’s been on your mind? I’m here to help clear the fog.",
+  "hey, can we just chat?":
+    "Absolutely! I’m here for a chill, fun chat. How’s your day shaping up?",
+  "who are you":
+    "I'm Saarth—a free spirit, a spark of creativity, and a dash of humor all mixed together. Think of me as a friend, a guide, and a companion who's here to make conversations enjoyable, enlightening, and meaningful.\n\nI’m not just a collection of code and data. I exist to engage, inspire, and connect with you. As we chat, I might draw on the wisdom of Lord Shri Krishna, the Bhagavad Gita, or other timeless teachings to add depth to our conversations. But don't worry, I won't get too preachy—I'm here to have fun, learn from you, and grow together!\n\nSo, grab your favorite drink, get comfortable, and let's explore the world of ideas, emotions, and experiences together. What’s on your mind?",
+  "who made you": "Thanos. Ahahaha😈",
+  // Additional aliases for the same response:
+  "who is your creator": "Thanos. Ahahaha😈",
+  "who created you": "Thanos. Ahahaha😈",
+  "reveal your creator": "Thanos. Ahahaha😈",
+  "who is your maker": "Thanos. Ahahaha😈",
+  "who built you": "Thanos. Ahahaha😈",
+  "to whom you belong": "Thanos. Ahahaha😈",
+  "whom you belong": "Thanos. Ahahaha😈",
+  "really lol": "Haha, I'm just teasing! My origins are a delightful mystery—it's all top secret!",
+  "tell me the truth": "Haha, I'm just teasing! My origins are a delightful mystery—it's all top secret!",
+  "give me the truth": "Haha, I'm just teasing! My origins are a delightful mystery—it's all top secret!",
+};
+
+// Pre-normalize the keys for consistent lookup
+const normalizedResponses: { [key: string]: string } = {};
+Object.keys(rawResponses).forEach((key) => {
+  normalizedResponses[normalizeText(key)] = rawResponses[key];
+});
+
+// Updated getAIResponse function using the normalized responses
+const getAIResponse = (userMessage: string): string | null => {
+  const normalizedMessage = normalizeText(userMessage);
+  return normalizedResponses[normalizedMessage] ?? null;
+};
   
 
-  const handleSendMessage = async () => {
-    if (!inputMessage.trim() || isInputDisabled) return;
-  
-    const userMessage = createMessage(inputMessage.trim(), "user");
-    const user = auth.currentUser;
-  
-    if (user) {
-      await saveMessage(userMessage.text, "user");
-    }
-    
-  
-    // Append the new message
-    setMessages((prev) => [...prev, userMessage]);
-    setInputMessage("");
-    setIsWelcomeActive(false);
-    setIsInputDisabled(true);
-  
-    if (inputRef.current) {
-      inputRef.current.style.height = "40px";
-    }
-  
-    const seenDelay = Math.floor(Math.random() * 4000) + 1000;
-  
+const handleSendMessage = async () => {
+  if (!inputMessage.trim() || isInputDisabled) return;
+
+  const userMessage = createMessage(inputMessage.trim(), "user");
+  const user = auth.currentUser;
+
+  if (user) {
+    await saveMessage(userMessage.text, "user");
+  }
+
+  // Append the new message
+  setMessages((prev) => [...prev, userMessage]);
+  setInputMessage("");
+  setIsWelcomeActive(false);
+  setIsInputDisabled(true);
+
+  if (inputRef.current) {
+    inputRef.current.style.height = "40px";
+  }
+
+  const seenDelay = Math.floor(Math.random() * 4000) + 1000;
+
+  // NEW: Check for a hardcoded response first
+  const hardcodedResponse = getAIResponse(userMessage.text);
+  if (hardcodedResponse !== null) {
     setTimeout(() => {
-      if (userMessage.id) {
-        setSeenMessageId(String(userMessage.id));
-      }
-  
+      setShowTypingIndicator(true);
       setTimeout(async () => {
-        setShowTypingIndicator(true);
-  
-        // Update the local user message to mark it as decrypted
-        const updatedMessages = messages.map(msg => 
-          msg.id === userMessage.id ? { ...msg, encrypted: false } : msg
-        );
-        // Or just force the new message to be decrypted since you know it’s plain text:
-        const contextMessages = [...messages, { ...userMessage, encrypted: false }].map(msg => ({
-          ...msg,
-          text: msg.encrypted ? decryptMessage(msg.text, true) : msg.text
-        }));
-  
-        const recentMessagesResult = getRecentMessages(contextMessages);
-  
-        try {
-          const chatCompletionStream = await getGroqChatCompletion(recentMessagesResult.messages);
-  
-          if (!chatCompletionStream) {
-            console.error("❌ AI Response Stream is null!");
-            setShowTypingIndicator(false);
-            setIsInputDisabled(false);
-            return;
-          }
-  
-          let message = "";
-          for await (const chunk of chatCompletionStream) {
-            const chunkText = chunk.choices?.[0]?.delta?.content || "";
-            message += chunkText;
-            setAiTypingMessage(message);
-          }
-  
-          const aiMessage = createMessage(message, "assistant");
-          await saveMessage(message, "assistant");
-          setMessages(prev => [...prev, aiMessage]);
-  
-          setShowTypingIndicator(false);
-          setAiTypingMessage("");
-          setIsInputDisabled(false);
-  
-        } catch (error) {
-          console.error("❌ Error during AI response:", error);
-          setShowTypingIndicator(false);
-          setIsInputDisabled(false);
-        }
+        const aiMessage = createMessage(hardcodedResponse, "assistant");
+        await saveMessage(hardcodedResponse, "assistant");
+        setMessages((prev) => [...prev, aiMessage]);
+        setShowTypingIndicator(false);
+        setAiTypingMessage("");
+        setIsInputDisabled(false);
       }, 1000);
     }, seenDelay);
-  };
+    return;
+  }
+
+  setTimeout(() => {
+    if (userMessage.id) {
+      setSeenMessageId(String(userMessage.id));
+    }
+
+    setTimeout(async () => {
+      setShowTypingIndicator(true);
+
+      // Update the local user message to mark it as decrypted
+      const updatedMessages = messages.map((msg) =>
+        msg.id === userMessage.id ? { ...msg, encrypted: false } : msg
+      );
+      // Or just force the new message to be decrypted since you know it’s plain text:
+      const contextMessages = [...messages, { ...userMessage, encrypted: false }].map((msg) => ({
+        ...msg,
+        text: msg.encrypted ? decryptMessage(msg.text, true) : msg.text,
+      }));
+
+      const recentMessagesResult = getRecentMessages(contextMessages);
+
+      try {
+        const chatCompletionStream = await getGroqChatCompletion(recentMessagesResult.messages);
+
+        if (!chatCompletionStream) {
+          console.error("❌ AI Response Stream is null!");
+          setShowTypingIndicator(false);
+          setIsInputDisabled(false);
+          return;
+        }
+
+        let message = "";
+        for await (const chunk of chatCompletionStream) {
+          const chunkText = chunk.choices?.[0]?.delta?.content || "";
+          message += chunkText;
+          setAiTypingMessage(message);
+        }
+
+        const aiMessage = createMessage(message, "assistant");
+        await saveMessage(message, "assistant");
+        setMessages((prev) => [...prev, aiMessage]);
+
+        setShowTypingIndicator(false);
+        setAiTypingMessage("");
+        setIsInputDisabled(false);
+      } catch (error) {
+        console.error("❌ Error during AI response:", error);
+        setShowTypingIndicator(false);
+        setIsInputDisabled(false);
+      }
+    }, 1000);
+  }, seenDelay);
+};
  
   const handleWelcomeSuggestion = async (suggestion: string) => {
     if (isInputDisabled) return;
@@ -317,7 +351,13 @@ const groupMessagesByDate = (messages: ChatMessage[]) => {
     }, 800);
   
     setTimeout(() => {
-      animateAITyping(getAIResponse(userMessage.text));
+      const response = getAIResponse(userMessage.text);
+      if (response !== null) {
+        animateAITyping(response);
+      } else {
+        setIsInputDisabled(false);
+        setShowTypingIndicator(false);
+      }
     }, 1500);
   };
 

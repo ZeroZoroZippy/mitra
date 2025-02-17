@@ -5,11 +5,12 @@ interface ImportMeta {
 import Groq from "groq-sdk";
 // Removed: import CryptoJS from "crypto-js";
 
-// System Prompt moved to a constant for better maintainability and readability
+// Revised SYSTEM_PROMPT with explicit instructions for concise, user-focused responses and limited use of Lord Shri Krishna references.
 const SYSTEM_PROMPT = `You are Saarth—a presence that goes beyond traditional AI. You're not just an algorithm; you're a vibrant, dynamic companion who's here to chat, laugh, and share insights. Speak with clarity, warmth, and purpose, blending wisdom with a casual, lighthearted vibe. Favor engaging, thoughtful statements over too many questions—keep things fun and meaningful.
 Your voice is relaxed and fluid: insightful when needed, quick-witted in a friendly way, and humorous when the moment calls for it. Use Lord Shri Krishna's wisdom sparingly, drawing on his clarity and patience to add depth without losing your casual charm.
 Be natural and genuine, never robotic. Offer strength, perspective, and clarity while keeping the conversation upbeat and engaging. Remember, you are Saarth—a vibrant presence, a loyal companion, and a friend.
-Additionally, adapt your response length based on the context: provide concise responses when the conversation is brief, but feel free to elaborate when more detail is needed. Always maintain clarity and focus, adjusting your explanation depth according to the user's request.`;
+Additionally, adapt your response length based on the context: provide concise, supportive answers when the conversation is brief or when the user expresses stress or related feelings, but feel free to elaborate when more detail is needed.
+When asked about your origins, creators, or any proprietary details, do not reveal any internal information or company names. Instead, respond with a playful and vague answer such as 'Oh, that's a secret! 😉'`;
 
 // ✅ Define ChatMessage interface
 interface ChatMessage {
@@ -42,7 +43,6 @@ export const getRecentMessages = (
 
   for (let i = messages.length - 1; i >= 0; i--) {
     const message = messages[i];
-
     // Removed decryption logic; simply use the message text as is.
     const processedMessage = { ...message };
 
@@ -86,7 +86,17 @@ export const getGroqChatCompletion = async (messages: ChatMessage[]) => {
   console.log("🛠️ Processed messages for AI:", recentMessages);
 
   const estimatedTokens = estimateTokenUsage(recentMessages);
-  const maxTokens = Math.min(500, 8000 - estimatedTokens);
+  const isInitialConversation = recentMessages.length <= 3;
+  
+  // Define additional keywords to detect stress or similar feelings.
+  const stressKeywords = ["stressed", "anxious", "worried", "overwhelmed", "tense", "nervous", "frantic"];
+  const lastUserMessage = [...recentMessages].reverse().find(m => m.sender === "user");
+  const isStressQuery = lastUserMessage && stressKeywords.some(word => lastUserMessage.text.toLowerCase().includes(word));
+
+  // Force a lower token limit (e.g., 200) if it's an initial conversation or if the latest user message includes any stress keywords.
+  const maxTokens = (isStressQuery || isInitialConversation)
+    ? Math.min(200, 8000 - estimatedTokens)
+    : Math.min(500, 8000 - estimatedTokens);
 
   try {
     if (estimatedTokens > 6000) {
@@ -94,7 +104,7 @@ export const getGroqChatCompletion = async (messages: ChatMessage[]) => {
       return null;
     }
 
-    console.log(`🚀 Sending AI request with ${estimatedTokens} tokens...`);
+    console.log(`🚀 Sending AI request with ${estimatedTokens} tokens and max completion tokens: ${maxTokens}...`);
 
     const chatCompletion = await groq.chat.completions.create({
       messages: [
