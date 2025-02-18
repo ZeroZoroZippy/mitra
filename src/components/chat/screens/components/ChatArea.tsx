@@ -8,7 +8,7 @@ import { auth } from "../../../../utils/firebaseConfig";
 import { onAuthStateChanged } from "firebase/auth";
 import { AiFillLike, AiFillDislike, AiOutlineLike, AiOutlineDislike } from "react-icons/ai";
 import { getMessages, saveMessage, updateLikeStatus, decryptMessage} from "../../../../utils/firebaseDb";
-import { getGroqChatCompletion, getRecentMessages, estimateTokenUsage } from "../../../../utils/getGroqChatCompletion";
+import { getGroqChatCompletion, getRecentMessages } from "../../../../utils/getGroqChatCompletion";
 import { exportToGoogleSheets, syncFirestoreToGoogleSheets } from "../../../../utils/googleSheets";
 import { getDoc, doc, getFirestore } from "firebase/firestore";
 
@@ -595,40 +595,6 @@ useEffect(() => {
               <FaPaperPlane />
             </button>
           </div>
-          {/* <div className="suggestion-buttons">
-            <button
-              className="suggestion-button"
-              onClick={() =>
-                handleWelcomeSuggestion(
-                  "I had this interesting dream last night..."
-                )
-              }
-            >
-              Talk about a dream
-            </button>
-            <button
-              className="suggestion-button"
-              onClick={() =>
-                handleWelcomeSuggestion("I could use some advice about...")
-              }
-            >
-              I need advice
-            </button>
-            <button
-              className="suggestion-button"
-              onClick={() =>
-                handleWelcomeSuggestion("I've been feeling uncertain about...")
-              }
-            >
-              Self-doubt
-            </button>
-            <button
-              className="suggestion-button"
-              onClick={() => handleWelcomeSuggestion("Hey, can we just chat?")}
-            >
-              Just talk...
-            </button>
-          </div> */}
         </div>
       ) : (
         <div className="messages-container">
