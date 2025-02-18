@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import ReactMarkdown from "react-markdown";
 import "./ChatArea.css";
 import ChatHeader from "./ChatHeader";
 import { FaPaperPlane } from "react-icons/fa6";
@@ -639,7 +640,16 @@ useEffect(() => {
               {dateMessages.map((message, index) => (
                 <div key={`${date}-${index}`} className="message-container">
                   <div className={`message-bubble ${message.sender}-bubble`}>
+                  <ReactMarkdown
+                    components={{
+                      p: ({ node, ...props }) => <p style={{ marginBottom: "0.3rem" }} {...props} />,
+                      ul: ({ node, ...props }) => <ul style={{ margin: "0.3rem 0", paddingLeft: "1rem" }} {...props} />,
+                      li: ({ node, ...props }) => <li style={{ marginBottom: "0.2rem" }} {...props} />,
+                      strong: ({ node, ...props }) => <strong style={{ fontWeight: 600 }} {...props} />,
+                    }}
+                  >
                     {message.text}
+                  </ReactMarkdown>
                   </div>
                   {/* ✅ Show "Seen just now" for the last sent user message */}
                   {message.sender === "user" && message.id === seenMessageId && (
