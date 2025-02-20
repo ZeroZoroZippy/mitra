@@ -15,7 +15,7 @@ interface SidebarProps {
   activeChatId: number;
   onSelectChat: (chatId: number) => void;
   onClose: () => void;
-  isSidebarOpen: boolean; // ✅ Add isSidebarOpen prop
+  isSidebarOpen: boolean;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({
@@ -30,10 +30,10 @@ const Sidebar: React.FC<SidebarProps> = ({
   const handleLogout = async () => {
     try {
       await signOut(auth);
-      localStorage.clear(); // ✅ Clears user session data
+      localStorage.clear();
       sessionStorage.clear();
-      navigate("/"); // Redirects to Landing Page
-      window.location.reload(); // ✅ Ensures session is fully reset
+      navigate("/");
+      window.location.reload();
     } catch (error) {
       console.error("Error signing out:", error);
     }
@@ -41,31 +41,33 @@ const Sidebar: React.FC<SidebarProps> = ({
 
   const handleGoHome = () => {
     navigate("/home");
-    window.location.reload(); // ✅ Ensures Landing Page refreshes fully
+    window.location.reload();
   };
 
   const handleFeedback = () => {
-    window.location.href = "mailto:feedbackforsaarth@gmail.com?subject=Feedback for Saarth&body=Hello, I'd like to share some feedback...";
+    window.location.href =
+      "mailto:feedbackforsaarth@gmail.com?subject=Feedback for Saarth&body=Hello, I'd like to share some feedback...";
   };
-  
 
   return (
-    <div className={`sidebar ${isSidebarOpen ? "open" : ""}`}> {/* ✅ Add class conditionally */}
+    <div className={`sidebar ${isSidebarOpen ? "open" : ""}`}>
       <div className="sidebar-header">
-        <h3>Chats</h3>
         <button className="close-sidebar" onClick={onClose}>
           ✖
         </button>
       </div>
 
-      {/* ✅ Home Button Placed Above Chat List */}
       <div className="sidebar-nav">
-        <button className="home-button" onClick={(handleGoHome)}>
+        <button className="home-button" onClick={handleGoHome}>
           🏠 Home
         </button>
-        {/* ✅ Feedback Button */}
-        <button className="sidebar-button feedback-button" onClick={handleFeedback}>✉️ Feedback</button>
+        <button className="sidebar-button feedback-button" onClick={handleFeedback}>
+          ✉️ Feedback
+        </button>
       </div>
+
+      {/* Moved the Chats header below the navigation */}
+      <h3 className="chat-header">Rooms</h3>
 
       <ul className="chat-list">
         {chatList.map((chat) => (
@@ -80,11 +82,13 @@ const Sidebar: React.FC<SidebarProps> = ({
         ))}
       </ul>
 
-      {/* <div className="sidebar-footer">
+      {/*
+      <div className="sidebar-footer">
         <button className="logout-button" onClick={handleLogout}>
           🚪 Logout
         </button>
-      </div> */}
+      </div>
+      */}
     </div>
   );
 };

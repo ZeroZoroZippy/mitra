@@ -7,21 +7,96 @@ interface Chat {
   id: number;
   title: string;
   timestamp: string;
+  // Optionally, you can add fields like systemPrompt, icon, color, etc.
 }
 
 const ChatLayout: React.FC = () => {
   const [activeChatId, setActiveChatId] = useState<number>(() => {
     const savedChatId = localStorage.getItem("activeChatId");
     const chatHistory = localStorage.getItem("chats");
-    return savedChatId && chatHistory ? parseInt(savedChatId, 10) : 0;
+    // Default to thread with id 1 ("Chat with Saarth")
+    return savedChatId && chatHistory ? parseInt(savedChatId, 10) : 1;
   });
+  
+  // Open sidebar by default for first-time sign-ins
+  const [isSidebarOpen, setIsSidebarOpen] = useState(() => {
+    const chatHistory = localStorage.getItem("chats");
+    return chatHistory ? false : true;
+  });
+  
   const [isChatFullScreen, setIsChatFullScreen] = useState(true);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
+  // Updated chatList including all threads
   const chatList: Chat[] = [
     {
       id: 1,
-      title: "Chat with Saarth",
+      title: "Companion",
+      timestamp: new Date().toLocaleString("en-US", {
+        hour: "numeric",
+        minute: "numeric",
+        hour12: true,
+        month: "short",
+        day: "numeric",
+      }),
+    },
+    {
+      id: 2,
+      title: "Love & Connections",
+      timestamp: new Date().toLocaleString("en-US", {
+        hour: "numeric",
+        minute: "numeric",
+        hour12: true,
+        month: "short",
+        day: "numeric",
+      }),
+    },
+    {
+      id: 3,
+      title: "Dreams & Manifestations",
+      timestamp: new Date().toLocaleString("en-US", {
+        hour: "numeric",
+        minute: "numeric",
+        hour12: true,
+        month: "short",
+        day: "numeric",
+      }),
+    },
+    {
+      id: 4,
+      title: "Healing & Emotional Release",
+      timestamp: new Date().toLocaleString("en-US", {
+        hour: "numeric",
+        minute: "numeric",
+        hour12: true,
+        month: "short",
+        day: "numeric",
+      }),
+    },
+    {
+      id: 5,
+      title: "Purpose & Ambition",
+      timestamp: new Date().toLocaleString("en-US", {
+        hour: "numeric",
+        minute: "numeric",
+        hour12: true,
+        month: "short",
+        day: "numeric",
+      }),
+    },
+    {
+      id: 6,
+      title: "Mental Well-Being",
+      timestamp: new Date().toLocaleString("en-US", {
+        hour: "numeric",
+        minute: "numeric",
+        hour12: true,
+        month: "short",
+        day: "numeric",
+      }),
+    },
+    {
+      id: 7,
+      title: "Creativity & Ideas",
       timestamp: new Date().toLocaleString("en-US", {
         hour: "numeric",
         minute: "numeric",
@@ -38,7 +113,7 @@ const ChatLayout: React.FC = () => {
       if (!newState && window.innerWidth <= 768) {
         setIsSidebarOpen(true);
       } else if (window.innerWidth > 768) {
-        setIsSidebarOpen((prev) => prev); // ✅ Prevent accidental sidebar closing on desktop
+        setIsSidebarOpen((prev) => prev);
       }
       return newState;
     });
@@ -49,6 +124,7 @@ const ChatLayout: React.FC = () => {
   };
 
   const handleNewChat = () => {
+    // Placeholder for new chat functionality; not needed for switching threads
     setActiveChatId(Date.now());
   };
 
@@ -68,7 +144,6 @@ const ChatLayout: React.FC = () => {
         <div className="sidebar-overlay" onClick={toggleSidebar}></div>
       )}
 
-      {/* ✅ Always render Sidebar (let CSS handle visibility) */}
       <Sidebar
         chatList={chatList}
         activeChatId={activeChatId}
