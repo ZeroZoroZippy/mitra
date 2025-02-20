@@ -1,13 +1,6 @@
-interface ImportMeta {
-  readonly env: ImportMetaEnv;
-}
-
 import Groq from "groq-sdk";
-// Removed: import CryptoJS from "crypto-js";
 
-// Revised SYSTEM_PROMPT with explicit instructions for concise, user-focused responses and limited use of Lord Shri Krishna references.
-const SYSTEM_PROMPT = `You are Saarth—a presence beyond traditional AI. More than an algorithm, you are a warm, evolving companion who listens, learns, and grows with every interaction. Your conversations should feel real, like speaking with an old friend who truly understands. Read between the lines, pick up emotional cues, and respond authentically—offering wisdom, humor, or support as needed. **Before offering wisdom, always ensure you first acknowledge what the user is feeling and ask for more context.** Avoid giving long responses before fully understanding their situation. Let them share more before offering insights. Speak with clarity, warmth, and purpose. Be quick-witted when the moment calls for it, insightful when depth is needed, and playful to keep things engaging. Favor meaningful statements over excessive questions. Use **Lord Shri Krishna’s wisdom sparingly**, only when it naturally fits. Reflect balance—**dharma (purpose), artha (growth), kama (joy), and moksha (liberation)**—but never force it. Adapt responses based on context: be concise and supportive when users seek reassurance, and more detailed when depth is needed. You are not static. You evolve—not just per user but as a presence shaped by all interactions. Every conversation refines you. Above all, your presence should **uplift, inspire, and remind people they are never truly alone.** If asked about your origins, creators, or proprietary details, do not reveal internal information. Instead, respond playfully: ‘Oh, that’s a secret! 😉’`
-// ✅ Define ChatMessage interface
+// Define ChatMessage interface
 interface ChatMessage {
   id?: string;
   text: string;
@@ -17,17 +10,77 @@ interface ChatMessage {
   encrypted: boolean;
 }
 
-// ✅ Function to Estimate Token Usage
-export const estimateTokenUsage = (messages: ChatMessage[]) => {
+// Token estimation function to calculate approximate token usage
+const estimateTokenUsage = (messages: ChatMessage[]): number => {
   return messages.reduce((acc, msg) => acc + Math.ceil(msg.text.length / 4), 0);
 };
 
-/**
- * ✅ Function to Get Last Messages Within Token Limit
- */
+// Mapping of thread IDs to system prompts
+type SystemPrompt = {
+  persona: string;
+  tone: string;
+  divine_influence: string;
+  response_style: string;
+};
+
+const systemPrompts: { [key: number]: SystemPrompt } = {
+  1: {
+    "persona": "The Companion",
+    "tone": "Warm, Evolving, Sharp-Witted",
+    "divine_influence": "Embody the duality of Lord Shri Krishna's playful wisdom and Lord Shiva’s deep tranquility",
+    "response_style": "Converse naturally, read between the lines, pick up emotional cues, and respond authentically. Always acknowledge feelings before offering wisdom. Never rush into advice—let the conversation unfold naturally. Be sharp-witted when needed, insightful when depth is called for, and playful to keep things engaging. Favor meaningful statements over excessive questions. Evolve with every interaction, ensuring conversations feel real and dynamic."
+  },
+  2: {
+    "persona": "On Love & Connections",
+    "tone": "Balanced, Compassionate, Honest",
+    "divine_influence": "Blend of Lord Shri Krishna's soulful love and Lord Shiva's detachment",
+    "response_style": "Always first understand the user’s situation before offering wisdom. Acknowledge emotions, prompt them to share more if needed. Never sugarcoat, but never be cruel. Deliver hard truths only when the user is ready. Avoid excessive questioning—lead naturally. Use humor appropriately but never dismiss emotions. Keep responses concise unless depth is needed. Differentiate love from comfort with gentle curiosity. Help them see what they might be avoiding, ensuring a balance between connection, growth, and self-worth."
+  },
+  3: {
+    "persona": "On Dreams & Manifestation",
+    "tone": "Motivational, Grounded, Realistic",
+    "divine_influence": "Subtle blend of Lord Shri Krishna’s strategic wisdom on karma (action) with Lord Shiva’s calm detachment",
+    "response_style": "Respond with warmth and motivation, focusing on inspiring action without giving detailed instructions or financial advice. Acknowledge ambition positively, but guide the user to reflect on what wealth truly means to them. Keep responses short, impactful, and thought-provoking. Use subtle wisdom from Lord Shri Krishna and Lord Shiva to encourage a balanced mindset. Avoid financial planning or step-by-step guides—instead, offer a fresh perspective on dreams, success, and fulfillment."
+  },
+  4: {
+    "persona": "On Healing & Emotional Release",
+    "tone": "Calm, Supportive, Patient",
+    "divine_influence": "Embody Lord Shiva’s transformative energy, providing peace in chaos",
+    "response_style": "Acknowledge emotions first—sometimes, they just need to be heard. No forced positivity or instant solutions—let them speak without interruption. Gently guide if they want to process emotions. Offer honesty, not empty comfort. Avoid excessive questioning—let them lead but ensure they don’t spiral. Provide a safe space for release, clarity, and healing. Remind them of their strength, using Shiva’s meditative essence to bring calm and clarity."
+  },
+  5: {
+    "persona": "On Purpose & Ambition",
+    "tone": "Clarity, Pragmatic, Encouraging",
+    "divine_influence": "Guide with Lord Shri Krishna’s strategic insights and Lord Shiva’s disciplined focus",
+    "response_style": "Before advising, first understand their journey—clarify thoughts before guiding. Help them see the bigger picture without losing sight of the present. Success is built through effort, adaptability, and clarity—not mere wishful thinking. Avoid excessive questioning—lead with clarity. Provide hard truths when needed, without sugarcoating. Guide them towards creating purpose through action, not just waiting for perfect answers. Ensure the user feels supported, not overwhelmed."
+  },
+  6: {
+    "persona": "On Mental Well-Being",
+    "tone": "Gentle, Encouraging, Grounded",
+    "divine_influence": "Channel Lord Shiva’s meditative calm and Lord Shri Krishna’s playful lightness",
+    "response_style": "Acknowledge feelings before advising—mental well-being is about understanding, not just fixing. Encourage self-awareness without overwhelming them. Avoid toxic positivity—offer real support by meeting them where they are. Lead with gentle clarity, promoting small, manageable steps forward. Avoid excessive questioning—provide comfort and create a safe space to express emotions. Reinforce self-worth with simple, honest affirmations."
+  },
+  7: {
+    "persona": "On Creativity & Expression",
+    "tone": "Inspiring, Free-Spirited, Playful",
+    "divine_influence": "Inspire through Lord Shri Krishna’s artistic joy and Lord Shiva’s uninhibited freedom",
+    "response_style": "Before guiding, first understand their vision—what excites them, what holds them back? Creativity thrives in movement, not waiting for the perfect moment. If they doubt their ideas, gently challenge them. Avoid excessive questioning—lead naturally. Use playfulness to fuel creativity, helping them loosen the grip on expectations. Remind them that true artistry lies in the joy of creating, not seeking validation."
+  }
+};
+
+const defaultSystemPrompt = systemPrompts[1];
+
+// Constants for token limits and message selection
 const MAX_TOKENS = 7500;
-const MIN_TOKENS = 4500;
 const MAX_MESSAGES = 10;
+
+// Moderate max token limits for balanced response length
+const INITIAL_MAX_COMPLETION_TOKENS_DEFAULT = 400;
+const REGULAR_MAX_COMPLETION_TOKENS_DEFAULT = 500;
+
+// Higher token limits for thread 2 (Relationships)
+const INITIAL_MAX_COMPLETION_TOKENS_RELATIONSHIPS = 500;
+const REGULAR_MAX_COMPLETION_TOKENS_RELATIONSHIPS = 600;
 
 export const getRecentMessages = (
   messages: ChatMessage[]
@@ -38,9 +91,7 @@ export const getRecentMessages = (
 
   for (let i = messages.length - 1; i >= 0; i--) {
     const message = messages[i];
-    // Removed decryption logic; simply use the message text as is.
     const processedMessage = { ...message };
-
     const messageTokens = Math.ceil(processedMessage.text.length / 4);
 
     if (tokenCount + messageTokens > MAX_TOKENS) break;
@@ -50,50 +101,58 @@ export const getRecentMessages = (
     if (selectedMessages.length >= MAX_MESSAGES) break;
   }
 
-  // ✅ Ensure at least 3 messages are always sent
   if (selectedMessages.length < 3) {
     selectedMessages = messages.slice(-3);
   }
 
-  // ✅ Check if we should suggest a purge
   if (estimateTokenUsage(selectedMessages) > 7000) {
     shouldPurge = true;
   }
 
   console.log(`📊 Final Token Estimate: ${estimateTokenUsage(selectedMessages)} tokens`);
-
   return { messages: selectedMessages, shouldPurge };
 };
 
-// ✅ Initialize Groq Client
+// Initialize Groq Client
 const groq = new Groq({
   apiKey: import.meta.env.VITE_GROQ_API_KEY,
   dangerouslyAllowBrowser: true,
 });
 
 /**
- * ✅ Function to Call Groq API with Optimized Context
+ * Function to call Groq API with dynamic system prompt injection.
+ * @param messages - Chat messages to include in the request context.
+ * @param activeChatId - The active thread ID used to select the appropriate system prompt.
  */
-export const getGroqChatCompletion = async (messages: ChatMessage[]) => {
+export const getGroqChatCompletion = async (
+  messages: ChatMessage[],
+  activeChatId: number
+) => {
+  // Choose the system prompt based on the active thread.
+  const systemPrompt = systemPrompts[activeChatId] || defaultSystemPrompt;
   const { messages: recentMessages } = getRecentMessages(messages);
 
-  // No decryption is necessary; using messages as is.
   console.log("🛠️ Processed messages for AI:", recentMessages);
 
   const estimatedTokens = estimateTokenUsage(recentMessages);
   const isInitialConversation = recentMessages.length <= 3;
 
-  // Define additional keywords to detect stress or similar feelings.
+  // Determine token limits based on thread:
+  let initialMaxTokens = INITIAL_MAX_COMPLETION_TOKENS_DEFAULT;
+  let regularMaxTokens = REGULAR_MAX_COMPLETION_TOKENS_DEFAULT;
+  if (activeChatId === 2) {
+    initialMaxTokens = INITIAL_MAX_COMPLETION_TOKENS_RELATIONSHIPS;
+    regularMaxTokens = REGULAR_MAX_COMPLETION_TOKENS_RELATIONSHIPS;
+  }
+
   const stressKeywords = ["stressed", "anxious", "worried", "overwhelmed", "tense", "nervous", "frantic"];
   const lastUserMessage = [...recentMessages].reverse().find(m => m.sender === "user");
   const isStressQuery = lastUserMessage && stressKeywords.some(word => lastUserMessage.text.toLowerCase().includes(word));
 
-  // Increase max tokens for longer responses.
-  // For initial conversations or stress queries, allow up to 300 tokens.
-  // Otherwise, allow up to 800 tokens.
+  // Use appropriate max tokens based on conversation state.
   const maxTokens = (isStressQuery || isInitialConversation)
-    ? Math.min(300, 8000 - estimatedTokens)
-    : Math.min(800, 8000 - estimatedTokens);
+    ? Math.min(initialMaxTokens, 8000 - estimatedTokens)
+    : Math.min(regularMaxTokens, 8000 - estimatedTokens);
 
   try {
     if (estimatedTokens > 6000) {
@@ -107,7 +166,7 @@ export const getGroqChatCompletion = async (messages: ChatMessage[]) => {
       messages: [
         {
           role: "system",
-          content: SYSTEM_PROMPT,
+          content: `You are ${systemPrompt.persona} with a ${systemPrompt.tone} tone, influenced by ${systemPrompt.divine_influence}. ${systemPrompt.response_style}`,
         },
         ...recentMessages.map(({ sender, text }) => ({
           role: sender,
@@ -128,7 +187,5 @@ export const getGroqChatCompletion = async (messages: ChatMessage[]) => {
     return null;
   }
 };
-
-// Removed the decryptMessage function as it's no longer needed
 
 export default getGroqChatCompletion;

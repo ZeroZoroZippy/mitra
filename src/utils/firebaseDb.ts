@@ -79,7 +79,8 @@ export const decryptMessage = (encryptedText: string, isEncrypted: boolean): str
 export const saveMessage = async (
   text: string,
   sender: "user" | "assistant",
-  likeStatus: "like" | "dislike" | null = null
+  likeStatus: "like" | "dislike" | null = null,
+  threadId?: number,
 ) => {
   const user = auth.currentUser;
   if (!user) {
@@ -92,18 +93,23 @@ export const saveMessage = async (
     sender,
     timestamp: new Date().toISOString(),
     likeStatus,
-    encrypted: false
+    encrypted: false,
+    threadId,
   });
 };
 
 /**
  * ✅ Function to Retrieve Messages for a User (Now Restored)
  */
-export const getMessages = async (userId: string): Promise<Message[]> => {
+export const getMessages = async (userId: string, activeChatId: number): Promise<Message[]> => {
   try {
-    console.log(`🔍 Fetching messages for user: users/${userId}/messages`);
+    console.log(`🔍 Fetching messages for user: users/${userId}/messages, Thread: ${activeChatId}`);
 
-    const q = query(collection(db, `users/${userId}/messages`));
+    // Filter messages by threadId
+    const q = query(
+      collection(db, `users/${userId}/messages`),
+      where("threadId", "==", activeChatId)
+    );
     const querySnapshot = await getDocs(q);
 
     if (querySnapshot.empty) {
@@ -120,14 +126,14 @@ export const getMessages = async (userId: string): Promise<Message[]> => {
         sender: messageData.sender,
         timestamp: new Date(messageData.timestamp).toISOString(),
         encrypted: false,
-        likeStatus: messageData.likeStatus || null
+        likeStatus: messageData.likeStatus || null,
       };
     });
 
     console.log("📥 Raw messages from Firestore:", messages);
 
     const sortedMessages = messages
-      .filter(msg => msg.timestamp && !isNaN(new Date(msg.timestamp).getTime()))
+      .filter((msg) => msg.timestamp && !isNaN(new Date(msg.timestamp).getTime()))
       .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
 
     console.log("✅ Sorted messages for UI:", sortedMessages);
