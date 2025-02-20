@@ -13,12 +13,26 @@ import { exportToGoogleSheets, syncFirestoreToGoogleSheets } from "../../../../u
 import { getDoc, doc, getFirestore } from "firebase/firestore";
 
 const db = getFirestore();
+const welcomeTitles: { [key: number]: string } = {
+  1: "What’s on your mind? Let’s chat.",
+  2: "Love, friendships, and all that jazz.",
+  3: "Manifest those dreams—speak them into existence.",
+  4: "No holding back—let it all out.",
+  5: "Let’s talk career, purpose, and your next big move.",
+  6: "Your mind matters—say what you need to say.",
+  7: "Let’s turn those sparks into flames of creativity.",
+};
+
+const genericInstruction =
+  "General Instructions: \n\n- For best insights, share your thoughts and feelings clearly and in detail. \n- Your honesty helps Saarth understand you better. \n- And remember—Saarth is a bit of a chatterbox. If you ever need him to be brief, just tell him to shut up and talk less!";
 
 interface ChatAreaProps {
+  isChatFullScreen: boolean;
   activeChatId: number;
   isSidebarOpen: boolean;
   onNewChat: () => void;
   onToggleSidebar: () => void;
+  onToggleFullScreen: () => void;
 }
 
 interface ChatMessage {
@@ -28,6 +42,7 @@ interface ChatMessage {
   timestamp: string;
   likeStatus?: "like" | "dislike" | null; // ✅ Store Like/Dislike status
   encrypted: boolean; // Remove optional flag
+  threadID: number; // ✅ Add threadID to the message
 }
 
 const ChatArea: React.FC<ChatAreaProps> = ({
@@ -47,7 +62,6 @@ const ChatArea: React.FC<ChatAreaProps> = ({
   const [visibleDate, setVisibleDate] = useState<string | null>(null);
   const [fadeOut, setFadeOut] = useState(false);
   const dateTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);  // ✅ State to track copy icon fade-in effect
-  const [showCopyIcon, setShowCopyIcon] = useState<{ [key: string]: boolean }>({});
   const [activeMessageId, setActiveMessageId] = useState<string | null>(null);
   const [seenMessageId, setSeenMessageId] = useState<string | null>(null); // ✅ Track last seen message
   // ✅ Get the last AI message ID
@@ -55,7 +69,9 @@ const ChatArea: React.FC<ChatAreaProps> = ({
   const [shouldPurge, setShouldPurge] = useState(false);
   const BACKUP_SYNC_INTERVAL = 900000;
   const [firstName, setFirstName] = useState<string>("friend");
-  const [formattedMessages, setFormattedMessages] = useState<ChatMessage[]>([]);
+  const [welcomeDismissed, setWelcomeDismissed] = useState(() => {
+    return localStorage.getItem(`welcomeDismissed_${activeChatId}`) === "true";
+  });
 
   // ✅ Fetch user's first name when component mounts
   useEffect(() => {
@@ -97,7 +113,8 @@ const ChatArea: React.FC<ChatAreaProps> = ({
   const handlePurge = () => {
     setMessages([{
       text: "Memory refreshed! Let’s start fresh. 😊", sender: "assistant", timestamp: new Date().toISOString(),
-      encrypted: false
+      encrypted: false,
+      threadID: 0
     }]);
     setShouldPurge(false);
   };
@@ -176,7 +193,8 @@ const groupMessagesByDate = (messages: ChatMessage[]) => {
     sender,
     timestamp: new Date().toISOString(),
     likeStatus: null,
-    encrypted: sender === "user"
+    encrypted: sender === "user",
+    threadID: activeChatId // ✅ Add threadID to the message
   });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -241,14 +259,19 @@ const getAIResponse = (userMessage: string): string | null => {
 const handleSendMessage = async () => {
   if (!inputMessage.trim() || isInputDisabled) return;
 
+  // When a message is sent, dismiss the welcome screen for this thread.
+  if (!welcomeDismissed) {
+    setWelcomeDismissed(true);
+    localStorage.setItem(`welcomeDismissed_${activeChatId}`, "true");
+  }
+
   const userMessage = createMessage(inputMessage.trim(), "user");
   const user = auth.currentUser;
 
   if (user) {
-    await saveMessage(userMessage.text, "user");
+    await saveMessage(userMessage.text, "user", null, activeChatId); // Updated to remove activeChatId parameter
   }
 
-  // Append the new message
   setMessages((prev) => [...prev, userMessage]);
   setInputMessage("");
   setIsWelcomeActive(false);
@@ -267,7 +290,7 @@ const handleSendMessage = async () => {
       setShowTypingIndicator(true);
       setTimeout(async () => {
         const aiMessage = createMessage(hardcodedResponse, "assistant");
-        await saveMessage(hardcodedResponse, "assistant");
+        await saveMessage(hardcodedResponse, "assistant", null, activeChatId);
         setMessages((prev) => [...prev, aiMessage]);
         setShowTypingIndicator(false);
         setAiTypingMessage("");
@@ -298,7 +321,7 @@ const handleSendMessage = async () => {
       const recentMessagesResult = getRecentMessages(contextMessages);
 
       try {
-        const chatCompletionStream = await getGroqChatCompletion(recentMessagesResult.messages);
+        const chatCompletionStream = await getGroqChatCompletion(recentMessagesResult.messages, activeChatId);
 
         if (!chatCompletionStream) {
           console.error("❌ AI Response Stream is null!");
@@ -315,7 +338,7 @@ const handleSendMessage = async () => {
         }
 
         const aiMessage = createMessage(message, "assistant");
-        await saveMessage(message, "assistant");
+        await saveMessage(message, "assistant", null, activeChatId);
         setMessages((prev) => [...prev, aiMessage]);
 
         setShowTypingIndicator(false);
@@ -325,6 +348,7 @@ const handleSendMessage = async () => {
         console.error("❌ Error during AI response:", error);
         setShowTypingIndicator(false);
         setIsInputDisabled(false);
+        setInputMessage("");
       }
     }, 1000);
   }, seenDelay);
@@ -340,7 +364,7 @@ const handleSendMessage = async () => {
   
     if (user) {
       console.log("User ID before saving:", user.uid); // ✅ Debug log to confirm user authentication
-      await saveMessage(userMessage.text, "user"); // ✅ FIXED: Now correctly saves suggested messages
+      await saveMessage(userMessage.text, "user", null, activeChatId); // Add null as likeStatus before threadId
     }
   
     setMessages((prev) => [...prev, userMessage]);
@@ -442,9 +466,10 @@ const fetchMessages = async () => {
   if (!user) return;
 
   try {
-    console.log("🔍 Fetching messages for user:", user.uid);
-    const loadedMessages = await getMessages(user.uid);
-    
+    console.log("🔍 Fetching messages for user:", user.uid, "Thread:", activeChatId);
+    // Pass activeChatId to filter messages by thread. (Ensure getMessages is updated accordingly.)
+    const loadedMessages = await getMessages(user.uid, activeChatId);
+
     const formatted = loadedMessages.map(msg => ({
       id: msg.id,
       text: msg.text,
@@ -456,12 +481,16 @@ const fetchMessages = async () => {
 
     console.log("✅ Formatted messages:", formatted);
     setMessages(formatted);
-    setFormattedMessages(formatted);
-    setIsWelcomeActive(formatted.length === 0);
+    setIsWelcomeActive(formatted.length === 0); // Show welcome screen if no messages in the thread
   } catch (error) {
     console.error("❌ Error loading messages:", error);
   }
 };
+
+// Re-fetch messages whenever the active thread changes
+useEffect(() => {
+  fetchMessages();
+}, [activeChatId]);
 
 // Update useEffect
 useEffect(() => {
@@ -561,6 +590,7 @@ useEffect(() => {
       <ChatHeader
         isSidebarOpen={isSidebarOpen}
         onToggleSidebar={onToggleSidebar}
+        activeChatId={activeChatId}
       />
   
       {/* ✅ Floating Date Header - Updates on Scroll */}
@@ -580,7 +610,12 @@ useEffect(() => {
   
       {isWelcomeActive ? (
         <div className="welcome-container">
-          <h1 className="welcome-heading">{`Hey ${firstName}, what’s on your mind?`}</h1>
+          <h1 className="welcome-heading">
+            {welcomeTitles[activeChatId] || `Hey ${firstName}, welcome!`}
+          </h1>
+          <div className="instruction-box">
+            <p>{genericInstruction}</p>
+          </div>
           <div className="input-send-container">
             <input
               type="text"
@@ -608,13 +643,46 @@ useEffect(() => {
                   <div className={`message-bubble ${message.sender}-bubble`}>
                   <ReactMarkdown
                     components={{
-                      p: ({ node, ...props }) => <p style={{ marginBottom: "0.3rem" }} {...props} />,
-                      ul: ({ node, ...props }) => <ul style={{ margin: "0.3rem 0", paddingLeft: "1rem" }} {...props} />,
-                      li: ({ node, ...props }) => <li style={{ marginBottom: "0.2rem" }} {...props} />,
-                      strong: ({ node, ...props }) => <strong style={{ fontWeight: 600 }} {...props} />,
+                      p: ({ node, ...props }) => (
+                        <p style={{ marginBottom: "1rem", lineHeight: "1.6" }} {...props} />
+                      ),
+                      ul: ({ node, ...props }) => (
+                        <ul style={{ margin: "1rem 0", paddingLeft: "1.5rem" }} {...props} />
+                      ),
+                      li: ({ node, ...props }) => (
+                        <li style={{ marginBottom: "0.4rem" }} {...props} />
+                      ),
+                      strong: ({ node, ...props }) => (
+                        <strong style={{ fontWeight: 600, color: "#000" }} {...props} />
+                      ),
+                      a: ({ node, ...props }) => (
+                        <a
+                          style={{ color: "#1E90FF", textDecoration: "underline" }}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          {...props}
+                        />
+                      ),
+                      blockquote: ({ node, ...props }) => (
+                        <blockquote
+                          style={{
+                            borderLeft: "4px solid #888",
+                            paddingLeft: "1rem",
+                            margin: "1rem 0",
+                            color: "#aaa",
+                            fontStyle: "italic",
+                            backgroundColor: "rgba(255, 255, 255, 0.05)",
+                            borderRadius: "4px",
+                          }}
+                          {...props}
+                        />
+                      ),
+                      h1: ({ node, ...props }) => <h1 style={{ margin: "0.8rem 0" }} {...props} />,
+                      h2: ({ node, ...props }) => <h2 style={{ margin: "0.8rem 0" }} {...props} />,
+                      h3: ({ node, ...props }) => <h3 style={{ margin: "0.8rem 0" }} {...props} />,
                     }}
                   >
-                    {message.text}
+                    {message.text.replace(/\n/g, "\n\n")}
                   </ReactMarkdown>
                   </div>
                   {/* ✅ Show "Seen just now" for the last sent user message */}

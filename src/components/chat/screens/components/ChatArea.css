@@ -46,14 +46,34 @@
   text-align: center;
   padding: 2rem;
   background-color: #1d1d1d;
-  gap: 1rem;
+  gap: 2rem;
 }
 
 .welcome-heading {
   font-size: 2.5rem;
   font-weight: 500;
   color: #fff;
-  margin-bottom: 2rem;
+  margin-bottom: 1rem;
+}
+
+.instruction-box {
+  border: 1px solid #3d3d3d;
+  background-color: #2d2d2d;
+  padding: 1rem;
+  border-radius: 12px;
+  max-width: 90%;
+  margin: 0 auto;
+  text-align: left;
+  font-family: 'Courier New', Courier, monospace; /* Use code font */
+}
+
+.instruction-box p {
+  color: #aaa;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  margin: 0;
+  text-align: left;
+  font-family: 'monospace'; /* Use code font */
 }
 
 .input-send-container {
@@ -174,48 +194,57 @@
 
 .message-bubble {
   max-width: 100%;
-  padding: 0.75rem 1rem;
-  border-radius: 18px;
+  padding: 0.3rem 1rem;
+  border-radius: 24px;
   font-size: 0.95rem;
-  white-space: pre-wrap;
+  /* white-space: pre-wrap; */
   word-wrap: break-word;
   position: relative;
   color: #1d1d1d;
 }
 
-/* ✅ Fix spacing issues caused by react-markdown */
+/* ✅ Fix paragraph display to ensure proper line breaks */
 .message-bubble p {
-  margin: 0.3rem; /* Removes extra spacing from paragraphs */
-  display: inline; /* Ensures text doesn't create block-level gaps */
+  margin: 0.8rem 0; /* Increase margin for breathing space */
+  display: block;    /* Ensure paragraphs render as blocks */
+  line-height: 1.6;  /* Add line height for readability */
 }
 
-/* ✅ Ensures lists and block elements don’t add unnecessary spacing */
-.message-bubble ul, 
-.message-bubble ol, 
+/* ✅ Add spacing and padding to lists */
+.message-bubble ul,
+.message-bubble ol {
+  margin: 0.8rem 0;  /* Ensure space around lists */
+  padding-left: 1.5rem; /* Standard list indentation */
+}
+
+.message-bubble li {
+  margin-bottom: 0.4rem; /* Space between list items */
+}
+
+/* ✅ Blockquote styling to avoid overflow and add space */
 .message-bubble blockquote {
-  margin-top: 0.3rem;
-  margin-bottom: 0.3rem; /* Reduce extra space in lists */
+  border-left: 4px solid #888;
   padding-left: 1rem;
-}
-
-/* ✅ Fix blockquotes so they don’t expand the bubble */
-.message-bubble blockquote {
-  border-left: 3px solid #ccc;
+  margin: 0.8rem 0;
+  color: #aaa;
   font-style: italic;
-  opacity: 0.9;
+  background-color: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
 }
 
-/* ✅ Ensure headings don’t take extra space */
-.message-bubble h1, 
-.message-bubble h2, 
+/* ✅ Add breathing room for headings */
+.message-bubble h1,
+.message-bubble h2,
 .message-bubble h3 {
-  margin: 4px 0;
-  font-size: 1em; /* Prevents large text from breaking bubble layout */
+  margin: 0.8rem 0;
   font-weight: bold;
+  color: #fff;
+  line-height: 1.4;
 }
 
 .message-bubble strong {
   font-weight: 600;
+  color: #1d1d1d;
 }
 
 .user-bubble {
