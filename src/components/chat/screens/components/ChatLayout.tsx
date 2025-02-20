@@ -94,17 +94,6 @@ const ChatLayout: React.FC = () => {
         day: "numeric",
       }),
     },
-    {
-      id: 7,
-      title: "Creativity & Ideas",
-      timestamp: new Date().toLocaleString("en-US", {
-        hour: "numeric",
-        minute: "numeric",
-        hour12: true,
-        month: "short",
-        day: "numeric",
-      }),
-    },
   ];
 
   const toggleFullScreen = () => {
