@@ -48,7 +48,7 @@ export const encryptMessage = (text: string): string => {
   }
 
   const encrypted = CryptoJS.AES.encrypt(text, ENCRYPTION_KEY).toString();
-  console.log(`🔐 Encrypting: ${text} → ${encrypted}`);
+  // console.log(`🔐 Encrypting: ${text} → ${encrypted}`);
   return encrypted;
 };
 
@@ -59,13 +59,13 @@ export const decryptMessage = (encryptedText: string, isEncrypted: boolean): str
   }
 
   try {
-    console.log("🔍 Attempting to decrypt:", encryptedText);
+    // console.log("🔍 Attempting to decrypt:", encryptedText);
     const bytes = CryptoJS.AES.decrypt(encryptedText, ENCRYPTION_KEY);
     const decryptedText = bytes.toString(CryptoJS.enc.Utf8);
 
     if (!decryptedText) throw new Error("Decryption produced empty result");
 
-    console.log("✅ Successfully decrypted:", decryptedText);
+    // console.log("✅ Successfully decrypted:", decryptedText);
     return decryptedText;
   } catch (error: any) {
     console.error("❌ Decryption Error:", error.message, " | Text:", encryptedText);
@@ -103,7 +103,7 @@ export const saveMessage = async (
  */
 export const getMessages = async (userId: string, activeChatId: number): Promise<Message[]> => {
   try {
-    console.log(`🔍 Fetching messages for user: users/${userId}/messages, Thread: ${activeChatId}`);
+    // console.log(`🔍 Fetching messages for user: users/${userId}/messages, Thread: ${activeChatId}`);
 
     // Filter messages by threadId
     const q = query(

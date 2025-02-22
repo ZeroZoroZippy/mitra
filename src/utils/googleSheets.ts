@@ -21,7 +21,7 @@ const sendMessageToGoogleSheets = async (message: any) => {
   try {
     // ✅ Prevent duplicate sends for the same message
     if (lastSyncedMessageIds.has(message.id)) {
-      console.log("⚠️ Duplicate message detected, skipping sync:", message.id);
+      // console.log("⚠️ Duplicate message detected, skipping sync:", message.id);
       return;
     }
 
@@ -52,7 +52,7 @@ const sendMessageToGoogleSheets = async (message: any) => {
  */
 export const syncFirestoreToGoogleSheets = () => {
   if (unsubscribeFirestoreListener) {
-    console.log("⚠️ Firestore listener already running. Skipping duplicate listener.");
+    // console.log("⚠️ Firestore listener already running. Skipping duplicate listener.");
     return;
   }
 
@@ -65,7 +65,7 @@ export const syncFirestoreToGoogleSheets = () => {
 
         // ✅ Prevent duplicate sends
         if (lastSyncedMessageIds.has(newMessage.id)) {
-          console.log("⚠️ Duplicate message detected, skipping sync:", newMessage.id);
+          // console.log("⚠️ Duplicate message detected, skipping sync:", newMessage.id);
           return;
         }
 
@@ -97,11 +97,11 @@ export const exportToGoogleSheets = async () => {
     const newMessages = messages.filter((msg) => !lastSyncedMessageIds.has(msg.id));
 
     if (newMessages.length === 0) {
-      console.log("✅ No new messages to sync.");
+      // console.log("✅ No new messages to sync.");
       return;
     }
 
-    console.log(`⏳ Syncing ${newMessages.length} new messages`);
+    // console.log(`⏳ Syncing ${newMessages.length} new messages`);
 
     await fetch(GOOGLE_SHEETS_SCRIPT_URL, {
       method: "POST",

@@ -12,18 +12,18 @@ const deleteUserMessages = async (userId: string) => {
   }
 
   try {
-    console.log(`🔍 Searching for messages by user: ${userId}...`);
+    // console.log(`🔍 Searching for messages by user: ${userId}...`);
 
     const messagesRef = collection(db, "messages");
     const q = query(messagesRef, where("userId", "==", userId));
     const querySnapshot = await getDocs(q);
 
     if (querySnapshot.empty) {
-      console.log(`✅ No messages found for user: ${userId}`);
+      // console.log(`✅ No messages found for user: ${userId}`);
       return;
     }
 
-    console.log(`🗑️ Found ${querySnapshot.size} messages. Deleting now...`);
+    // console.log(`🗑️ Found ${querySnapshot.size} messages. Deleting now...`);
 
     const deletePromises = querySnapshot.docs.map((docSnapshot) =>
       deleteDoc(doc(db, "messages", docSnapshot.id))
@@ -31,7 +31,7 @@ const deleteUserMessages = async (userId: string) => {
 
     await Promise.all(deletePromises);
 
-    console.log(`✅ Successfully deleted all messages for user: ${userId}`);
+    // console.log(`✅ Successfully deleted all messages for user: ${userId}`);
   } catch (error) {
     console.error("❌ Error deleting messages:", error);
   }
