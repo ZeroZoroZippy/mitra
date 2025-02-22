@@ -1,7 +1,6 @@
 import React, { useEffect } from "react";
-// import { auth } from "../../../shared/utils/firebaseAuth.ts";  // ✅ Correct path // Adjust path as needed
 import { signInWithPopup, GoogleAuthProvider, signOut } from "firebase/auth";
-import { auth } from "../../../../../../shared/utils/firebaseConfig";
+import { auth } from "../../../../utils/firebaseAuth";
 
 const FirebaseTest: React.FC = () => {
   
@@ -13,9 +12,9 @@ const FirebaseTest: React.FC = () => {
   const checkAuthState = () => {
     auth.onAuthStateChanged((user) => {
       if (user) {
-        console.log("✅ User is logged in:", user);
+        // console.log("✅ User is logged in:", user);
       } else {
-        console.log("❌ No user logged in");
+        // console.log("❌ No user logged in");
       }
     });
   };
@@ -24,7 +23,7 @@ const FirebaseTest: React.FC = () => {
     const provider = new GoogleAuthProvider();
     try {
       const result = await signInWithPopup(auth, provider);
-      console.log("✅ Signed in:", result.user);
+        // console.log("✅ Signed in:", result.user);
     } catch (error) {
       console.error("❌ Sign-in error:", error);
     }
@@ -33,7 +32,7 @@ const FirebaseTest: React.FC = () => {
   const handleSignOut = async () => {
     try {
       await signOut(auth);
-      console.log("✅ Signed out successfully");
+        // console.log("✅ Signed out successfully");
     } catch (error) {
       console.error("❌ Sign-out error:", error);
     }

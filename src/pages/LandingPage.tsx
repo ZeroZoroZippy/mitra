@@ -33,12 +33,12 @@ const LandingPage: React.FC<LandingPageProps> = ({ featuresRef }) => {
   // Handle authentication state and update CTA button
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      console.log("Auth state changed. User:", user);
+      // console.log("Auth state changed. User:", user);
       setIsAuthenticated(!!user);
 
       // Only redirect if the user is on "/" and hasn't been redirected
       if (user && location.pathname === "/" && !hasRedirected) {
-        console.log("Redirecting to /chat...");
+        // console.log("Redirecting to /chat...");
         setHasRedirected(true); // Update state before navigating
         navigate("/chat");
       }
