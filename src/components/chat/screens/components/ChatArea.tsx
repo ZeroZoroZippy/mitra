@@ -11,6 +11,7 @@ import { getMessages, saveMessage, updateLikeStatus, decryptMessage} from "../..
 import { getGroqChatCompletion, getRecentMessages } from "../../../../utils/getGroqChatCompletion";
 import { exportToGoogleSheets, syncFirestoreToGoogleSheets } from "../../../../utils/googleSheets";
 import { getDoc, doc, getFirestore } from "firebase/firestore";
+import { isCreator } from "../../../../utils/firebaseAuth";
 
 const db = getFirestore();
 const welcomeTitles: { [key: number]: string } = {
@@ -267,6 +268,7 @@ const handleSendMessage = async () => {
 
   const userMessage = createMessage(inputMessage.trim(), "user");
   const user = auth.currentUser;
+  const userIsCreator = isCreator(); // ✅ Check if the user is the creator
 
   if (user) {
     await saveMessage(userMessage.text, "user", null, activeChatId); // Updated to remove activeChatId parameter
@@ -320,8 +322,11 @@ const handleSendMessage = async () => {
 
       const recentMessagesResult = getRecentMessages(contextMessages);
 
+      const userIsCreator = isCreator();
+      console.log("User is creator, passing creator context:", userIsCreator ? "Yuvaan" : "none");
+
       try {
-        const chatCompletionStream = await getGroqChatCompletion(recentMessagesResult.messages, activeChatId);
+        const chatCompletionStream = await getGroqChatCompletion(recentMessagesResult.messages, activeChatId, userIsCreator ? "Yuvaan" : undefined);
 
         if (!chatCompletionStream) {
           console.error("❌ AI Response Stream is null!");
