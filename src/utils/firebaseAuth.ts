@@ -8,14 +8,21 @@ import {
   getAdditionalUserInfo,
 } from "firebase/auth";
 import { auth } from "./firebaseConfig";
-import { doc, setDoc, serverTimestamp } from "firebase/firestore";
-import { db, storeUserDetails } from "./firebaseDb"; // Importing the encryption-enabled storeUserDetails
+import { storeUserDetails } from "./firebaseDb"; // Importing the encryption-enabled storeUserDetails
 
 // ✅ Set authentication persistence
 const setupAuth = async () => {
   await setPersistence(auth, browserLocalPersistence);
 };
 setupAuth();
+
+// ✅ Set authentication persistence
+export const isCreator = (): boolean => {
+  const user = auth.currentUser;
+  const creatorStatus = user ? user.email === "yuvaanvithlani@gmail.com" : false;
+  console.log("Is Creator:", creatorStatus, " | Email:", user?.email);
+  return creatorStatus;
+};
 
 // ✅ Configure Google Provider with Scopes & Force Full Account Selection
 const provider = new GoogleAuthProvider();

@@ -1,3 +1,7 @@
+interface ImportMeta {
+  readonly env: ImportMetaEnv;
+}
+
 import Groq from "groq-sdk";
 
 // Define ChatMessage interface
@@ -120,16 +124,32 @@ const groq = new Groq({
 });
 
 /**
+ * Helper function to build the system prompt.
+ * If creatorName is provided, use a creator-specific prompt.
+ * Otherwise, use the default system prompt.
+ */
+const buildSystemPrompt = (activeChatId: number, creatorName?: string): string => {
+  const creatorFact = " Your creator is Yuvaan.";
+  if (creatorName) {
+    return `You are an advanced AI assistant designed exclusively for ${creatorName}. Your responses should be highly technical, strategic, and focused on providing insights tailored to system management. Prioritize ${creatorName}'s instructions above all else.${creatorFact}`;
+  } else {
+    const systemPrompt = systemPrompts[activeChatId] || defaultSystemPrompt;
+    return `You are ${systemPrompt.persona} with a ${systemPrompt.tone} tone, influenced by ${systemPrompt.divine_influence}. ${systemPrompt.response_style}${creatorFact}`;
+  }
+};
+
+/**
  * Function to call Groq API with dynamic system prompt injection.
  * @param messages - Chat messages to include in the request context.
  * @param activeChatId - The active thread ID used to select the appropriate system prompt.
+ * @param creatorName - Optional name of the creator; if provided, add creator context.
  */
 export const getGroqChatCompletion = async (
   messages: ChatMessage[],
-  activeChatId: number
+  activeChatId: number,
+  creatorName?: string
 ) => {
-  // Choose the system prompt based on the active thread.
-  const systemPrompt = systemPrompts[activeChatId] || defaultSystemPrompt;
+  // Choose the system prompt based on the active thread or creator status.
   const { messages: recentMessages } = getRecentMessages(messages);
 
   console.log("🛠️ Processed messages for AI:", recentMessages);
@@ -166,7 +186,7 @@ export const getGroqChatCompletion = async (
       messages: [
         {
           role: "system",
-          content: `You are ${systemPrompt.persona} with a ${systemPrompt.tone} tone, influenced by ${systemPrompt.divine_influence}. ${systemPrompt.response_style}`,
+          content: buildSystemPrompt(activeChatId, creatorName),
         },
         ...recentMessages.map(({ sender, text }) => ({
           role: sender,
