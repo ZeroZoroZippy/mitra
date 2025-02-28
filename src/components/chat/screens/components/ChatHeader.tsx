@@ -76,7 +76,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({ isSidebarOpen, onToggleSidebar,
     4: "Healing & Emotional Release",
     5: "Purpose & Ambition",
     6: "Mental Well-Being",
-    7: "Creativity & Ideas",
+    7: "Admin Dashboard",
   };
 
   const getChatTitle = (chatId: number) => {
