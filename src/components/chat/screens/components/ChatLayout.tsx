@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import "./ChatLayout.css";
 import Sidebar from "./Sidebar";
 import ChatArea from "./ChatArea";
+import { isCreator } from "../../../../utils/firebaseAuth";
 
 interface Chat {
   id: number;
@@ -11,6 +12,10 @@ interface Chat {
 }
 
 const ChatLayout: React.FC = () => {
+  // Determine if the current user is the admin/creator.
+  const userIsAdmin = isCreator();
+
+  // Get the activeChatId from localStorage (default to 1)
   const [activeChatId, setActiveChatId] = useState<number>(() => {
     const savedChatId = localStorage.getItem("activeChatId");
     const chatHistory = localStorage.getItem("chats");
@@ -26,8 +31,8 @@ const ChatLayout: React.FC = () => {
   
   const [isChatFullScreen, setIsChatFullScreen] = useState(true);
 
-  // Updated chatList including all threads
-  const chatList: Chat[] = [
+  // Define the standard chat rooms.
+  const baseChatList: Chat[] = [
     {
       id: 1,
       title: "Companion",
@@ -95,6 +100,24 @@ const ChatLayout: React.FC = () => {
       }),
     },
   ];
+
+  // Conditionally add the admin-only dashboard room.
+  const chatList: Chat[] = userIsAdmin
+    ? [
+        ...baseChatList,
+        {
+          id: 7, // Use a unique id that doesn't conflict with others.
+          title: "Admin Dashboard",
+          timestamp: new Date().toLocaleString("en-US", {
+            hour: "numeric",
+            minute: "numeric",
+            hour12: true,
+            month: "short",
+            day: "numeric",
+          }),
+        },
+      ]
+    : baseChatList;
 
   const toggleFullScreen = () => {
     setIsChatFullScreen((prev) => {
