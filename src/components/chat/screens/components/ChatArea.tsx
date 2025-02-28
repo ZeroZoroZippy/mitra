@@ -322,11 +322,12 @@ const handleSendMessage = async () => {
 
       const recentMessagesResult = getRecentMessages(contextMessages);
 
-      const userIsCreator = isCreator();
-      console.log("User is creator, passing creator context:", userIsCreator ? "Yuvaan" : "none");
+      // Only pass the creator (admin) context if the active chat is the Admin Dashboard room (assumed id 7)
+        const adminContext = (activeChatId === 7 && isCreator()) ? "Yuvaan" : undefined;
+        console.log("Admin context:", adminContext);
 
-      try {
-        const chatCompletionStream = await getGroqChatCompletion(recentMessagesResult.messages, activeChatId, userIsCreator ? "Yuvaan" : undefined);
+        try {
+          const chatCompletionStream = await getGroqChatCompletion(recentMessagesResult.messages, activeChatId, adminContext);
 
         if (!chatCompletionStream) {
           console.error("❌ AI Response Stream is null!");
