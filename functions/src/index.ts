@@ -1,29 +1,23 @@
-import express from "express";
-import * as admin from "firebase-admin";
 import { onSchedule, ScheduledEvent } from "firebase-functions/v2/scheduler";
 import { onRequest } from "firebase-functions/v2/https";
 import { onDocumentCreated } from "firebase-functions/v2/firestore";
-import { LanguageServiceClient } from "@google-cloud/language";
+import * as admin from "firebase-admin";
 
-// -----------------------------------------------------------------------------
-// 1. Initialize Firebase Admin (Only once)
-if (!admin.apps.length) {
-  admin.initializeApp();
-}
+// Initialize Firebase
+admin.initializeApp();
 const db = admin.firestore();
 
-// -----------------------------------------------------------------------------
-// 2. Type Definitions and Constants
+// Constants
+const ANOMALY_THRESHOLD = 100000;
 
-// Data structure for each user message
+// Type definitions
 interface MessageData {
   sender: string;
-  content: string;
-  timestamp: admin.firestore.Timestamp;
+  text: string;
+  timestamp: admin.firestore.Timestamp | any;  // Allows for different timestamp types
   sentimentScore?: number;
 }
 
-// Data structure for aggregated analytics
 interface AggregatedData {
   timestamp: admin.firestore.FieldValue;
   totalMessages: number;
@@ -31,113 +25,160 @@ interface AggregatedData {
   aiMessages: number;
   averageSentiment: number;
   messagesWithSentiment: number;
-  averageInterval: number; // in milliseconds
-  peakHour: number;        // 0-23
-  peakCount: number;       // number of messages in peak hour
-  hourCounts: number[];    // array of length 24
+  averageInterval: number;
+  peakHour: number;
+  peakCount: number;
+  hourCounts: number[];
   totalSentiment: number;
 }
 
-// Threshold for anomaly detection
-const ANOMALY_THRESHOLD = 100;
-
-// -----------------------------------------------------------------------------
-// 3. Optional Express Server for Local Testing (Emulator Only)
-const app = express();
-const PORT = process.env.PORT || 8080;
-app.get("/", (req, res) => {
-  res.status(200).send("Firebase Functions are active.");
-});
-if (process.env.FUNCTIONS_EMULATOR) {
-  app.listen(PORT, () => {
-    console.log(`Server is listening on port ${PORT}`);
-  });
+interface LastAggregationData {
+  timestamp: admin.firestore.Timestamp;
+  lastAggregationId?: string;
 }
 
-// -----------------------------------------------------------------------------
-// 4. Aggregation Functions
+// Simple sentiment analysis function using word lists
+function simpleSentimentAnalysis(text: string): number {
+  const positiveWords = [
+    "good", "great", "excellent", "wonderful", "amazing", "love", "happy",
+    "helpful", "beautiful", "best", "fantastic", "perfect", "thank", "thanks",
+    "appreciate", "nice", "awesome", "enjoy", "pleased", "satisfied",
+    "incredible", "delightful", "joyful", "positive", "better", "superb"
+  ];
+  
+  const negativeWords = [
+    "bad", "terrible", "awful", "horrible", "hate", "dislike", "poor",
+    "disappointing", "worst", "annoying", "useless", "problem", "difficult",
+    "frustrating", "angry", "sad", "unfortunately", "error", "issue", "broken"
+  ];
+
+  const normalizedText = text.toLowerCase();
+  const words = normalizedText.match(/\b\w+\b/g) || [];
+  
+  let positiveCount = 0;
+  let negativeCount = 0;
+  
+  for (const word of words) {
+    if (positiveWords.includes(word)) positiveCount++;
+    if (negativeWords.includes(word)) negativeCount++;
+  }
+  
+  const totalWords = words.length;
+  if (totalWords === 0) return 0;
+  
+  const positiveScore = positiveCount / totalWords;
+  const negativeScore = negativeCount / totalWords;
+  
+  return Math.round((positiveScore - negativeScore) * 100) / 100;
+}
 
 /**
- * Aggregates data from all "messages" subcollections, computing:
- * - total/user/AI message counts
- * - average sentiment
- * - average message interval
- * - peak activity hour
- * and stores the result in "aggregatedAnalytics".
+ * Aggregate data from all "messages" subcollections.
  */
 async function aggregateData(): Promise<AggregatedData> {
   try {
-    // Retrieve last aggregation timestamp (if any) from "system/lastAggregation"
     const lastAggregationRef = db.collection("system").doc("lastAggregation");
     const lastAggregationDoc = await lastAggregationRef.get();
-
+    
     let lastTimestamp: admin.firestore.Timestamp | null = null;
+    let prevTotalMessages = 0;
+    let prevUserMessages = 0;
+    let prevAiMessages = 0;
+    let prevTotalSentiment = 0;
+    let prevMessagesWithSentiment = 0;
+    let prevHourCounts: number[] = new Array(24).fill(0);
+
     if (lastAggregationDoc.exists) {
-      const data = lastAggregationDoc.data() as { timestamp?: admin.firestore.Timestamp };
+      const data = lastAggregationDoc.data() as LastAggregationData | undefined;
       lastTimestamp = data?.timestamp || null;
     }
 
-    // Build a query for new messages since the last aggregation
+    const latestAggregationSnapshot = await db
+      .collection("aggregatedAnalytics")
+      .orderBy("timestamp", "desc")
+      .limit(1)
+      .get();
+
+    if (!latestAggregationSnapshot.empty) {
+      const latestData = latestAggregationSnapshot.docs[0].data() as Partial<AggregatedData>;
+      prevTotalMessages = latestData.totalMessages || 0;
+      prevUserMessages = latestData.userMessages || 0;
+      prevAiMessages = latestData.aiMessages || 0;
+      prevTotalSentiment = latestData.totalSentiment as number || 0;
+      prevMessagesWithSentiment = latestData.messagesWithSentiment || 0;
+      if (latestData.hourCounts) {
+        for (let i = 0; i < 24; i++) {
+          prevHourCounts[i] = latestData.hourCounts[i] || 0;
+        }
+      }
+    }
+
     let messagesQuery: admin.firestore.Query = db.collectionGroup("messages");
     if (lastTimestamp) {
       messagesQuery = messagesQuery.where("timestamp", ">", lastTimestamp);
     }
 
-    // Fetch new messages
-    const newMessagesSnapshot = await messagesQuery.get();
+    const messagesSnapshot = await messagesQuery.get();
 
-    // Initialize counters
-    let totalMessages = 0;
-    let userMessages = 0;
-    let aiMessages = 0;
-    let totalSentiment = 0;
-    let messagesWithSentiment = 0;
-    let messageIntervals: number[] = [];
+    let newTotalMessages = 0;
+    let newUserMessages = 0;
+    let newAiMessages = 0;
+    let newTotalSentiment = 0;
+    let newMessagesWithSentiment = 0;
+    let newMessageIntervals: number[] = [];
     let lastMessageTime: Date | null = null;
-    const hourCounts: number[] = new Array(24).fill(0);
+    let newHourCounts: number[] = new Array(24).fill(0);
 
-    // (Optional) If you want to carry over prior totals, you can parse the latest doc here
-    // For simplicity, we're just starting fresh each time for new messages
-
-    // Process new messages
-    newMessagesSnapshot.forEach((doc) => {
+    messagesSnapshot.forEach((doc) => {
       const data = doc.data() as MessageData;
-      totalMessages++;
-
-      // Count user vs. AI messages
-      if (data.sender === "user") {
-        userMessages++;
-        // If a sentimentScore is present, incorporate it
-        if (typeof data.sentimentScore === "number") {
-          totalSentiment += data.sentimentScore;
-          messagesWithSentiment++;
+      if (data.timestamp && data.timestamp instanceof admin.firestore.Timestamp) {
+        newTotalMessages++;
+        
+        if (data.sender === "user") {
+          newUserMessages++;
+          if (data.text && data.text.length >= 5) {
+            const score = data.sentimentScore !== undefined
+              ? data.sentimentScore
+              : simpleSentimentAnalysis(data.text);
+            newTotalSentiment += score;
+            newMessagesWithSentiment++;
+            if (data.sentimentScore === undefined) {
+              doc.ref.update({ sentimentScore: score }).catch(err =>
+                console.error(`Error updating sentiment for message ${doc.id}: ${err}`)
+              );
+            }
+          }
+        } else if (data.sender === "assistant") {
+          newAiMessages++;
         }
-      } else if (data.sender === "assistant") {
-        aiMessages++;
-      }
-
-      // Track timing data
-      if (data.timestamp) {
-        const msgDate = data.timestamp.toDate();
-        const hour = msgDate.getHours();
-        hourCounts[hour]++;
+        
+        const messageDate = data.timestamp.toDate();
+        const hour = messageDate.getHours();
+        newHourCounts[hour]++;
         if (lastMessageTime) {
-          const interval = msgDate.getTime() - lastMessageTime.getTime();
-          messageIntervals.push(interval);
+          const interval = messageDate.getTime() - lastMessageTime.getTime();
+          newMessageIntervals.push(interval);
         }
-        lastMessageTime = msgDate;
+        lastMessageTime = messageDate;
+      } else {
+        console.error(`Skipping message ${doc.id}: invalid or missing timestamp (type: ${typeof data.timestamp})`);
       }
     });
 
-    // Calculate advanced metrics
-    const averageSentiment = messagesWithSentiment > 0
-      ? totalSentiment / messagesWithSentiment
+    const totalMessages = prevTotalMessages + newTotalMessages;
+    const userMessages = prevUserMessages + newUserMessages;
+    const aiMessages = prevAiMessages + newAiMessages;
+    const totalSentiment = prevTotalSentiment + newTotalSentiment;
+    const messagesWithSentiment = prevMessagesWithSentiment + newMessagesWithSentiment;
+    const hourCounts = prevHourCounts.map((count, i) => count + newHourCounts[i]);
+
+    const averageSentiment = messagesWithSentiment > 0 
+      ? Math.round((totalSentiment / messagesWithSentiment) * 100) / 100
       : 0;
-    const averageInterval = messageIntervals.length > 0
-      ? messageIntervals.reduce((sum, val) => sum + val, 0) / messageIntervals.length
+    const averageInterval = newMessageIntervals.length > 0 
+      ? newMessageIntervals.reduce((sum, interval) => sum + interval, 0) / newMessageIntervals.length
       : 0;
 
-    // Determine peak hour
     let peakHour = 0;
     let peakCount = 0;
     for (let i = 0; i < 24; i++) {
@@ -158,13 +199,10 @@ async function aggregateData(): Promise<AggregatedData> {
       peakHour,
       peakCount,
       hourCounts,
-      totalSentiment,
+      totalSentiment
     };
 
-    // Store aggregated data in "aggregatedAnalytics"
     const docRef = await db.collection("aggregatedAnalytics").add(aggregatedData);
-
-    // Update "system/lastAggregation" with the current timestamp
     await lastAggregationRef.set({
       timestamp: admin.firestore.FieldValue.serverTimestamp(),
       lastAggregationId: docRef.id
@@ -174,12 +212,13 @@ async function aggregateData(): Promise<AggregatedData> {
     return aggregatedData;
   } catch (err) {
     console.error("Error in aggregateData:", err);
-    throw new Error(`Aggregation failed: ${(err as Error).message}`);
+    const error = err as Error;
+    throw new Error(`Aggregation failed: ${error.message}`);
   }
 }
 
 /**
- * Scheduled Cloud Function to run aggregation every 60 minutes.
+ * Scheduled function to run aggregation every 60 minutes.
  */
 export const hourlyDataIngestion = onSchedule(
   {
@@ -193,13 +232,14 @@ export const hourlyDataIngestion = onSchedule(
       console.log("Hourly data ingestion completed successfully.");
     } catch (err) {
       console.error("Error in hourly data ingestion:", err);
-      throw new Error(`Data ingestion failed: ${(err as Error).message}`);
+      const error = err as Error;
+      throw new Error(`Data ingestion failed: ${error.message}`);
     }
   }
 );
 
 /**
- * HTTP-triggered function for testing aggregation manually.
+ * HTTP function to test aggregation manually.
  */
 export const testAggregation = onRequest(
   {
@@ -211,16 +251,20 @@ export const testAggregation = onRequest(
       const aggregatedData = await aggregateData();
       res
         .status(200)
-        .send("Aggregation completed successfully: " + JSON.stringify(aggregatedData));
+        .send(
+          "Aggregation completed successfully: " +
+            JSON.stringify(aggregatedData)
+        );
     } catch (err) {
       console.error("Error in test aggregation:", err);
-      res.status(500).send(`Aggregation test failed: ${(err as Error).message}`);
+      const error = err as Error;
+      res.status(500).send(`Aggregation test failed: ${error.message}`);
     }
   }
 );
 
 /**
- * HTTP API endpoint to generate a technical analytics summary.
+ * HTTP API endpoint for analytics summary.
  */
 export const getTechSummary = onRequest(
   {
@@ -249,10 +293,28 @@ export const getTechSummary = onRequest(
         return;
       }
 
-      const docs = snapshot.docs.map((doc) => doc.data() as AggregatedData);
+      const docs = snapshot.docs.map((doc) => {
+        const data = doc.data();
+        return {
+          timestamp: data.timestamp || admin.firestore.Timestamp.now(),
+          totalMessages: data.totalMessages || 0,
+          userMessages: data.userMessages || 0,
+          aiMessages: data.aiMessages || 0,
+          averageSentiment: data.averageSentiment || 0,
+          messagesWithSentiment: data.messagesWithSentiment || 0,
+          averageInterval: data.averageInterval || 0,
+          peakHour: data.peakHour !== undefined ? data.peakHour : 0,
+          peakCount: data.peakCount || 0,
+          hourCounts: data.hourCounts || new Array(24).fill(0),
+          totalSentiment: data.totalSentiment || 0
+        } as AggregatedData;
+      });
+      
       const data = docs.reverse();
-
       let summary = "";
+      let sentimentDelta = 0;
+      let sentimentTrend = "Stable";
+
       if (data.length >= 2) {
         const older = data[data.length - 2];
         const latest = data[data.length - 1];
@@ -260,85 +322,94 @@ export const getTechSummary = onRequest(
         const totalDiff = latest.totalMessages - older.totalMessages;
         const userDiff = latest.userMessages - older.userMessages;
         const aiDiff = latest.aiMessages - older.aiMessages;
-        const sentimentDiff = (latest.averageSentiment ?? 0) - (older.averageSentiment ?? 0);
+
+        sentimentDelta = Math.round((latest.averageSentiment - older.averageSentiment) * 100) / 100;
+        if (sentimentDelta > 0.05) sentimentTrend = "Up";
+        else if (sentimentDelta < -0.05) sentimentTrend = "Down";
+        else sentimentTrend = "Stable";
+
+        if (isNaN(sentimentDelta)) sentimentDelta = 0;
+
+        const sentimentText = latest.messagesWithSentiment > 0 
+          ? `${latest.averageSentiment.toFixed(2)} (${latest.averageSentiment > 0 ? 'Positive' : 'Negative'})` 
+          : '0.00 (Neutral)';
+        
+        const avgIntervalMinutes = latest.averageInterval > 0 
+          ? (latest.averageInterval / 60000).toFixed(1)
+          : '0.0';
+        
+        const peakHourFormatted = latest.peakHour !== undefined 
+          ? `${latest.peakHour % 12 || 12}${latest.peakHour < 12 ? 'AM' : 'PM'}` 
+          : '12AM';
 
         const formatDiff = (num: number) =>
           num >= 0 ? `**+${num}** 📈` : `**${num}** 📉`;
-
-        // Convert average interval from ms to minutes
-        const avgIntervalMinutes = latest.averageInterval
-          ? (latest.averageInterval / 60000).toFixed(1)
-          : "No data";
-
-        // Format peak hour
-        const peakHourFormatted =
-          latest.peakHour !== undefined
-            ? `${latest.peakHour % 12 || 12}${latest.peakHour < 12 ? "AM" : "PM"}`
-            : "No data";
 
         summary = `**Technical Analytics Summary**:\n\n`;
         summary += `**Total Messages:** ${latest.totalMessages} (${formatDiff(totalDiff)})\n`;
         summary += `**User Messages:** ${latest.userMessages} (${formatDiff(userDiff)})\n`;
         summary += `**AI Messages:** ${latest.aiMessages} (${formatDiff(aiDiff)})\n`;
-        summary += `**Average Sentiment:** ${latest.averageSentiment.toFixed(2)} (${formatDiff(sentimentDiff)})\n`;
-        summary += `**Avg. Message Interval:** ${avgIntervalMinutes} minutes\n`;
-        summary += `**Peak Activity:** ${peakHourFormatted} with ${latest.peakCount} messages\n`;
+        summary += `**Average Sentiment:** ${sentimentText}\n`;
+        summary += `**Sentiment Delta:** ${sentimentDelta} (${sentimentTrend})\n`;
+        summary += `**Messages with Sentiment:** ${latest.messagesWithSentiment}\n`;
+        summary += `**Average Response Time:** ${avgIntervalMinutes} minutes\n`;
+        summary += `**Peak Activity Hour:** ${peakHourFormatted}\n`;
       } else {
         const latest = data[data.length - 1];
-        const avgIntervalMinutes = latest.averageInterval
+        
+        const sentimentText = latest.messagesWithSentiment > 0 
+          ? `${latest.averageSentiment.toFixed(2)} (${latest.averageSentiment > 0 ? 'Positive' : 'Negative'})` 
+          : '0.00 (Neutral)';
+        
+        const avgIntervalMinutes = latest.averageInterval > 0 
           ? (latest.averageInterval / 60000).toFixed(1)
-          : "No data";
-
-        const peakHourFormatted =
-          latest.peakHour !== undefined
-            ? `${latest.peakHour % 12 || 12}${latest.peakHour < 12 ? "AM" : "PM"}`
-            : "No data";
-
+          : '0.0';
+        
+        const peakHourFormatted = latest.peakHour !== undefined 
+          ? `${latest.peakHour % 12 || 12}${latest.peakHour < 12 ? 'AM' : 'PM'}` 
+          : '12AM';
+        
         summary = `**Latest Analytics**:\n\n`;
         summary += `**Total Messages:** ${latest.totalMessages}\n`;
         summary += `**User Messages:** ${latest.userMessages}\n`;
         summary += `**AI Messages:** ${latest.aiMessages}\n`;
-        summary += `**Average Sentiment:** ${latest.averageSentiment.toFixed(2)}\n`;
-        summary += `**Avg. Message Interval:** ${avgIntervalMinutes} minutes\n`;
-        summary += `**Peak Activity:** ${peakHourFormatted} with ${latest.peakCount} messages\n`;
+        summary += `**Average Sentiment:** ${sentimentText}\n`;
+        summary += `**Messages with Sentiment:** ${latest.messagesWithSentiment || 0}\n`;
+        summary += `**Average Response Time:** ${avgIntervalMinutes} minutes\n`;
+        summary += `**Peak Activity Hour:** ${peakHourFormatted}\n`;
       }
 
-      // Check for anomalies
       if (data.length >= 1) {
         const latest = data[data.length - 1];
-        // Check message volume
+        
         if (latest.totalMessages > ANOMALY_THRESHOLD) {
-          summary += `\n\n⚠️ **Anomaly Detected:** Total messages exceed ${ANOMALY_THRESHOLD}.\n`;
+          summary += `\n⚠️ **Anomaly Detected:** Total messages exceed ${ANOMALY_THRESHOLD}.\n`;
         }
-        // Check sentiment anomaly
+        
         if (latest.averageSentiment < -0.5 && latest.messagesWithSentiment > 5) {
           summary += `⚠️ **Anomaly Detected:** Unusually negative sentiment detected.\n`;
         }
-        // Check average interval
-        if (latest.averageInterval > 300000) { // 5 minutes in ms
+        
+        if (latest.averageInterval > 300000) {
           summary += `⚠️ **Anomaly Detected:** Average response time exceeds 5 minutes.\n`;
         }
       }
 
       res.status(200).json({ summary });
-      return;
     } catch (err) {
       console.error("Error generating technical summary: ", err);
       const error = err as Error;
       res.status(500).json({ error: "Internal Server Error", details: error.message });
-      return;
     }
   }
 );
 
-// -----------------------------------------------------------------------------
-// Firestore-triggered Sentiment Analysis Function
-// -----------------------------------------------------------------------------
-const languageClient = new LanguageServiceClient();
-
+/**
+ * Firestore-triggered function to analyze sentiment of new messages.
+ */
 export const analyzeMessageSentiment = onDocumentCreated(
   {
-    document: "chats/{chatId}/messages/{messageId}",
+    document: "users/{userId}/messages/{messageId}",
     memory: "256MiB"
   },
   async (event) => {
@@ -350,37 +421,34 @@ export const analyzeMessageSentiment = onDocumentCreated(
       }
 
       const messageData = snapshot.data() as MessageData;
-      // Only analyze user messages of sufficient length if not already analyzed
-      if (
-        messageData.sender !== "user" ||
-        !messageData.content ||
-        messageData.content.length < 10 ||
-        messageData.sentimentScore !== undefined
-      ) {
-        console.log("Skipping sentiment analysis for message", snapshot.id);
+      
+      console.log(`Evaluating message ${snapshot.id}`);
+
+      if (messageData.sender !== "user") {
+        console.log(`Skipping message ${snapshot.id}: Sender is not 'user' (found: ${messageData.sender})`);
+        return;
+      }
+      
+      if (!messageData.text || messageData.text.length < 5) {
+        console.log(`Skipping message ${snapshot.id}: text too short or missing`);
+        return;
+      }
+      
+      if (messageData.sentimentScore !== undefined) {
+        console.log(`Skipping message ${snapshot.id}: Sentiment score already exists`);
         return;
       }
 
-      // Use the Google Cloud Natural Language API
-      const document = {
-        content: messageData.content,
-        type: "PLAIN_TEXT" as "PLAIN_TEXT",
-      };
-      const [result] = (await languageClient.analyzeSentiment({ document })) as any;
-      const sentiment = result.documentSentiment;
-      if (!sentiment) {
-        console.error("No sentiment found.");
-        return;
-      }
-      console.log(`Sentiment for message ${snapshot.id}: score=${sentiment.score}, magnitude=${sentiment.magnitude}`);
+      const sentimentScore = simpleSentimentAnalysis(messageData.text);
 
-      // Update Firestore with the sentiment score
       await snapshot.ref.update({
-        sentimentScore: sentiment.score
+      sentimentScore: sentimentScore,
+      timestamp: admin.firestore.FieldValue.serverTimestamp()
       });
+
+      console.log(`Sentiment analysis completed for message ${snapshot.id}: score = ${sentimentScore}`);
     } catch (err) {
-      console.error("Error analyzing sentiment:", err);
-      // Not rethrowing to avoid infinite retries
+      console.error("Error analyzing sentiment for a message:", err);
     }
   }
 );
