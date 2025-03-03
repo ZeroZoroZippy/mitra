@@ -103,9 +103,6 @@ export const saveMessage = async (
  */
 export const getMessages = async (userId: string, activeChatId: number): Promise<Message[]> => {
   try {
-    // console.log(`🔍 Fetching messages for user: users/${userId}/messages, Thread: ${activeChatId}`);
-
-    // Filter messages by threadId
     const q = query(
       collection(db, `users/${userId}/messages`),
       where("threadId", "==", activeChatId)
@@ -114,30 +111,71 @@ export const getMessages = async (userId: string, activeChatId: number): Promise
 
     if (querySnapshot.empty) {
       console.warn("⚠️ No messages found in Firestore.");
+      return [];
     }
 
-    const messages = querySnapshot.docs.map((doc) => {
-      const messageData = doc.data() as Message;
+    const messages: Message[] = [];
 
-      return {
-        id: doc.id,
-        userId: userId,
-        text: messageData.text,
-        sender: messageData.sender,
-        timestamp: new Date(messageData.timestamp).toISOString(),
-        encrypted: false,
-        likeStatus: messageData.likeStatus || null,
-      };
+    querySnapshot.docs.forEach((doc) => {
+      const messageData = doc.data() as Message;
+      let timestamp: string | null = null;
+
+      // Handle Firestore Timestamp object
+      if (messageData.timestamp && typeof messageData.timestamp === 'object' && 'toDate' in messageData.timestamp) {
+        try {
+          const date = (messageData.timestamp as any).toDate(); // Cast to any to access toDate()
+          if (!isNaN(date.getTime())) {
+            timestamp = date.toISOString();
+          } else {
+            console.warn(`Invalid timestamp for message ${doc.id}: ${JSON.stringify(messageData.timestamp)}`);
+            return; // Skip this message
+          }
+        } catch (error) {
+          console.error(`Error parsing timestamp for message ${doc.id}: ${JSON.stringify(messageData.timestamp)}`, error);
+          return; // Skip this message
+        }
+      } 
+      // Handle string timestamp
+      else if (typeof messageData.timestamp === 'string') {
+        try {
+          const date = new Date(messageData.timestamp);
+          if (!isNaN(date.getTime())) {
+            timestamp = date.toISOString();
+          } else {
+            console.warn(`Invalid timestamp for message ${doc.id}: ${messageData.timestamp}`);
+            return; // Skip this message
+          }
+        } catch (error) {
+          console.error(`Error parsing timestamp for message ${doc.id}: ${messageData.timestamp}`, error);
+          return; // Skip this message
+        }
+      } 
+      // Handle missing or invalid timestamp
+      else {
+        console.warn(`Missing or invalid timestamp for message ${doc.id}`);
+        return; // Skip this message
+      }
+
+      // Only add message if timestamp is not null
+      if (timestamp) {
+        messages.push({
+          id: doc.id,
+          userId: userId,
+          text: messageData.text,
+          sender: messageData.sender,
+          timestamp: timestamp,
+          encrypted: false, // Adjust based on your data
+          likeStatus: messageData.likeStatus || null,
+        });
+      }
     });
 
-    console.log("📥 Raw messages from Firestore:", messages);
-
-    const sortedMessages = messages
-      .filter((msg) => msg.timestamp && !isNaN(new Date(msg.timestamp).getTime()))
-      .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+    // Sort messages by timestamp
+    const sortedMessages = messages.sort(
+      (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+    );
 
     console.log("✅ Sorted messages for UI:", sortedMessages);
-
     return sortedMessages;
   } catch (error) {
     console.error("❌ Error fetching messages:", error);
