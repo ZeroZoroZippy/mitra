@@ -73,6 +73,7 @@ const ChatArea: React.FC<ChatAreaProps> = ({
   const [welcomeDismissed, setWelcomeDismissed] = useState(() => {
     return localStorage.getItem(`welcomeDismissed_${activeChatId}`) === "true";
   });
+  const [techSummary, setTechSummary] = useState("");
 
   // ✅ Fetch user's first name when component mounts
   useEffect(() => {
@@ -268,10 +269,10 @@ const handleSendMessage = async () => {
 
   const userMessage = createMessage(inputMessage.trim(), "user");
   const user = auth.currentUser;
-  const userIsCreator = isCreator(); // ✅ Check if the user is the creator
+  const userIsCreator = isCreator(); // Check if the user is the creator
 
   if (user) {
-    await saveMessage(userMessage.text, "user", null, activeChatId); // Updated to remove activeChatId parameter
+    await saveMessage(userMessage.text, "user", null, activeChatId);
   }
 
   setMessages((prev) => [...prev, userMessage]);
@@ -285,7 +286,7 @@ const handleSendMessage = async () => {
 
   const seenDelay = Math.floor(Math.random() * 4000) + 1000;
 
-  // NEW: Check for a hardcoded response first
+  // Check for a hardcoded response first
   const hardcodedResponse = getAIResponse(userMessage.text);
   if (hardcodedResponse !== null) {
     setTimeout(() => {
@@ -314,7 +315,7 @@ const handleSendMessage = async () => {
       const updatedMessages = messages.map((msg) =>
         msg.id === userMessage.id ? { ...msg, encrypted: false } : msg
       );
-      // Or just force the new message to be decrypted since you know it’s plain text:
+      // Force decryption on new message since it's plain text.
       const contextMessages = [...messages, { ...userMessage, encrypted: false }].map((msg) => ({
         ...msg,
         text: msg.encrypted ? decryptMessage(msg.text, true) : msg.text,
@@ -322,11 +323,31 @@ const handleSendMessage = async () => {
 
       const recentMessagesResult = getRecentMessages(contextMessages);
 
-      const userIsCreator = isCreator();
-      console.log("User is creator, passing creator context:", userIsCreator ? "Yuvaan" : "none");
+      // Only pass the creator (admin) context if in the admin room (assumed id 7)
+      const adminContext = (activeChatId === 7 && isCreator()) ? "Yuvaan" : undefined;
+      console.log("Admin context:", adminContext);
+
+      // For admin room: fetch technical summary and build a custom system prompt.
+      let customSystemPrompt: string | undefined = undefined;
+      if (activeChatId === 7) {
+        try {
+          const techResponse = await fetch("https://gettechsummary-753xfutpkq-uc.a.run.app/");
+          const techData = await techResponse.json();
+          // Build a refined prompt with lower temperature instructions.
+          customSystemPrompt = `You are Saarth, the advanced system AI. Below is the latest technical analytics summary based on our real data:\n\n${techData.summary}\n\n**Important:** Please provide your analysis and recommendations **only** based on the above data. Do not invent any additional metrics or details.`;
+        } catch (error) {
+          console.error("Error fetching technical summary:", error);
+        }
+      }
 
       try {
-        const chatCompletionStream = await getGroqChatCompletion(recentMessagesResult.messages, activeChatId, userIsCreator ? "Yuvaan" : undefined);
+        // Now call getGroqChatCompletion with the custom prompt if in admin room.
+        const chatCompletionStream = await getGroqChatCompletion(
+          contextMessages,
+          activeChatId,
+          adminContext,
+          customSystemPrompt
+        );
 
         if (!chatCompletionStream) {
           console.error("❌ AI Response Stream is null!");
@@ -532,6 +553,29 @@ useEffect(() => {
     };
   }, []);
 
+  // Replace existing fetchTechSummary with this version
+const fetchAndAppendTechSummary = async () => {
+  try {
+    const response = await fetch("https://gettechsummary-753xfutpkq-uc.a.run.app/");
+    const data = await response.json();
+    
+    // Create and append tech summary as a message
+    const techMessage = createMessage(data.summary, "assistant");
+    await saveMessage(data.summary, "assistant", null, activeChatId);
+    setMessages(prev => [...prev, techMessage]);
+    
+  } catch (error) {
+    console.error("Error fetching technical summary:", error);
+  }
+};
+
+// Update useEffect for tech summary
+useEffect(() => {
+  if (activeChatId === 7) {
+    // Optional: Auto-fetch on room entry
+    // fetchAndAppendTechSummary();
+  }
+}, [activeChatId]);
 
   /* Fix Safari Bottom URL Bar Overlapping Input Bar */
   const isIOS = () => {
