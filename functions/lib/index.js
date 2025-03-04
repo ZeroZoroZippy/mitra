@@ -378,7 +378,8 @@ exports.analyzeMessageSentiment = (0, firestore_1.onDocumentCreated)({
         }
         const sentimentScore = simpleSentimentAnalysis(messageData.text);
         await snapshot.ref.update({
-            sentimentScore: sentimentScore
+            sentimentScore: sentimentScore,
+            timestamp: admin.firestore.FieldValue.serverTimestamp()
         });
         console.log(`Sentiment analysis completed for message ${snapshot.id}: score = ${sentimentScore}`);
     }
