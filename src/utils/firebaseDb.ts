@@ -158,15 +158,15 @@ export const getMessages = async (userId: string, activeChatId: number): Promise
 
       // Only add message if timestamp is not null
       if (timestamp) {
-        messages.push({
-          id: doc.id,
-          userId: userId,
-          text: messageData.text,
-          sender: messageData.sender,
+      messages.push({
+        id: doc.id,
+        userId: userId,
+        text: messageData.text,
+        sender: messageData.sender,
           timestamp: timestamp,
           encrypted: false, // Adjust based on your data
-          likeStatus: messageData.likeStatus || null,
-        });
+        likeStatus: messageData.likeStatus || null,
+      });
       }
     });
 

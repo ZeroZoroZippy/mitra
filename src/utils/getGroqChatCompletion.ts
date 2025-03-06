@@ -1,7 +1,3 @@
-interface ImportMeta {
-  readonly env: ImportMetaEnv;
-}
-
 import Groq from "groq-sdk";
 
 // Define ChatMessage interface
@@ -12,6 +8,11 @@ interface ChatMessage {
   timestamp: string;
   likeStatus?: "like" | "dislike" | null;
   encrypted: boolean;
+}
+
+// Define Chat interface
+interface ImportMeta {
+  readonly env: ImportMetaEnv;
 }
 
 // Token estimation function to calculate approximate token usage
