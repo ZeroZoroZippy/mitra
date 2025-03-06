@@ -43,12 +43,10 @@ const convertToIST = (utcTimestamp: string): string => {
 // ✅ Keep existing encryption function name
 export const encryptMessage = (text: string): string => {
   if (!ENCRYPTION_KEY) {
-    console.error("❌ ENCRYPTION_KEY is missing! Encryption will fail.");
     return text;
   }
 
   const encrypted = CryptoJS.AES.encrypt(text, ENCRYPTION_KEY).toString();
-  // console.log(`🔐 Encrypting: ${text} → ${encrypted}`);
   return encrypted;
 };
 
@@ -59,16 +57,13 @@ export const decryptMessage = (encryptedText: string, isEncrypted: boolean): str
   }
 
   try {
-    // console.log("🔍 Attempting to decrypt:", encryptedText);
     const bytes = CryptoJS.AES.decrypt(encryptedText, ENCRYPTION_KEY);
     const decryptedText = bytes.toString(CryptoJS.enc.Utf8);
 
     if (!decryptedText) throw new Error("Decryption produced empty result");
 
-    // console.log("✅ Successfully decrypted:", decryptedText);
     return decryptedText;
   } catch (error: any) {
-    console.error("❌ Decryption Error:", error.message, " | Text:", encryptedText);
     return "[Decryption Failed]";
   }
 };
@@ -84,7 +79,6 @@ export const saveMessage = async (
 ) => {
   const user = auth.currentUser;
   if (!user) {
-    console.error("No authenticated user found.");
     return;
   }
 
@@ -110,7 +104,6 @@ export const getMessages = async (userId: string, activeChatId: number): Promise
     const querySnapshot = await getDocs(q);
 
     if (querySnapshot.empty) {
-      console.warn("⚠️ No messages found in Firestore.");
       return [];
     }
 
@@ -126,12 +119,8 @@ export const getMessages = async (userId: string, activeChatId: number): Promise
           const date = (messageData.timestamp as any).toDate(); // Cast to any to access toDate()
           if (!isNaN(date.getTime())) {
             timestamp = date.toISOString();
-          } else {
-            console.warn(`Invalid timestamp for message ${doc.id}: ${JSON.stringify(messageData.timestamp)}`);
-            return; // Skip this message
           }
         } catch (error) {
-          console.error(`Error parsing timestamp for message ${doc.id}: ${JSON.stringify(messageData.timestamp)}`, error);
           return; // Skip this message
         }
       } 
@@ -141,18 +130,13 @@ export const getMessages = async (userId: string, activeChatId: number): Promise
           const date = new Date(messageData.timestamp);
           if (!isNaN(date.getTime())) {
             timestamp = date.toISOString();
-          } else {
-            console.warn(`Invalid timestamp for message ${doc.id}: ${messageData.timestamp}`);
-            return; // Skip this message
           }
         } catch (error) {
-          console.error(`Error parsing timestamp for message ${doc.id}: ${messageData.timestamp}`, error);
           return; // Skip this message
         }
       } 
       // Handle missing or invalid timestamp
       else {
-        console.warn(`Missing or invalid timestamp for message ${doc.id}`);
         return; // Skip this message
       }
 
@@ -175,10 +159,8 @@ export const getMessages = async (userId: string, activeChatId: number): Promise
       (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
     );
 
-    console.log("✅ Sorted messages for UI:", sortedMessages);
     return sortedMessages;
   } catch (error) {
-    console.error("❌ Error fetching messages:", error);
     return [];
   }
 };
@@ -197,8 +179,6 @@ export const storeUserDetails = async (user: User): Promise<void> => {
       const encryptedDisplayName = encryptMessage(user.displayName || "");
       const encryptedEmail = encryptMessage(user.email || "");
 
-      console.log(`📌 Storing Encrypted Data → Name: ${encryptedDisplayName}, Email: ${encryptedEmail}`);
-
       await setDoc(userRef, {
         uid: user.uid,
         displayName: encryptedDisplayName,
@@ -206,11 +186,8 @@ export const storeUserDetails = async (user: User): Promise<void> => {
         photoURL: user.photoURL || "",
         signInTimestamp: serverTimestamp(),
       });
-
-      console.log("✅ User details stored successfully with encryption.");
     }
   } catch (error) {
-    console.error("❌ Error storing encrypted user details:", error);
   }
 };
 
@@ -224,9 +201,6 @@ export const getUserProfile = async (userId: string) => {
 
     if (userSnap.exists()) {
       const userData = userSnap.data();
-      
-      console.log(`📥 Raw Data from Firestore:`, userData); // ✅ Check before decryption
-
       return {
         uid: userData.uid,
         displayName: decryptMessage(userData.displayName, true), // ✅ Decrypt Name
@@ -236,7 +210,6 @@ export const getUserProfile = async (userId: string) => {
       };
     }
   } catch (error) {
-    console.error("❌ Error fetching encrypted user profile:", error);
     return null;
   }
 };
@@ -272,10 +245,7 @@ export const updateLikeStatus = async (
   try {
     const messageRef = doc(db, `users/${user.uid}/messages`, messageId);
     await updateDoc(messageRef, { likeStatus: newStatus });
-
-    console.log(`✅ Like/Dislike updated: ${messageId} → ${newStatus}`);
   } catch (error) {
-    console.error("❌ Error updating Like/Dislike:", error);
   }
 };
 
