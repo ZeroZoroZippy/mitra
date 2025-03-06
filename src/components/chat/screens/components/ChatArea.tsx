@@ -15,12 +15,12 @@ import { isCreator } from "../../../../utils/firebaseAuth";
 
 const db = getFirestore();
 const welcomeTitles: { [key: number]: string } = {
-  1: "What’s on your mind? Let’s chat.",
-  2: "Love, friendships, and all that jazz.",
-  3: "Manifest those dreams—speak them into existence.",
-  4: "No holding back—let it all out.",
-  5: "Let’s talk career, purpose, and your next big move.",
-  6: "Your mind matters—say what you need to say.",
+  1: "Chat about friendship, companionship, or anything general...",
+  2: "Talk relationships, love, or emotional connections...",
+  3: "Discuss your dreams, goals, or manifestations...",
+  4: "Share feelings, emotional struggles, or seek healing...",
+  5: "Talk about your ambitions, career goals, or life's purpose...",
+  6: "Share thoughts about mindfulness, peace, or managing anxiety...",
   7: "Let’s turn those sparks into flames of creativity.",
 };
 
