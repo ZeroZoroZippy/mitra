@@ -257,6 +257,27 @@ const getAIResponse = (userMessage: string): string | null => {
   return normalizedResponses[normalizedMessage] ?? null;
 };
   
+const animateMessageReveal = (fullMessage: string, messageId: string) => {
+  // Start with empty content
+  let visibleContent = "";
+  const messageSpeed = 20; // ms per character - adjust for faster/slower typing
+  
+  // Find the message in state and update it progressively
+  const messageElement = document.getElementById(`message-${messageId}`);
+  
+  if (messageElement) {
+    const animationInterval = setInterval(() => {
+      if (visibleContent.length < fullMessage.length) {
+        // Add one more character
+        visibleContent = fullMessage.slice(0, visibleContent.length + 1);
+        messageElement.innerHTML = visibleContent;
+      } else {
+        // Animation complete
+        clearInterval(animationInterval);
+      }
+    }, messageSpeed);
+  }
+};
 
 const handleSendMessage = async () => {
   if (!inputMessage.trim() || isInputDisabled) return;
@@ -294,9 +315,18 @@ const handleSendMessage = async () => {
       setTimeout(async () => {
         const aiMessage = createMessage(hardcodedResponse, "assistant");
         await saveMessage(hardcodedResponse, "assistant", null, activeChatId);
+        
+        // Add the complete message
         setMessages((prev) => [...prev, aiMessage]);
+        
+        // Hide typing indicator
         setShowTypingIndicator(false);
         setAiTypingMessage("");
+        
+        // Start the revealing animation
+        animateMessageReveal(aiMessage.id || "", hardcodedResponse);
+        
+        // Re-enable input
         setIsInputDisabled(false);
       }, 1000);
     }, seenDelay);
@@ -364,11 +394,21 @@ const handleSendMessage = async () => {
         }
 
         const aiMessage = createMessage(message, "assistant");
-        await saveMessage(message, "assistant", null, activeChatId);
+        
+        // Add the complete message
         setMessages((prev) => [...prev, aiMessage]);
+        
+        // Save to Firebase
+        await saveMessage(message, "assistant", null, activeChatId);
 
+        // Hide typing indicator
         setShowTypingIndicator(false);
         setAiTypingMessage("");
+        
+        // Start revealing animation
+        animateMessageReveal(aiMessage.id || "", message);
+        
+        // Re-enable input
         setIsInputDisabled(false);
       } catch (error) {
         console.error("❌ Error during AI response:", error);
