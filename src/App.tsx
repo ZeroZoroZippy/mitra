@@ -8,8 +8,8 @@ import ChatLayout from "./components/chat/screens/components/ChatLayout";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import Dashboard from "./pages/Dashboard";
 
-// Move this to a constant that can be imported elsewhere if needed
-export const APP_VERSION = "2.0.10";
+// Define current app version - update this when releasing new versions
+export const APP_VERSION = "2.0.0";
 
 const ProtectedRoute: React.FC<{ element: JSX.Element }> = ({ element }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
@@ -26,9 +26,27 @@ const ProtectedRoute: React.FC<{ element: JSX.Element }> = ({ element }) => {
 };
 
 /**
- * This function unregisters any service workers (if registered) and then reloads the page.
+ * Compare two semantic version strings and determine if serverVersion is newer
  */
-function handleUpdateClick() {
+function isNewerVersion(serverVersion: string, clientVersion: string): boolean {
+  const serverParts = serverVersion.split('.').map(Number);
+  const clientParts = clientVersion.split('.').map(Number);
+  
+  for (let i = 0; i < Math.max(serverParts.length, clientParts.length); i++) {
+    const server = serverParts[i] || 0;
+    const client = clientParts[i] || 0;
+    
+    if (server > client) return true;
+    if (server < client) return false;
+  }
+  
+  return false; // Versions are identical
+}
+
+/**
+ * Handle the update action by clearing caches and reloading the page
+ */
+function performUpdate() {
   if ("serviceWorker" in navigator) {
     navigator.serviceWorker
       .getRegistrations()
@@ -36,7 +54,6 @@ function handleUpdateClick() {
         for (let registration of registrations) {
           registration.unregister();
         }
-        // Once service workers are unregistered, reload the page
         window.location.reload();
       })
       .catch((error) => {
@@ -49,10 +66,61 @@ function handleUpdateClick() {
 }
 
 /**
- * Creates and appends a modal prompting the user to update.
+ * Show update notification banner
+ */
+function showUpdateBanner() {
+  // Check if banner already exists to prevent duplicates
+  if (document.getElementById('saarth-update-banner')) {
+    return;
+  }
+  
+  const banner = document.createElement('div');
+  banner.id = 'saarth-update-banner';
+  banner.style.position = 'fixed';
+  banner.style.bottom = '0';
+  banner.style.width = '100%';
+  banner.style.background = 'linear-gradient(45deg, #FDD844, #FFEC9F)';
+  banner.style.padding = '12px 20px';
+  banner.style.zIndex = '9999';
+  banner.style.display = 'flex';
+  banner.style.justifyContent = 'space-between';
+  banner.style.alignItems = 'center';
+  banner.style.boxShadow = '0 -2px 10px rgba(0,0,0,0.1)';
+  
+  const message = document.createElement('span');
+  message.textContent = 'A new version of Saarth is available';
+  message.style.color = '#1d1d1d';
+  message.style.fontFamily = "'Poppins', sans-serif";
+  message.style.fontWeight = '500';
+  
+  const updateButton = document.createElement('button');
+  updateButton.textContent = 'Update Now';
+  updateButton.style.padding = '8px 16px';
+  updateButton.style.borderRadius = '20px';
+  updateButton.style.border = 'none';
+  updateButton.style.background = '#1d1d1d';
+  updateButton.style.color = '#FDD844';
+  updateButton.style.cursor = 'pointer';
+  updateButton.style.fontFamily = "'Poppins', sans-serif";
+  updateButton.style.fontWeight = '500';
+  updateButton.onclick = performUpdate;
+  
+  banner.appendChild(message);
+  banner.appendChild(updateButton);
+  document.body.appendChild(banner);
+}
+
+/**
+ * Show modal for more critical updates
  */
 function showUpdateModal() {
+  // Check if modal already exists
+  if (document.getElementById('saarth-update-modal')) {
+    return;
+  }
+  
   const modal = document.createElement("div");
+  modal.id = 'saarth-update-modal';
   modal.style.position = "fixed";
   modal.style.top = "0";
   modal.style.left = "0";
@@ -93,8 +161,7 @@ function showUpdateModal() {
   button.style.fontWeight = "500";
   button.style.cursor = "pointer";
   button.style.fontFamily = "'Poppins', sans-serif";
-
-  button.addEventListener("click", handleUpdateClick);
+  button.addEventListener("click", performUpdate);
 
   content.appendChild(title);
   content.appendChild(message);
@@ -106,39 +173,68 @@ function showUpdateModal() {
 
 const App: React.FC = () => {
   const featuresRef = useRef<HTMLDivElement>(null);
+  const [updateChecked, setUpdateChecked] = useState(false);
 
   useEffect(() => {
-    // This ensures Firebase is initialized before checking version
-    const checkAppVersion = async () => {
+    // Check for updates when app loads and after Firebase is initialized
+    const checkForUpdates = async () => {
       try {
-        // Add timestamp to force a fresh request from Firestore
+        console.log("Checking for updates...");
         const db = getFirestore();
-        // @ts-ignore
-        const configDoc = await getDoc(doc(db, "config/appVersion"), {
-          source: "server",
-        });
-        const serverVersion = configDoc.data()?.version;
-
-        console.log("Version check:", { clientVersion: APP_VERSION, serverVersion });
-
-        if (serverVersion && serverVersion !== APP_VERSION) {
-          // Store a timestamp to prevent showing modal too frequently
+        const configRef = doc(db, "config", "appVersion");
+        const configSnap = await getDoc(configRef);
+        
+        if (!configSnap.exists()) {
+          console.log("No version config found in Firestore");
+          return;
+        }
+        
+        const serverVersion = configSnap.data().version;
+        console.log(`Version check: Client=${APP_VERSION}, Server=${serverVersion}`);
+        
+        // Only show update if server version is newer
+        if (isNewerVersion(serverVersion, APP_VERSION)) {
+          console.log("New version available, showing update notification");
+          
+          // Check if it's a major update to determine notification type
+          const isMajorUpdate = serverVersion.split('.')[0] > APP_VERSION.split('.')[0];
+          
+          // Get last update prompt timestamp
           const lastPrompt = localStorage.getItem("last_update_prompt");
           const now = Date.now();
-
-          // Only show prompt once per 12 hours max
-          if (!lastPrompt || now - parseInt(lastPrompt) > 43200000) {
+          
+          // Show update notification if no recent prompt (within 2 hours)
+          if (!lastPrompt || now - parseInt(lastPrompt) > 7200000) {
             localStorage.setItem("last_update_prompt", now.toString());
-            showUpdateModal();
+            
+            if (isMajorUpdate) {
+              showUpdateModal();
+            } else {
+              showUpdateBanner();
+            }
           }
         }
+        
+        setUpdateChecked(true);
       } catch (error) {
-        console.error("Version check failed:", error);
+        console.error("Update check failed:", error);
+        setUpdateChecked(true);
       }
     };
 
-    // Short delay to ensure Firebase is ready
-    setTimeout(checkAppVersion, 1000);
+    // Wait for auth to initialize before checking for updates
+    const unsubscribe = onAuthStateChanged(auth, () => {
+      // We're just using this to ensure Firebase is initialized
+      checkForUpdates();
+    });
+    
+    // Set up periodic checks (every 15 minutes)
+    const intervalId = setInterval(checkForUpdates, 900000);
+    
+    return () => {
+      unsubscribe();
+      clearInterval(intervalId);
+    };
   }, []);
 
   return (
