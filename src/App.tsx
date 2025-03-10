@@ -9,7 +9,7 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import Dashboard from "./pages/Dashboard";
 
 // Move this to a constant that can be imported elsewhere if needed
-export const APP_VERSION = '2.0.2';
+export const APP_VERSION = '2.0.3';
 
 const ProtectedRoute: React.FC<{ element: JSX.Element }> = ({ element }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
@@ -46,7 +46,7 @@ function showUpdateModal() {
       <h3 style="color: #fff; margin-top: 0; font-size: 1.4rem;">Saarth Has Evolved</h3>
       <p style="color: #aaa;">We've enhanced your experience with new insights and capabilities.</p>
       <button 
-        onclick="window.location.reload(true)" 
+        onclick="localStorage.setItem('app_version_cache', '${APP_VERSION}'); window.location.reload(true)" 
         style="background: linear-gradient(45deg, #FDD844, #FFEC9F); border: none; color: #1d1d1d; padding: 12px 24px; border-radius: 24px; font-weight: 500; cursor: pointer; font-family: 'Poppins', sans-serif;">
         Update Now
       </button>
@@ -62,14 +62,26 @@ const App: React.FC = () => {
     // This ensures Firebase is initialized before checking version
     const checkAppVersion = async () => {
       try {
+        // Check if we've already handled this update
+        const cachedVersion = localStorage.getItem('app_version_cache');
+        if (cachedVersion === APP_VERSION) {
+          console.log("Using cached version, skipping update check");
+          return;
+        }
+    
         const db = getFirestore();
         const configDoc = await getDoc(doc(db, 'config', 'appVersion'));
         const serverVersion = configDoc.data()?.version;
         
-        console.log("Version check:", { clientVersion: APP_VERSION, serverVersion });
+        console.log("Version check:", { clientVersion: APP_VERSION, serverVersion, cachedVersion });
         
         if (serverVersion && serverVersion !== APP_VERSION) {
+          // Store the server version for future reference
+          localStorage.setItem('server_version', serverVersion);
           showUpdateModal();
+        } else {
+          // We're on the latest version, update cache
+          localStorage.setItem('app_version_cache', APP_VERSION);
         }
       } catch (error) {
         console.error("Version check failed:", error);
