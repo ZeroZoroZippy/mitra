@@ -62,26 +62,23 @@ const App: React.FC = () => {
     // This ensures Firebase is initialized before checking version
     const checkAppVersion = async () => {
       try {
-        // Check if we've already handled this update
-        const cachedVersion = localStorage.getItem('app_version_cache');
-        if (cachedVersion === APP_VERSION) {
-          console.log("Using cached version, skipping update check");
-          return;
-        }
-    
+        // Add timestamp to force fresh request
         const db = getFirestore();
-        const configDoc = await getDoc(doc(db, 'config', 'appVersion'));
+        const configDoc = await getDoc(doc(db, `config/appVersion?_=${Date.now()}`));
         const serverVersion = configDoc.data()?.version;
         
-        console.log("Version check:", { clientVersion: APP_VERSION, serverVersion, cachedVersion });
+        console.log("Version check:", { clientVersion: APP_VERSION, serverVersion });
         
         if (serverVersion && serverVersion !== APP_VERSION) {
-          // Store the server version for future reference
-          localStorage.setItem('server_version', serverVersion);
-          showUpdateModal();
-        } else {
-          // We're on the latest version, update cache
-          localStorage.setItem('app_version_cache', APP_VERSION);
+          // Store a timestamp to prevent showing modal too frequently
+          const lastPrompt = localStorage.getItem('last_update_prompt');
+          const now = Date.now();
+          
+          // Only show prompt once per 12 hours max
+          if (!lastPrompt || (now - parseInt(lastPrompt)) > 43200000) {
+            localStorage.setItem('last_update_prompt', now.toString());
+            showUpdateModal();
+          }
         }
       } catch (error) {
         console.error("Version check failed:", error);
