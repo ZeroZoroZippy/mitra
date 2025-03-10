@@ -9,7 +9,7 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import Dashboard from "./pages/Dashboard";
 
 // Move this to a constant that can be imported elsewhere if needed
-export const APP_VERSION = '2.0.3';
+export const APP_VERSION = '2.0.5';
 
 const ProtectedRoute: React.FC<{ element: JSX.Element }> = ({ element }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
