@@ -693,7 +693,7 @@ useEffect(() => {
                   <ReactMarkdown
                     components={{
                       p: ({ node, ...props }) => (
-                        <p style={{ marginBottom: "1rem", lineHeight: "1.6" }} {...props} />
+                        <p style={{ marginBottom: "1rem", lineHeight: "1.5" }} {...props} />
                       ),
                       ul: ({ node, ...props }) => (
                         <ul style={{ margin: "1rem 0", paddingLeft: "1.5rem" }} {...props} />
