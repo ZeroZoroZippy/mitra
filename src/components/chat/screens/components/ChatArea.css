@@ -270,7 +270,7 @@
   
   .assistant-bubble {
     align-self: flex-start;
-    background: linear-gradient(45deg, #1d1d1d, #2d2d2d);
+    /* background: linear-gradient(45deg, #1d1d1d, #2d2d2d); */
     background-size: 200% 200%;
     border-bottom-left-radius: 0;
     line-height: 1;
