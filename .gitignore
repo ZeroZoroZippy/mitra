@@ -26,5 +26,5 @@ dist-ssr
 .env
 .bak
 
-# Security credentials
+# Ignore Google Cloud Service Account Credentials
 serviceAccountKey.json
