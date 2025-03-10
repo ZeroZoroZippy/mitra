@@ -9,7 +9,7 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import Dashboard from "./pages/Dashboard";
 
 // Define current app version - update this when releasing new versions
-export const APP_VERSION = "2.0.0";
+export const APP_VERSION = "2.0.1";
 
 const ProtectedRoute: React.FC<{ element: JSX.Element }> = ({ element }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
@@ -66,7 +66,7 @@ function performUpdate() {
 }
 
 /**
- * Show update notification banner
+ * Show update notification banner (centered on screen)
  */
 function showUpdateBanner() {
   // Check if banner already exists to prevent duplicates
@@ -74,40 +74,72 @@ function showUpdateBanner() {
     return;
   }
   
-  const banner = document.createElement('div');
-  banner.id = 'saarth-update-banner';
-  banner.style.position = 'fixed';
-  banner.style.bottom = '0';
-  banner.style.width = '100%';
-  banner.style.background = 'linear-gradient(45deg, #FDD844, #FFEC9F)';
-  banner.style.padding = '12px 20px';
-  banner.style.zIndex = '9999';
-  banner.style.display = 'flex';
-  banner.style.justifyContent = 'space-between';
-  banner.style.alignItems = 'center';
-  banner.style.boxShadow = '0 -2px 10px rgba(0,0,0,0.1)';
+  const overlay = document.createElement('div');
+  overlay.id = 'saarth-update-banner';
+  overlay.style.position = 'fixed';
+  overlay.style.top = '0';
+  overlay.style.left = '0';
+  overlay.style.width = '100%';
+  overlay.style.height = '100%';
+  overlay.style.backgroundColor = 'rgba(29, 29, 29, 0.7)';
+  overlay.style.display = 'flex';
+  overlay.style.justifyContent = 'center';
+  overlay.style.alignItems = 'center';
+  overlay.style.zIndex = '9999';
   
-  const message = document.createElement('span');
+  const banner = document.createElement('div');
+  banner.style.background = 'linear-gradient(45deg, #FDD844, #FFEC9F)';
+  banner.style.padding = '20px 24px';
+  banner.style.borderRadius = '12px';
+  banner.style.boxShadow = '0 4px 20px rgba(0,0,0,0.2)';
+  banner.style.display = 'flex';
+  banner.style.flexDirection = 'column';
+  banner.style.alignItems = 'center';
+  banner.style.gap = '16px';
+  banner.style.maxWidth = '350px';
+  banner.style.width = '85%';
+  
+  const message = document.createElement('div');
   message.textContent = 'A new version of Saarth is available';
   message.style.color = '#1d1d1d';
   message.style.fontFamily = "'Poppins', sans-serif";
-  message.style.fontWeight = '500';
+  message.style.fontWeight = '600';
+  message.style.fontSize = '16px';
+  message.style.textAlign = 'center';
   
   const updateButton = document.createElement('button');
   updateButton.textContent = 'Update Now';
-  updateButton.style.padding = '8px 16px';
-  updateButton.style.borderRadius = '20px';
+  updateButton.style.padding = '10px 24px';
+  updateButton.style.borderRadius = '24px';
   updateButton.style.border = 'none';
   updateButton.style.background = '#1d1d1d';
   updateButton.style.color = '#FDD844';
   updateButton.style.cursor = 'pointer';
   updateButton.style.fontFamily = "'Poppins', sans-serif";
   updateButton.style.fontWeight = '500';
+  updateButton.style.fontSize = '14px';
+  updateButton.style.width = '80%';
   updateButton.onclick = performUpdate;
+  
+  const skipButton = document.createElement('button');
+  skipButton.textContent = 'Remind me later';
+  skipButton.style.background = 'transparent';
+  skipButton.style.border = 'none';
+  skipButton.style.color = '#1d1d1d';
+  skipButton.style.opacity = '0.7';
+  skipButton.style.cursor = 'pointer';
+  skipButton.style.fontFamily = "'Poppins', sans-serif";
+  skipButton.style.fontSize = '12px';
+  skipButton.style.marginTop = '8px';
+  skipButton.onclick = () => {
+    document.body.removeChild(overlay);
+  };
   
   banner.appendChild(message);
   banner.appendChild(updateButton);
-  document.body.appendChild(banner);
+  banner.appendChild(skipButton);
+  overlay.appendChild(banner);
+  document.body.appendChild(overlay);
 }
 
 /**
