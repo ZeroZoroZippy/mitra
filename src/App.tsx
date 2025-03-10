@@ -9,7 +9,7 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import Dashboard from "./pages/Dashboard";
 
 // Move this to a constant that can be imported elsewhere if needed
-export const APP_VERSION = '2.0.5';
+export const APP_VERSION = '2.0.6';
 
 const ProtectedRoute: React.FC<{ element: JSX.Element }> = ({ element }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
@@ -64,7 +64,7 @@ const App: React.FC = () => {
       try {
         // Add timestamp to force fresh request
         const db = getFirestore();
-        const configDoc = await getDoc(doc(db, `config/appVersion?_=${Date.now()}`));
+        const configDoc = await getDoc(doc(db, 'config/appVersion'));
         const serverVersion = configDoc.data()?.version;
         
         console.log("Version check:", { clientVersion: APP_VERSION, serverVersion });
