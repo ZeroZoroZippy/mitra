@@ -6,7 +6,7 @@ import App from "./App";
 import "./index.css";
 import { getFirestore, doc, getDoc } from 'firebase/firestore';
 
-const APP_VERSION = '2.0.0'; // Update this with each deployment
+const APP_VERSION = '2.0.1'; // Update this with each deployment
 
 async function checkForUpdates() {
   try {
