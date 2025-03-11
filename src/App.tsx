@@ -9,7 +9,7 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import Dashboard from "./pages/Dashboard";
 
 // Define current app version - update this when releasing new versions
-export const APP_VERSION = "2.0.5";
+export const APP_VERSION = "2.0.6";
 
 const ProtectedRoute: React.FC<{ element: JSX.Element }> = ({ element }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
@@ -133,6 +133,21 @@ function showUpdateBanner() {
   skipButton.style.marginTop = '8px';
   skipButton.onclick = () => {
     document.body.removeChild(overlay);
+    
+    // Set a shorter reminder interval (30 minutes)
+    const remindTime = Date.now() + 1800000;
+    localStorage.setItem("last_update_prompt", remindTime.toString());
+    
+    // Optional: Schedule a reminder if the tab stays open
+    setTimeout(() => {
+      const currentTime = Date.now();
+      const lastPrompt = localStorage.getItem("last_update_prompt");
+      
+      // Only show if we haven't shown another prompt since
+      if (lastPrompt && parseInt(lastPrompt) === remindTime) {
+        showUpdateBanner();
+      }
+    }, 1800000);
   };
   
   banner.appendChild(message);
