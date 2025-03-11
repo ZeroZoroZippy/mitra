@@ -1,64 +1,179 @@
+// src/components/pages/AdminDashboard.tsx
+
 import React, { useState, useEffect } from 'react';
 import { 
-  getTopUsers, 
-  getLastActiveUser, 
-  getUserActivityProfile,
-  getPopularRooms,
-  getPlatformAnalytics
-} from '../utils/analytics';
+  collection, 
+  query, 
+  orderBy, 
+  limit, 
+  onSnapshot,
+  doc,
+  getDoc,
+  getDocs,
+  where,
+  Timestamp
+} from 'firebase/firestore';
+import { db } from '../utils/firebaseDb';
+import { getUserActivityProfile } from '../utils/analytics';
 import './AdminDashboard.css';
 
-// You'll need to create this CSS file with your styling
+interface UserAnalytics {
+  userId: string;
+  displayName?: string;
+  totalMessages: number;
+  firstSeen: Timestamp;
+  lastActive: Timestamp;
+  roomsVisited: { [roomId: string]: number };
+  sessionCount: number;
+  averageSessionDuration: number;
+  longestSession: number;
+  messagesByDate: { [date: string]: number };
+  messagesByRoom: { [roomId: string]: number };
+}
+
+interface RoomAnalytics {
+  roomId: number;
+  roomName: string;
+  totalMessages: number;
+  uniqueUsers: number;
+  averageMessagesPerUser: number;
+  mostActiveTime: string;
+}
 
 const AdminDashboard: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [platformStats, setPlatformStats] = useState<any>(null);
-  const [topUsers, setTopUsers] = useState<any[]>([]);
-  const [lastActiveUser, setLastActiveUser] = useState<any>(null);
-  const [popularRooms, setPopularRooms] = useState<any[]>([]);
+  const [topUsers, setTopUsers] = useState<UserAnalytics[]>([]);
+  const [lastActiveUser, setLastActiveUser] = useState<UserAnalytics | null>(null);
+  const [popularRooms, setPopularRooms] = useState<RoomAnalytics[]>([]);
   const [selectedUser, setSelectedUser] = useState<string | null>(null);
   const [userProfile, setUserProfile] = useState<any>(null);
   
+  // Load dashboard with real-time listeners
   useEffect(() => {
-    loadDashboardData();
+    setIsLoading(true);
     
-    // Refresh data every 5 minutes
-    const interval = setInterval(loadDashboardData, 5 * 60 * 1000);
-    return () => clearInterval(interval);
+    // Real-time listener for last active user
+    const lastActiveQuery = query(
+      collection(db, "userAnalytics"), 
+      orderBy("lastActive", "desc"), 
+      limit(1)
+    );
+    
+    const lastActiveUnsubscribe = onSnapshot(lastActiveQuery, (snapshot) => {
+      if (!snapshot.empty) {
+        const userData = snapshot.docs[0].data() as UserAnalytics;
+        setLastActiveUser(userData);
+        
+        // Auto-select the last active user if no user is selected
+        if (!selectedUser) {
+          setSelectedUser(userData.userId);
+        }
+      }
+      setIsLoading(false);
+    }, (error) => {
+      console.error("Error in last active listener:", error);
+      setIsLoading(false);
+    });
+    
+    // Real-time listener for top users
+    const topUsersQuery = query(
+      collection(db, "userAnalytics"), 
+      orderBy("totalMessages", "desc"), 
+      limit(10)
+    );
+    
+    const topUsersUnsubscribe = onSnapshot(topUsersQuery, (snapshot) => {
+      const users = snapshot.docs.map(doc => doc.data() as UserAnalytics);
+      setTopUsers(users);
+    });
+    
+    // Real-time listener for popular rooms
+    const popularRoomsQuery = query(
+      collection(db, "roomAnalytics"), 
+      orderBy("totalMessages", "desc"), 
+      limit(7)
+    );
+    
+    const popularRoomsUnsubscribe = onSnapshot(popularRoomsQuery, (snapshot) => {
+      const rooms = snapshot.docs.map(doc => doc.data() as RoomAnalytics);
+      setPopularRooms(rooms);
+    });
+    
+    // Platform stats listener (active users counts)
+    const updatePlatformStats = async () => {
+      try {
+        // Get total users count
+        const usersSnapshot = await getDocs(collection(db, "userAnalytics"));
+        const totalUsers = usersSnapshot.size;
+        
+        // Get active users in last 24 hours
+        const date24hAgo = new Date();
+        date24hAgo.setHours(date24hAgo.getHours() - 24);
+        
+        const active24hQuery = query(
+          collection(db, "userAnalytics"),
+          where("lastActive", ">=", date24hAgo)
+        );
+        const active24hSnapshot = await getDocs(active24hQuery);
+        const activeUsers24h = active24hSnapshot.size;
+        
+        // Get active users in last 7 days
+        const date7dAgo = new Date();
+        date7dAgo.setDate(date7dAgo.getDate() - 7);
+        
+        const active7dQuery = query(
+          collection(db, "userAnalytics"),
+          where("lastActive", ">=", date7dAgo)
+        );
+        const active7dSnapshot = await getDocs(active7dQuery);
+        const activeUsers7d = active7dSnapshot.size;
+        
+        // Get total messages
+        let totalMessages = 0;
+        usersSnapshot.forEach(doc => {
+          const userData = doc.data() as UserAnalytics;
+          totalMessages += userData.totalMessages || 0;
+        });
+        
+        // Get room count
+        const roomsSnapshot = await getDocs(collection(db, "roomAnalytics"));
+        const roomCount = roomsSnapshot.size;
+        
+        setPlatformStats({
+          totalUsers,
+          activeUsers24h,
+          activeUsers7d,
+          totalMessages,
+          roomCount,
+          averageMessagesPerUser: totalUsers > 0 ? totalMessages / totalUsers : 0
+        });
+      } catch (error) {
+        console.error("Error updating platform stats:", error);
+      }
+    };
+    
+    // Initial platform stats load
+    updatePlatformStats();
+    
+    // Set up interval for platform stats (these queries are heavier)
+    const platformStatsInterval = setInterval(updatePlatformStats, 60000);
+    
+    // Cleanup all listeners on unmount
+    return () => {
+      lastActiveUnsubscribe();
+      topUsersUnsubscribe();
+      popularRoomsUnsubscribe();
+      clearInterval(platformStatsInterval);
+    };
   }, []);
   
+  // Load user profile when selected user changes
   useEffect(() => {
     if (selectedUser) {
       loadUserProfile(selectedUser);
     }
   }, [selectedUser]);
-  
-  const loadDashboardData = async () => {
-    setIsLoading(true);
-    
-    try {
-      const [stats, users, active, rooms] = await Promise.all([
-        getPlatformAnalytics(),
-        getTopUsers(10),
-        getLastActiveUser(),
-        getPopularRooms()
-      ]);
-      
-      setPlatformStats(stats);
-      setTopUsers(users);
-      setLastActiveUser(active);
-      setPopularRooms(rooms);
-      
-      // Auto-select the last active user if no user is selected
-      if (!selectedUser && active) {
-        setSelectedUser(active.userId);
-      }
-    } catch (error) {
-      console.error("Error loading dashboard data:", error);
-    }
-    
-    setIsLoading(false);
-  };
   
   const loadUserProfile = async (userId: string) => {
     try {
@@ -136,9 +251,10 @@ const AdminDashboard: React.FC = () => {
               {lastActiveUser ? (
                 <div className="last-active-user">
                   <h3>{lastActiveUser.displayName || 'Anonymous'}</h3>
-                  <p>Last active: {formatDate(lastActiveUser.lastActive)}</p>
-                  <p>Total messages: {lastActiveUser.totalMessages}</p>
-                  <p>Sessions: {lastActiveUser.sessionCount}</p>
+                  <p><strong>ID:</strong> {lastActiveUser.userId}</p>
+                  <p><strong>Last active:</strong> {formatDate(lastActiveUser.lastActive)}</p>
+                  <p><strong>Total messages:</strong> {lastActiveUser.totalMessages || 0}</p>
+                  <p><strong>Sessions:</strong> {lastActiveUser.sessionCount || 0}</p>
                   <button 
                     onClick={() => setSelectedUser(lastActiveUser.userId)}
                     className="view-profile-btn"
@@ -160,6 +276,7 @@ const AdminDashboard: React.FC = () => {
                 <thead>
                   <tr>
                     <th>User</th>
+                    <th>ID</th>
                     <th>Messages</th>
                     <th>Sessions</th>
                     <th>Last Active</th>
@@ -170,8 +287,9 @@ const AdminDashboard: React.FC = () => {
                   {topUsers.map(user => (
                     <tr key={user.userId}>
                       <td>{user.displayName || 'Anonymous'}</td>
-                      <td>{user.totalMessages}</td>
-                      <td>{user.sessionCount}</td>
+                      <td>{user.userId.slice(0, 8)}...</td>
+                      <td>{user.totalMessages || 0}</td>
+                      <td>{user.sessionCount || 0}</td>
                       <td>{formatDate(user.lastActive)}</td>
                       <td>
                         <button 
@@ -225,6 +343,10 @@ const AdminDashboard: React.FC = () => {
                   <h3>User Metrics</h3>
                   <table className="metrics-table">
                     <tbody>
+                      <tr>
+                        <td>User ID:</td>
+                        <td>{userProfile.userId}</td>
+                      </tr>
                       <tr>
                         <td>First Seen:</td>
                         <td>{formatDate(userProfile.firstSeen)}</td>
@@ -296,11 +418,10 @@ const AdminDashboard: React.FC = () => {
               </div>
               
               <div className="activity-over-time">
-                <h3>Activity Over Time</h3>
+                <h3>Activity Timeline</h3>
                 <div className="activity-chart">
-                  {/* This would be a good place to add a chart component */}
-                  {/* You could use recharts or another charting library */}
-                  <p>Message activity chart would go here</p>
+                  <p>Last active: {formatTimeAgo(userProfile.minutesSinceActive)}</p>
+                  <p>First seen: {userProfile.daysSinceFirstSeen} days ago</p>
                 </div>
               </div>
             </div>
