@@ -6,10 +6,10 @@ import { getFirestore, doc, getDoc } from "firebase/firestore";
 import LandingPage from "./pages/LandingPage";
 import ChatLayout from "./components/chat/screens/components/ChatLayout";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
-import Dashboard from "./pages/Dashboard";
+import AdminDashboard from "./pages/AdminDashboard";
 
 // Define current app version - update this when releasing new versions
-export const APP_VERSION = "2.0.6";
+export const APP_VERSION = "2.0.7";
 
 const ProtectedRoute: React.FC<{ element: JSX.Element }> = ({ element }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
@@ -291,7 +291,8 @@ const App: React.FC = () => {
       <Route path="/chat" element={<ProtectedRoute element={<ChatLayout />} />} />
       <Route path="/privacy-policy" element={<PrivacyPolicy />} />
       <Route path="*" element={<LandingPage featuresRef={featuresRef} />} />
-      <Route path="/dashboard" element={<Dashboard />} />
+      <Route path="/admin/dashboard" element={<AdminDashboard />} />
+
     </Routes>
   );
 };

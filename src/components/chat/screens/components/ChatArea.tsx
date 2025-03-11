@@ -12,6 +12,8 @@ import { getGroqChatCompletion, getRecentMessages } from "../../../../utils/getG
 import { exportToGoogleSheets, syncFirestoreToGoogleSheets } from "../../../../utils/googleSheets";
 import { getDoc, doc, getFirestore } from "firebase/firestore";
 import { isCreator } from "../../../../utils/firebaseAuth";
+import { trackMessage } from "../../../../utils/analytics";
+import AdminDashboard from '../../../../pages/AdminDashboard';
 
 const db = getFirestore();
 const welcomeTitles: { [key: number]: string } = {
@@ -296,6 +298,10 @@ const handleSendMessage = async () => {
     await saveMessage(userMessage.text, "user", null, activeChatId);
   }
 
+  if (user) {
+    trackMessage(user.uid, activeChatId, userMessage.text);
+  }
+
   setMessages((prev) => [...prev, userMessage]);
   setInputMessage("");
   setIsWelcomeActive(false);
@@ -400,6 +406,10 @@ const handleSendMessage = async () => {
         
         // Save to Firebase
         await saveMessage(message, "assistant", null, activeChatId);
+
+        if (user) {
+          trackMessage(user.uid, activeChatId, message);
+        }
 
         // Hide typing indicator
         setShowTypingIndicator(false);
@@ -673,6 +683,9 @@ useEffect(() => {
     };
   }, []);
 
+  if (activeChatId === 7) {
+    return <AdminDashboard />;
+  }
 
   return (
     <div className="chat-area">
@@ -696,7 +709,7 @@ useEffect(() => {
           <button className="continue-btn" onClick={() => setShouldPurge(false)}>No</button>
         </div>
       )}
-  
+    
       {isWelcomeActive ? (
         <div className="welcome-container">
           <h1 className="welcome-heading">
