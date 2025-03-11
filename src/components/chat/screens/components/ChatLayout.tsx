@@ -3,6 +3,8 @@ import "./ChatLayout.css";
 import Sidebar from "./Sidebar";
 import ChatArea from "./ChatArea";
 import { isCreator } from "../../../../utils/firebaseAuth";
+import { trackUserActivity, trackSessionStart, trackSessionEnd } from "../../../../utils/analytics";
+import { auth } from "../../../../utils/firebaseConfig"; // Add this import
 
 interface Chat {
   id: number;
@@ -101,6 +103,12 @@ const ChatLayout: React.FC = () => {
     },
   ];
 
+  // Room names mapping for analytics
+  const roomLabels: {[key: number]: string} = {};
+  baseChatList.forEach(chat => {
+    roomLabels[chat.id] = chat.title;
+  });
+
   // Conditionally add the admin-only dashboard room.
   const chatList: Chat[] = userIsAdmin
     ? [
@@ -118,6 +126,27 @@ const ChatLayout: React.FC = () => {
         },
       ]
     : baseChatList;
+
+  // Track room changes
+  const handleRoomChange = (roomId: number) => {
+    setActiveChatId(roomId);
+    
+    // Track the room change in analytics
+    if (auth.currentUser) {
+      trackUserActivity(auth.currentUser.uid, roomId, roomLabels[roomId] || "Unknown");
+    }
+  };
+
+  // Session tracking
+  useEffect(() => {
+    // Track session start when component mounts
+    trackSessionStart();
+    
+    // Track session end when component unmounts
+    return () => {
+      trackSessionEnd();
+    };
+  }, []);
 
   const toggleFullScreen = () => {
     setIsChatFullScreen((prev) => {
@@ -159,7 +188,7 @@ const ChatLayout: React.FC = () => {
       <Sidebar
         chatList={chatList}
         activeChatId={activeChatId}
-        onSelectChat={setActiveChatId}
+        onSelectChat={handleRoomChange} // Changed from setActiveChatId to handleRoomChange
         onClose={toggleSidebar}
         isSidebarOpen={isSidebarOpen}
       />

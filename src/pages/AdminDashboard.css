@@ -1,0 +1,229 @@
+.admin-dashboard {
+    padding: 1.5rem;
+    max-width: 1200px;
+    margin: 0 auto;
+    color: #333;
+  }
+  
+  .admin-dashboard h1 {
+    margin-bottom: 1.5rem;
+    font-size: 2rem;
+    color: #fff;
+    border-bottom: 2px solid #eaeaea;
+    padding-bottom: 0.75rem;
+  }
+  
+  .loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 200px;
+    font-size: 1.2rem;
+    color: #666;
+  }
+  
+  /* Grid Layouts */
+  .dashboard-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  @media (max-width: 992px) {
+    .dashboard-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+  
+  /* Cards */
+  .stats-card,
+  .user-card,
+  .top-users-card,
+  .popular-rooms-card,
+  .user-profile-card {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    padding: 1.5rem;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  
+  .stats-card:hover,
+  .user-card:hover,
+  .top-users-card:hover,
+  .popular-rooms-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.12);
+  }
+  
+  /* Stats Display */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+  }
+  
+  .stat-item {
+    text-align: center;
+    padding: 1rem;
+    background-color: #f9f9f9;
+    border-radius: 6px;
+  }
+  
+  .stat-item h3 {
+    font-size: 0.9rem;
+    color: #666;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+  }
+  
+  .stat-item p {
+    font-size: 1.8rem;
+    font-weight: 600;
+    color: #333;
+    margin: 0;
+  }
+  
+  /* Last Active User Card */
+  .last-active-user {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .last-active-user h3 {
+    font-size: 1.2rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .last-active-user p {
+    margin: 0.25rem 0;
+    font-size: 0.9rem;
+    color: #666;
+  }
+  
+  .view-profile-btn {
+    margin-top: 1rem;
+    padding: 0.5rem 1rem;
+    background-color: #3498db;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 500;
+    transition: background-color 0.2s;
+  }
+  
+  .view-profile-btn:hover {
+    background-color: #2980b9;
+  }
+  
+  /* Tables */
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+    font-size: 0.9rem;
+  }
+  
+  .data-table th,
+  .data-table td {
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid #eaeaea;
+  }
+  
+  .data-table th {
+    font-weight: 600;
+    color: #555;
+    background-color: #f7f7f7;
+  }
+  
+  .data-table tbody tr:hover {
+    background-color: #f9f9f9;
+  }
+  
+  .view-btn {
+    padding: 0.3rem 0.75rem;
+    background-color: #3498db;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: background-color 0.2s;
+  }
+  
+  .view-btn:hover {
+    background-color: #2980b9;
+  }
+  
+  /* User Profile Section */
+  .user-profile-card {
+    margin-top: 2rem;
+  }
+  
+  .profile-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  @media (max-width: 768px) {
+    .profile-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+  
+  .metrics-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  .metrics-table td {
+    padding: 0.5rem;
+    border-bottom: 1px solid #eaeaea;
+  }
+  
+  .metrics-table td:first-child {
+    font-weight: 500;
+    color: #555;
+    width: 40%;
+  }
+  
+  .activity-chart {
+    height: 300px;
+    background-color: #f9f9f9;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 1rem;
+  }
+  
+  /* Section Headings */
+  .stats-card h2,
+  .user-card h2,
+  .top-users-card h2,
+  .popular-rooms-card h2,
+  .user-profile-card h2,
+  .profile-metrics h3,
+  .room-usage h3,
+  .activity-over-time h3 {
+    color: #2c3e50;
+    font-size: 1.2rem;
+    margin-top: 0;
+    margin-bottom: 1rem;
+    font-weight: 600;
+  }
+  
+  .profile-metrics h3,
+  .room-usage h3,
+  .activity-over-time h3 {
+    font-size: 1.1rem;
+    border-bottom: 1px solid #eaeaea;
+    padding-bottom: 0.5rem;
+  }
