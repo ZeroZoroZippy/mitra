@@ -361,7 +361,6 @@ const handleSendMessage = async () => {
 
       // Only pass the creator (admin) context if in the admin room (assumed id 7)
       const adminContext = (activeChatId === 7 && isCreator()) ? "Yuvaan" : undefined;
-      console.log("Admin context:", adminContext);
 
       // For admin room: fetch technical summary and build a custom system prompt.
       let customSystemPrompt: string | undefined = undefined;
@@ -369,24 +368,22 @@ const handleSendMessage = async () => {
         try {
           const techResponse = await fetch("https://gettechsummary-753xfutpkq-uc.a.run.app/");
           const techData = await techResponse.json();
-          // Build a refined prompt with lower temperature instructions.
           customSystemPrompt = `You are Saarth, the advanced system AI. Below is the latest technical analytics summary based on our real data:\n\n${techData.summary}\n\n**Important:** Please provide your analysis and recommendations **only** based on the above data. Do not invent any additional metrics or details.`;
         } catch (error) {
-          console.error("Error fetching technical summary:", error);
+          // Error fetching technical summary (silently ignored)
         }
       }
 
       try {
         // Now call getGroqChatCompletion with the custom prompt if in admin room.
         const chatCompletionStream = await getGroqChatCompletion(
-          contextMessages,
+          recentMessagesResult.messages,
           activeChatId,
           adminContext,
           customSystemPrompt
         );
 
         if (!chatCompletionStream) {
-          console.error("❌ AI Response Stream is null!");
           setShowTypingIndicator(false);
           setIsInputDisabled(false);
           return;
@@ -421,7 +418,6 @@ const handleSendMessage = async () => {
         // Re-enable input
         setIsInputDisabled(false);
       } catch (error) {
-        console.error("❌ Error during AI response:", error);
         setShowTypingIndicator(false);
         setIsInputDisabled(false);
         setInputMessage("");

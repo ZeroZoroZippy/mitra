@@ -20,7 +20,6 @@ setupAuth();
 export const isCreator = (): boolean => {
   const user = auth.currentUser;
   const creatorStatus = user ? user.email === "yuvaanvithlani@gmail.com" : false;
-  console.log("Is Creator:", creatorStatus, " | Email:", user?.email);
   return creatorStatus;
 };
 
@@ -43,12 +42,6 @@ export const signInWithGoogle = async (): Promise<User | null> => {
     }
 
     if (!user.displayName || !user.email) {
-      console.warn("⚠️ Missing user profile data:", {
-        displayName: user.displayName,
-        email: user.email,
-        photoURL: user.photoURL,
-      });
-
       // ✅ Force Firebase to update missing profile data
       await updateProfile(user, {
         displayName: user.displayName || "New User",
@@ -65,7 +58,6 @@ export const signInWithGoogle = async (): Promise<User | null> => {
     await storeUserDetails(user); // ✅ Save user data to Firestore with encryption
     return user;
   } catch (error) {
-    console.error("❌ Sign-in error:", error);
     return null;
   }
 };
