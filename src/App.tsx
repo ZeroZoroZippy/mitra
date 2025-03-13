@@ -9,7 +9,7 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import AdminDashboard from "./pages/AdminDashboard";
 
 // Define current app version - update this when releasing new versions
-export const APP_VERSION = "2.0.9";
+export const APP_VERSION = "2.0.10";
 
 const ProtectedRoute: React.FC<{ element: JSX.Element }> = ({ element }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
