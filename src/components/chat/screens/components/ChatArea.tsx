@@ -87,7 +87,6 @@ const ChatArea: React.FC<ChatAreaProps> = ({
         // ✅ Extract first name from displayName
         if (user.displayName) {
           const firstName = user.displayName.split(" ")[0]; // Get the first word
-          console.log("📌 Extracted First Name:", firstName);
           setFirstName(firstName);
           return;
         }
@@ -538,7 +537,6 @@ const fetchMessages = async () => {
   if (!user) return;
 
   try {
-    console.log("🔍 Fetching messages for user:", user.uid, "Thread:", activeChatId);
     // Pass activeChatId to filter messages by thread. (Ensure getMessages is updated accordingly.)
     const loadedMessages = await getMessages(user.uid, activeChatId);
 
@@ -551,7 +549,6 @@ const fetchMessages = async () => {
       encrypted: msg.encrypted ?? false
     })) as ChatMessage[];
 
-    console.log("✅ Formatted messages:", formatted);
     setMessages(formatted);
     setIsWelcomeActive(formatted.length === 0); // Show welcome screen if no messages in the thread
   } catch (error) {
