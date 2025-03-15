@@ -5,12 +5,12 @@ import ChatHeader from "./ChatHeader";
 import { FaPaperPlane } from "react-icons/fa6";
 import { IoCopyOutline } from "react-icons/io5";
 import { auth } from "../../../../utils/firebaseConfig";
-import { onAuthStateChanged } from "firebase/auth";
+import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
 import { AiFillLike, AiFillDislike, AiOutlineLike, AiOutlineDislike } from "react-icons/ai";
 import { getMessages, saveMessage, updateLikeStatus, decryptMessage} from "../../../../utils/firebaseDb";
 import { getGroqChatCompletion, getRecentMessages } from "../../../../utils/getGroqChatCompletion";
 import { exportToGoogleSheets, syncFirestoreToGoogleSheets } from "../../../../utils/googleSheets";
-import { getDoc, doc, getFirestore } from "firebase/firestore";
+import { getFirestore, doc, getDoc, updateDoc, increment, setDoc } from "firebase/firestore";
 import { isCreator } from "../../../../utils/firebaseAuth";
 import { trackMessage } from "../../../../utils/analytics";
 import AdminDashboard from '../../../../pages/AdminDashboard';
@@ -28,6 +28,20 @@ const welcomeTitles: { [key: number]: string } = {
 
 const genericInstruction =
   "General Instructions: \n\n- For best insights, share your thoughts and feelings clearly and in detail. \n- Your honesty helps Saarth understand you better. \n- And remember—Saarth is a bit of a chatterbox. If you ever need him to be brief, just tell him to shut up and talk less!";
+
+  const isGuestUser = () => localStorage.getItem("isGuestUser") === "true";
+
+  const getGuestMessageCount = () => parseInt(localStorage.getItem("guestMessageCount") || "0");
+  
+  const getRemainingMessages = () => isGuestUser() ? Math.max(0, 5 - getGuestMessageCount()) : Infinity;
+  
+  const incrementMessageCount = () => {
+    if (!isGuestUser()) return true;
+    
+    const newCount = getGuestMessageCount() + 1;
+    localStorage.setItem("guestMessageCount", newCount.toString());
+    return 5 - newCount >= 0;
+  };
 
 interface ChatAreaProps {
   isChatFullScreen: boolean;
@@ -76,6 +90,20 @@ const ChatArea: React.FC<ChatAreaProps> = ({
     return localStorage.getItem(`welcomeDismissed_${activeChatId}`) === "true";
   });
   const [techSummary, setTechSummary] = useState("");
+  const [isGuest, setIsGuest] = useState(false);
+  const [remainingMessages, setRemainingMessages] = useState(5);
+  const [showLimitModal, setShowLimitModal] = useState(false);
+
+  //Guest useEffect:
+  useEffect(() => {
+    setIsGuest(isGuestUser());
+    
+    if (isGuestUser() && !localStorage.getItem("guestMessageCount")) {
+      localStorage.setItem("guestMessageCount", "0");
+    }
+    
+    setRemainingMessages(getRemainingMessages());
+  }, []);
 
   // ✅ Fetch user's first name when component mounts
   useEffect(() => {
@@ -283,7 +311,29 @@ const animateMessageReveal = (fullMessage: string, messageId: string) => {
 const handleSendMessage = async () => {
   if (!inputMessage.trim() || isInputDisabled) return;
 
-  // When a message is sent, dismiss the welcome screen for this thread.
+  // Guest message limit check using localStorage
+  if (isGuestUser()) {
+    const currentCount = parseInt(localStorage.getItem("guestMessageCount") || "0");
+    const remainingMsgs = Math.max(0, 5 - currentCount);
+    
+    console.log("Guest user check - count:", currentCount, "remaining:", remainingMsgs);
+    console.log("About to check limit - isGuest:", isGuest, "remainingMsgs:", remainingMsgs, "showLimitModal:", showLimitModal);
+    
+    if (remainingMsgs <= 0) {
+      console.log("Setting modal to true");
+      setShowLimitModal(true);
+      return;
+    }
+    
+    // Increment the count in localStorage
+    const newCount = currentCount + 1;
+    localStorage.setItem("guestMessageCount", newCount.toString());
+    
+    // Update UI counter
+    setRemainingMessages(5 - newCount);
+  }
+
+  // Dismiss welcome screen if needed
   if (!welcomeDismissed) {
     setWelcomeDismissed(true);
     localStorage.setItem(`welcomeDismissed_${activeChatId}`, "true");
@@ -291,17 +341,13 @@ const handleSendMessage = async () => {
 
   const userMessage = createMessage(inputMessage.trim(), "user");
   const user = auth.currentUser;
-  const userIsCreator = isCreator(); // Check if the user is the creator
 
   if (user) {
     await saveMessage(userMessage.text, "user", null, activeChatId);
-  }
-
-  if (user) {
     trackMessage(user.uid, activeChatId, userMessage.text);
   }
 
-  setMessages((prev) => [...prev, userMessage]);
+  setMessages(prev => [...prev, userMessage]);
   setInputMessage("");
   setIsWelcomeActive(false);
   setIsInputDisabled(true);
@@ -312,26 +358,21 @@ const handleSendMessage = async () => {
 
   const seenDelay = Math.floor(Math.random() * 4000) + 1000;
 
-  // Check for a hardcoded response first
+  // Check for hardcoded response
   const hardcodedResponse = getAIResponse(userMessage.text);
   if (hardcodedResponse !== null) {
     setTimeout(() => {
       setShowTypingIndicator(true);
       setTimeout(async () => {
         const aiMessage = createMessage(hardcodedResponse, "assistant");
-        await saveMessage(hardcodedResponse, "assistant", null, activeChatId);
+        if (user) {
+          await saveMessage(hardcodedResponse, "assistant", null, activeChatId);
+        }
         
-        // Add the complete message
-        setMessages((prev) => [...prev, aiMessage]);
-        
-        // Hide typing indicator
+        setMessages(prev => [...prev, aiMessage]);
         setShowTypingIndicator(false);
         setAiTypingMessage("");
-        
-        // Start the revealing animation
         animateMessageReveal(aiMessage.id || "", hardcodedResponse);
-        
-        // Re-enable input
         setIsInputDisabled(false);
       }, 1000);
     }, seenDelay);
@@ -346,23 +387,17 @@ const handleSendMessage = async () => {
     setTimeout(async () => {
       setShowTypingIndicator(true);
 
-      // Update the local user message to mark it as decrypted
-      const updatedMessages = messages.map((msg) =>
-        msg.id === userMessage.id ? { ...msg, encrypted: false } : msg
-      );
-      // Force decryption on new message since it's plain text.
-      const contextMessages = [...messages, { ...userMessage, encrypted: false }].map((msg) => ({
+      // Force decryption on new message since it's plain text
+      const contextMessages = [...messages, { ...userMessage, encrypted: false }].map(msg => ({
         ...msg,
         text: msg.encrypted ? decryptMessage(msg.text, true) : msg.text,
       }));
 
       const recentMessagesResult = getRecentMessages(contextMessages);
-
-      // Only pass the creator (admin) context if in the admin room (assumed id 7)
       const adminContext = (activeChatId === 7 && isCreator()) ? "Yuvaan" : undefined;
 
-      // For admin room: fetch technical summary and build a custom system prompt.
-      let customSystemPrompt: string | undefined = undefined;
+      // Admin room setup
+      let customSystemPrompt;
       if (activeChatId === 7) {
         try {
           const techResponse = await fetch("https://gettechsummary-753xfutpkq-uc.a.run.app/");
@@ -374,7 +409,6 @@ const handleSendMessage = async () => {
       }
 
       try {
-        // Now call getGroqChatCompletion with the custom prompt if in admin room.
         const chatCompletionStream = await getGroqChatCompletion(
           recentMessagesResult.messages,
           activeChatId,
@@ -396,27 +430,19 @@ const handleSendMessage = async () => {
         }
 
         const aiMessage = createMessage(message, "assistant");
+        setMessages(prev => [...prev, aiMessage]);
         
-        // Add the complete message
-        setMessages((prev) => [...prev, aiMessage]);
-        
-        // Save to Firebase
-        await saveMessage(message, "assistant", null, activeChatId);
-
         if (user) {
+          await saveMessage(message, "assistant", null, activeChatId);
           trackMessage(user.uid, activeChatId, message);
         }
 
-        // Hide typing indicator
         setShowTypingIndicator(false);
         setAiTypingMessage("");
-        
-        // Start revealing animation
         animateMessageReveal(aiMessage.id || "", message);
-        
-        // Re-enable input
         setIsInputDisabled(false);
       } catch (error) {
+        console.error("Error generating AI response:", error);
         setShowTypingIndicator(false);
         setIsInputDisabled(false);
         setInputMessage("");
@@ -613,12 +639,12 @@ const fetchAndAppendTechSummary = async () => {
 };
 
 // Update useEffect for tech summary
-useEffect(() => {
-  if (activeChatId === 7) {
-    // Optional: Auto-fetch on room entry
-    // fetchAndAppendTechSummary();
-  }
-}, [activeChatId]);
+  useEffect(() => {
+    if (activeChatId === 7) {
+      // Optional: Auto-fetch on room entry
+      // fetchAndAppendTechSummary();
+    }
+  }, [activeChatId]);
 
   /* Fix Safari Bottom URL Bar Overlapping Input Bar */
   const isIOS = () => {
@@ -740,6 +766,16 @@ useEffect(() => {
                     components={{
                       p: ({ node, ...props }) => (
                         <p style={{ marginBottom: "1rem", lineHeight: "1.5" }} {...props} />
+                      ),
+                      em: ({ node, ...props }) => (
+                        <em style={{ 
+                          fontStyle: 'italic', 
+                          color: '#a0d2ff', 
+                          fontWeight: 300,
+                          opacity: 0.85,
+                          padding: '0 2px',
+                          letterSpacing: '0.02em'
+                        }} {...props} />
                       ),
                       ul: ({ node, ...props }) => (
                         <ul style={{ margin: "1rem 0", paddingLeft: "1.5rem" }} {...props} />
@@ -866,12 +902,9 @@ useEffect(() => {
       {!isWelcomeActive && (
         <div>
           <div className="input-bar">
-            {/* ✅ Precaution message moved inside input-bar above input-send-container */}
-            {!isWelcomeActive && (
-              <div className="precaution-message-container">
-                <p className="precaution-message">
-                  Your Saarth apologizes for any mistakes made.
-                </p>
+            {isGuest && (
+              <div className={`guest-message-counter ${remainingMessages <= 2 ? 'low' : ''}`}>
+                <span>{remainingMessages}</span> message{remainingMessages !== 1 ? 's' : ''} left
               </div>
             )}
             <div className="input-send-container">
@@ -889,14 +922,47 @@ useEffect(() => {
                 }}
                 disabled={isInputDisabled}
               />
-              <button
-                className="send-icon-button"
-                onClick={handleSendMessage}
-                disabled={isInputDisabled}
-              >
+              <button className="send-icon-button" onClick={handleSendMessage} disabled={isInputDisabled}>
                 <FaPaperPlane />
               </button>
             </div>
+          </div>
+        </div>
+      )}
+      {isGuest && showLimitModal && (
+        <div className="message-limit-modal">
+          <div className="message-limit-content">
+            <button 
+              className="close-modal-button"
+              onClick={() => setShowLimitModal(false)}
+            >
+              ✖
+            </button>
+            <h3>Message Limit Reached</h3>
+            <p>You've used all 5 guest messages. Sign in to continue your conversation!</p>
+            <button 
+              className="sign-in-button"
+              onClick={() => {
+                const provider = new GoogleAuthProvider();
+                signInWithPopup(auth, provider)
+                  .then(() => {
+                    // Clear guest status
+                    localStorage.removeItem("isGuestUser");
+                    localStorage.removeItem("guestMessageCount");
+                    
+                    // Close modal
+                    setShowLimitModal(false);
+                    
+                    // If you need to refresh state
+                    window.location.reload();
+                  })
+                  .catch((error) => {
+                    console.error("Error during sign in:", error);
+                  });
+              }}
+            >
+              Sign In Now
+            </button>
           </div>
         </div>
       )}

@@ -6,15 +6,39 @@ import {
   browserLocalPersistence,
   updateProfile,
   getAdditionalUserInfo,
+  signInAnonymously,
 } from "firebase/auth";
 import { auth } from "./firebaseConfig";
-import { storeUserDetails } from "./firebaseDb"; // Importing the encryption-enabled storeUserDetails
+import { storeUserDetails, db } from "./firebaseDb";
+import { doc, setDoc } from "firebase/firestore";
 
 // ✅ Set authentication persistence
 const setupAuth = async () => {
   await setPersistence(auth, browserLocalPersistence);
 };
 setupAuth();
+
+// ✅ Guest User Sign-In Function
+export const signInAsGuest = async () => {
+  try {
+    const userCredential = await signInAnonymously(auth);
+    const user = userCredential.user;
+    
+    // Set up guest user in Firestore
+    await setDoc(doc(db, "users", user.uid), {
+      isGuest: true,
+      messageCount: 0,
+      createdAt: new Date().toISOString(),
+      displayName: "Guest User"
+    });
+    
+    localStorage.setItem("isGuestUser", "true");
+    return user;
+  } catch (error) {
+    console.error("Error signing in as guest:", error);
+    throw error;
+  }
+};
 
 // ✅ Set authentication persistence
 export const isCreator = (): boolean => {

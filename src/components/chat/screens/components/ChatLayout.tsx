@@ -4,7 +4,7 @@ import Sidebar from "./Sidebar";
 import ChatArea from "./ChatArea";
 import { isCreator } from "../../../../utils/firebaseAuth";
 import { trackUserActivity, trackSessionStart, trackSessionEnd } from "../../../../utils/analytics";
-import { auth } from "../../../../utils/firebaseConfig"; // Add this import
+import { auth } from "../../../../utils/firebaseConfig";
 
 interface Chat {
   id: number;
@@ -175,6 +175,8 @@ const ChatLayout: React.FC = () => {
     }
   }, [activeChatId]);
 
+  const [showLimitModal, setShowLimitModal] = useState(false);
+
   return (
     <div
       className={`chat-layout ${isChatFullScreen ? "fullscreen" : ""} ${
@@ -185,13 +187,14 @@ const ChatLayout: React.FC = () => {
         <div className="sidebar-overlay" onClick={toggleSidebar}></div>
       )}
 
-      <Sidebar
-        chatList={chatList}
-        activeChatId={activeChatId}
-        onSelectChat={handleRoomChange} // Changed from setActiveChatId to handleRoomChange
-        onClose={toggleSidebar}
-        isSidebarOpen={isSidebarOpen}
-      />
+    <Sidebar
+      chatList={chatList}
+      activeChatId={activeChatId}
+      onSelectChat={handleRoomChange}
+      onClose={toggleSidebar}
+      isSidebarOpen={isSidebarOpen}
+      showLimitModal={() => setShowLimitModal(true)} // Add this
+    />
 
       <ChatArea
         activeChatId={activeChatId}
