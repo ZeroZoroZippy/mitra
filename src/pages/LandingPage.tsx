@@ -1,11 +1,11 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { onAuthStateChanged } from "firebase/auth";
-import { signInWithGoogle, auth } from "../utils/firebaseAuth";
+import { signInWithGoogle, signInAsGuest, auth } from "../utils/firebaseAuth";
 import { storeUserDetails } from "../utils/firebaseDb";
-import { analytics } from "../utils/firebaseConfig"; // ✅ Import Firebase Analytics
-import { logEvent } from "firebase/analytics"; // ✅ Import logEvent function
-import { Helmet } from "react-helmet-async"; // ✅ Added for dynamic meta tags
+import { analytics } from "../utils/firebaseConfig";
+import { logEvent } from "firebase/analytics";
+import { Helmet } from "react-helmet-async";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import "./LandingPage.css";
@@ -13,7 +13,8 @@ import two_male_friends from "../assets/images/webp/two_male_friends_wobg.webp";
 import hand from "../assets/images/webp/hand_wobg.webp";
 import scrapbook from "../assets/images/webp/scrapbook_wobg.webp";
 import two_friends from "../assets/images/webp/two_friends_wobg.webp";
-import slugImage from "../assets/images/webp/two_male_friends_wobg.webp"; // New About image
+import slugImage from "../assets/images/webp/two_male_friends_wobg.webp";
+import { FcGoogle } from "react-icons/fc"; // Import Google icon
 
 interface LandingPageProps {
   featuresRef: React.RefObject<HTMLDivElement>;
@@ -23,23 +24,22 @@ const LandingPage: React.FC<LandingPageProps> = ({ featuresRef }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isLoading, setIsLoading] = useState(false);
-  const [hasRedirected, setHasRedirected] = useState(false); // Prevents multiple redirects
+  const [hasRedirected, setHasRedirected] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const modalRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    logEvent(analytics, "page_view", { page_path: location.pathname }); // ✅ Track Page Visit
+    logEvent(analytics, "page_view", { page_path: location.pathname });
   }, [location.pathname]);
 
   // Handle authentication state and update CTA button
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      // console.log("Auth state changed. User:", user);
       setIsAuthenticated(!!user);
 
-      // Only redirect if the user is on "/" and hasn't been redirected
       if (user && location.pathname === "/" && !hasRedirected) {
-        // console.log("Redirecting to /chat...");
-        setHasRedirected(true); // Update state before navigating
+        setHasRedirected(true);
         navigate("/chat");
       }
     });
@@ -47,48 +47,77 @@ const LandingPage: React.FC<LandingPageProps> = ({ featuresRef }) => {
     return () => unsubscribe();
   }, [navigate, location.pathname, hasRedirected]);
 
-  // Handle sign-in button click
-  const handleSignIn = async () => {
+  // Handle click outside modal to close it
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (modalRef.current && !modalRef.current.contains(event.target as Node)) {
+        setShowAuthModal(false);
+      }
+    };
+
+    if (showAuthModal) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showAuthModal]);
+
+  // Handle sign-in with Google
+  const handleGoogleSignIn = async () => {
     try {
+      setIsLoading(true);
       const user = await signInWithGoogle();
       if (user) {
         await storeUserDetails(user);
-        logEvent(analytics, "login", { method: "Google" }); // ✅ Track Sign-In Event
+        logEvent(analytics, "login", { method: "Google" });
         navigate("/chat");
       }
     } catch (error) {
       console.error("Sign-in failed:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Handle sign-in as guest
+  const handleGuestSignIn = async () => {
+    try {
+      setIsLoading(true);
+      const user = await signInAsGuest();
+      if (user) {
+        logEvent(analytics, "login", { method: "Guest" });
+        navigate("/chat");
+      }
+    } catch (error) {
+      console.error("Guest sign-in failed:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   // Dynamic CTA button functionality
-  const handleCTAClick = async () => {
-    if (auth.currentUser) {
-      logEvent(analytics, "cta_clicked", { button: "Continue Chat" }); // ✅ Track CTA Click
+  const handleCTAClick = () => {
+    if (isAuthenticated) {
+      logEvent(analytics, "cta_clicked", { button: "Continue Chat" });
       navigate("/chat");
     } else {
-      try {
-        const user = await signInWithGoogle();
-        if (user) {
-          await storeUserDetails(user);
-          logEvent(analytics, "cta_clicked", { button: "Start Talking" }); // ✅ Track CTA Click
-          navigate("/chat");
-        }
-      } catch (error) {
-        console.error("Sign-in failed:", error);
-      }
+      logEvent(analytics, "cta_clicked", { button: "Start Talking" });
+      setShowAuthModal(true);
     }
   };
 
   return (
     <>
-      {/* ✅ Dynamic Meta Tags */}
       <Helmet>
         <title>Saarth – Your AI Companion for Meaningful Conversations</title>
-        <meta name="description" content="Saarth is where AI conversation evolves beyond tools and utilities. Experience personalized dialogue that adapts to you, offers genuine insights, and creates meaningful connections - available whenever you need it." />        <meta property="og:type" content="website" />
+        <meta name="description" content="Saarth is where AI conversation evolves beyond tools and utilities. Experience personalized dialogue that adapts to you, offers genuine insights, and creates meaningful connections - available whenever you need it." />        
+        <meta property="og:type" content="website" />
         <meta property="og:url" content="https://saarth.netlify.app/" />
         <meta property="og:title" content="Saarth – Your AI Companion for Meaningful Conversations" />
-        <meta property="og:description" content="Discover Saarth - where AI finally understands the nuances of real conversation. Not just another utility bot, but a companion that adapts, listens, and responds with depth." />        <meta property="og:image" content={slugImage} />
+        <meta property="og:description" content="Discover Saarth - where AI finally understands the nuances of real conversation. Not just another utility bot, but a companion that adapts, listens, and responds with depth." />        
+        <meta property="og:image" content={slugImage} />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="Saarth – Your AI Companion for Meaningful Conversations" />
         <meta name="twitter:description" content="Saarth is here to chat, share insights, and be your late-night confidant. Connect, explore, and grow together." />
@@ -116,13 +145,12 @@ const LandingPage: React.FC<LandingPageProps> = ({ featuresRef }) => {
         <link rel="canonical" href="https://saarth.netlify.app${location.pathname}" />    
       </Helmet>
 
-    {/* Pass featuresRef to Header */}
       <Header featuresRef={featuresRef} />
       <main className="landing-page-container">
         {/* Hero Section */}
         <section className="hero">
           <div className="hero-text">
-          <h1>Saarth: Where AI Meets You</h1>
+            <h1>Saarth: Where AI Meets You</h1>
             <p>
               I'm more than just AI—I am a friendly presence here to listen, share a laugh, and offer guidance when you need it. Whether you're looking for advice or simply a genuine chat, I'm here to connect with you on a real level.
             </p>
@@ -189,13 +217,50 @@ const LandingPage: React.FC<LandingPageProps> = ({ featuresRef }) => {
             <div className="why-Saarth-item">
               <h3 className="item-title">Your Late-Night Confidant</h3>
               <p className="item-description">
-                Some thoughts can’t wait until morning. Whether it's a late-night reflection or an early chat, I'm always here to help you find clarity.
+                Some thoughts can't wait until morning. Whether it's a late-night reflection or an early chat, I'm always here to help you find clarity.
               </p>
             </div>
           </div>
         </div>
       </main>
-      {/* Footer Component */}
+
+      {/* Custom Auth Modal */}
+      {showAuthModal && (
+        <div className="auth-modal-overlay">
+          <div className="auth-modal" ref={modalRef}>
+            <button className="auth-modal-close" onClick={() => setShowAuthModal(false)}>✕</button>
+            <h3 className="auth-modal-title">Welcome to Saarth</h3>
+            <p className="auth-modal-subtitle">Choose how you'd like to get started</p>
+            
+            <button 
+              className={`auth-button google-button ${isLoading ? 'loading' : ''}`}
+              onClick={handleGoogleSignIn}
+              disabled={isLoading}
+            >
+              <FcGoogle size={24} />
+              <span>Continue with Google</span>
+            </button>
+            
+            <div className="auth-divider">
+              <span>or</span>
+            </div>
+            
+            <button 
+              className={`auth-button guest-button ${isLoading ? 'loading' : ''}`}
+              onClick={handleGuestSignIn}
+              disabled={isLoading}
+            >
+              <span>Try as Guest</span>
+              <div className="guest-limit-note">5 free messages</div>
+            </button>
+            
+            <p className="auth-privacy-note">
+              By continuing, you agree to our <a href="/privacy-policy">Privacy Policy</a>
+            </p>
+          </div>
+        </div>
+      )}
+
       <Footer />
     </>
   );
