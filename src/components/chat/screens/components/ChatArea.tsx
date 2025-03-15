@@ -105,6 +105,16 @@ const ChatArea: React.FC<ChatAreaProps> = ({
     setRemainingMessages(getRemainingMessages());
   }, []);
 
+  useEffect(() => {
+    if (isGuestUser()) {
+      const count = getGuestMessageCount();
+      setRemainingMessages(Math.max(0, 5 - count));
+      if (count >= 5) {
+        setShowLimitModal(true);
+      }
+    }
+  }, []);
+
   // ✅ Fetch user's first name when component mounts
   useEffect(() => {
     const fetchUserName = async () => {
@@ -314,27 +324,25 @@ const handleSendMessage = async () => {
   // Guest message limit check using localStorage
   if (isGuestUser()) {
     const currentCount = parseInt(localStorage.getItem("guestMessageCount") || "0");
-    const remainingMsgs = Math.max(0, 5 - currentCount);
     
-    console.log("Guest user check - count:", currentCount, "remaining:", remainingMsgs);
-    console.log("About to check limit - isGuest:", isGuest, "remainingMsgs:", remainingMsgs, "showLimitModal:", showLimitModal);
-    
+    // Check if we've already hit the limit
     if (currentCount >= 5) {
-      // Force UI update with timeout
-      setIsInputDisabled(true); // Disable input
-      setTimeout(() => {
-        setShowLimitModal(true); // Show modal after slight delay
-        console.log("Modal visibility state:", showLimitModal);
-      }, 100);
+      setIsInputDisabled(true);
+      setShowLimitModal(true);
       return;
     }
     
-    // Increment the count in localStorage
+    // Increment the count in localStorage BEFORE any async operations
     const newCount = currentCount + 1;
     localStorage.setItem("guestMessageCount", newCount.toString());
     
     // Update UI counter
     setRemainingMessages(5 - newCount);
+    
+    // Force modal if this was the 5th message
+    if (newCount === 5) {
+      console.log("Fifth message sent, next attempt will show modal");
+    }
   }
 
   // Dismiss welcome screen if needed
