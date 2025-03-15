@@ -320,8 +320,12 @@ const handleSendMessage = async () => {
     console.log("About to check limit - isGuest:", isGuest, "remainingMsgs:", remainingMsgs, "showLimitModal:", showLimitModal);
     
     if (currentCount >= 5) {
-      console.log("Guest message limit reached - show modal");
-      setShowLimitModal(true);
+      // Force UI update with timeout
+      setIsInputDisabled(true); // Disable input
+      setTimeout(() => {
+        setShowLimitModal(true); // Show modal after slight delay
+        console.log("Modal visibility state:", showLimitModal);
+      }, 100);
       return;
     }
     
