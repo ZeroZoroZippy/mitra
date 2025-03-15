@@ -10,7 +10,7 @@ import {
 } from "firebase/auth";
 import { auth } from "./firebaseConfig";
 import { storeUserDetails, db } from "./firebaseDb";
-import { doc, setDoc } from "firebase/firestore";
+import { doc, setDoc, updateDoc, increment } from "firebase/firestore";
 
 // ✅ Set authentication persistence
 const setupAuth = async () => {
@@ -31,6 +31,12 @@ export const signInAsGuest = async () => {
       createdAt: new Date().toISOString(),
       displayName: "Guest User"
     });
+    
+    // Track new guest account creation
+    const statsRef = doc(db, "statistics", "guestUsage");
+    await updateDoc(statsRef, {
+      totalGuestAccounts: increment(1)
+    }).catch(err => console.error("Error tracking guest account creation:", err));
     
     localStorage.setItem("isGuestUser", "true");
     return user;

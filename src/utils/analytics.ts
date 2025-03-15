@@ -44,6 +44,65 @@ import {
     messagesByHour: { [hour: string]: number };
     messagesByDate: { [date: string]: number };
   }
+
+  // Add these interfaces after your existing interfaces
+export interface GuestAnalytics {
+  totalGuestMessages: number;
+  totalGuestAccounts: number;
+  conversions: number;
+  lastUpdated: Timestamp;
+}
+
+// Add these functions to the file
+
+/**
+ * Gets guest usage statistics
+ */
+export const getGuestAnalytics = async (): Promise<GuestAnalytics | null> => {
+  try {
+    const statsRef = doc(db, "statistics", "guestUsage");
+    const snapshot = await getDoc(statsRef);
+    
+    if (snapshot.exists()) {
+      return snapshot.data() as GuestAnalytics;
+    }
+    return null;
+  } catch (error) {
+    console.error("Error getting guest analytics:", error);
+    return null;
+  }
+};
+
+/**
+ * Calculates conversion rate from guest metrics
+ */
+export const getGuestConversionRate = async (): Promise<string> => {
+  const analytics = await getGuestAnalytics();
+  
+  if (!analytics || analytics.totalGuestAccounts === 0) {
+    return "0%";
+  }
+  
+  const rate = (analytics.conversions / analytics.totalGuestAccounts) * 100;
+  return `${rate.toFixed(2)}%`;
+};
+
+/**
+ * Ensures the guest analytics document exists
+ */
+export const initializeGuestAnalytics = async (): Promise<void> => {
+  const statsRef = doc(db, "statistics", "guestUsage");
+  const snapshot = await getDoc(statsRef);
+  
+  if (!snapshot.exists()) {
+    await setDoc(statsRef, {
+      totalGuestMessages: 0,
+      totalGuestAccounts: 0, 
+      conversions: 0,
+      lastUpdated: serverTimestamp()
+    });
+  }
+};
   
   // Session timeout in milliseconds (30 minutes)
   const SESSION_TIMEOUT = 30 * 60 * 1000;
@@ -465,6 +524,82 @@ import {
       console.error("Error tracking session end:", error);
       return false;
     }
+  };
+
+    /**
+   * Tracks a message sent by a guest user
+   */
+  export const trackGuestMessage = async (): Promise<boolean> => {
+    try {
+      const statsRef = doc(db, "statistics", "guestUsage");
+      
+      await updateDoc(statsRef, {
+        totalGuestMessages: increment(1),
+        lastUpdated: serverTimestamp()
+      });
+      
+      return true;
+    } catch (error) {
+      console.error("Error tracking guest message:", error);
+      return false;
+    }
+  };
+
+  /**
+   * Tracks when a guest user account is created
+   */
+  export const trackGuestAccountCreation = async (): Promise<boolean> => {
+    try {
+      const statsRef = doc(db, "statistics", "guestUsage");
+      
+      await updateDoc(statsRef, {
+        totalGuestAccounts: increment(1),
+        lastUpdated: serverTimestamp()
+      });
+      
+      return true;
+    } catch (error) {
+      console.error("Error tracking guest account creation:", error);
+      return false;
+    }
+  };
+
+  /**
+   * Tracks when a guest user converts to a registered user
+   */
+  export const trackGuestConversion = async (): Promise<boolean> => {
+    try {
+      const statsRef = doc(db, "statistics", "guestUsage");
+      
+      await updateDoc(statsRef, {
+        conversions: increment(1),
+        lastUpdated: serverTimestamp()
+      });
+      
+      return true;
+    } catch (error) {
+      console.error("Error tracking guest conversion:", error);
+      return false;
+    }
+  };
+
+  /**
+   * Gets full guest analytics with calculated metrics
+   */
+  export const getGuestAnalyticsWithMetrics = async () => {
+    const stats = await getGuestAnalytics();
+    
+    if (!stats) return null;
+    
+    return {
+      ...stats,
+      conversionRate: stats.totalGuestAccounts > 0 
+        ? (stats.conversions / stats.totalGuestAccounts * 100).toFixed(2) + '%' 
+        : '0%',
+      messagesPerGuest: stats.totalGuestAccounts > 0
+        ? (stats.totalGuestMessages / stats.totalGuestAccounts).toFixed(1)
+        : '0'
+    };
   };
   
   // Export helper functions for admin dashboard

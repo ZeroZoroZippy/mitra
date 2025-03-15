@@ -2,14 +2,34 @@ import React, { useRef, useEffect, useState } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "./utils/firebaseAuth";
-import { getFirestore, doc, getDoc } from "firebase/firestore";
+import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 import LandingPage from "./pages/LandingPage";
 import ChatLayout from "./components/chat/screens/components/ChatLayout";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import AdminDashboard from "./pages/AdminDashboard";
 
 // Define current app version - update this when releasing new versions
-export const APP_VERSION = "2.2.4";
+export const APP_VERSION = "2.2.5";
+
+// Initialize the guest analytics function
+export const initializeGuestAnalytics = async () => {
+  const db = getFirestore();
+  const statsRef = doc(db, "statistics", "guestUsage");
+  
+  // Check if document exists first
+  const statsDoc = await getDoc(statsRef);
+  
+  if (!statsDoc.exists()) {
+    // Initialize the statistics document
+    await setDoc(statsRef, {
+      totalGuestMessages: 0,
+      totalGuestAccounts: 0,
+      conversions: 0,
+      lastUpdated: serverTimestamp()
+    });
+    console.log("Guest analytics document initialized");
+  }
+};
 
 const ProtectedRoute: React.FC<{ element: JSX.Element }> = ({ element }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
@@ -223,6 +243,11 @@ const App: React.FC = () => {
   const [updateChecked, setUpdateChecked] = useState(false);
 
   useEffect(() => {
+    // Initialize guest analytics tracking
+    initializeGuestAnalytics().catch(err => 
+      console.error("Error initializing guest analytics:", err)
+    );
+    
     // Check for updates when app loads and after Firebase is initialized
     const checkForUpdates = async () => {
       try {
@@ -292,7 +317,6 @@ const App: React.FC = () => {
       <Route path="/privacy-policy" element={<PrivacyPolicy />} />
       <Route path="*" element={<LandingPage featuresRef={featuresRef} />} />
       <Route path="/admin/dashboard" element={<AdminDashboard />} />
-
     </Routes>
   );
 };

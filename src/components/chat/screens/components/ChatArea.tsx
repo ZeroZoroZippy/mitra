@@ -323,6 +323,8 @@ const handleSendMessage = async () => {
 
   // Guest message limit check using localStorage
   if (isGuestUser()) {
+    const db = getFirestore();
+    const statsRef = doc(db, "statistics", "guestUsage");
     const currentCount = parseInt(localStorage.getItem("guestMessageCount") || "0");
     
     // Check if we've already hit the limit
@@ -343,6 +345,10 @@ const handleSendMessage = async () => {
     if (newCount === 5) {
       console.log("Fifth message sent, next attempt will show modal");
     }
+
+    updateDoc(statsRef, {
+      totalGuestMessages: increment(1)
+    });
   }
 
   // Dismiss welcome screen if needed
@@ -955,6 +961,13 @@ const fetchAndAppendTechSummary = async () => {
             <button 
               className="sign-in-button"
               onClick={() => {
+                // Add tracking code here
+                const db = getFirestore();
+                const statsRef = doc(db, "statistics", "guestUsage");
+                updateDoc(statsRef, {
+                  conversions: increment(1)
+                }).catch(err => console.error("Error tracking conversion:", err));
+                
                 const provider = new GoogleAuthProvider();
                 signInWithPopup(auth, provider)
                   .then(() => {

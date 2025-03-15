@@ -48,6 +48,7 @@ const AdminDashboard: React.FC = () => {
   const [popularRooms, setPopularRooms] = useState<RoomAnalytics[]>([]);
   const [selectedUser, setSelectedUser] = useState<string | null>(null);
   const [userProfile, setUserProfile] = useState<any>(null);
+  const [guestAnalytics, setGuestAnalytics] = useState<any>(null);
   
   // Load dashboard with real-time listeners
   useEffect(() => {
@@ -98,6 +99,27 @@ const AdminDashboard: React.FC = () => {
     const popularRoomsUnsubscribe = onSnapshot(popularRoomsQuery, (snapshot) => {
       const rooms = snapshot.docs.map(doc => doc.data() as RoomAnalytics);
       setPopularRooms(rooms);
+    });
+    
+    // Real-time listener for guest analytics
+    const guestAnalyticsRef = doc(db, "statistics", "guestUsage");
+    const guestAnalyticsUnsubscribe = onSnapshot(guestAnalyticsRef, (snapshot) => {
+      if (snapshot.exists()) {
+        const data = snapshot.data();
+        setGuestAnalytics({
+          ...data,
+          conversionRate: data.totalGuestAccounts > 0 
+            ? (data.conversions / data.totalGuestAccounts * 100).toFixed(2) + '%' 
+            : '0%',
+          messagesPerGuest: data.totalGuestAccounts > 0
+            ? (data.totalGuestMessages / data.totalGuestAccounts).toFixed(1)
+            : '0'
+        });
+      } else {
+        setGuestAnalytics(null);
+      }
+    }, (error) => {
+      console.error("Error in guest analytics listener:", error);
     });
     
     // Platform stats listener (active users counts)
@@ -164,6 +186,7 @@ const AdminDashboard: React.FC = () => {
       lastActiveUnsubscribe();
       topUsersUnsubscribe();
       popularRoomsUnsubscribe();
+      guestAnalyticsUnsubscribe();
       clearInterval(platformStatsInterval);
     };
   }, []);
@@ -266,6 +289,41 @@ const AdminDashboard: React.FC = () => {
                 <p>No active users found</p>
               )}
             </div>
+          </div>
+
+          {/* Guest Analytics Card */}
+          <div className="stats-card">
+            <h2>Guest User Analytics</h2>
+            {guestAnalytics ? (
+              <div className="stats-grid">
+                <div className="stat-item">
+                  <h3>Guest Accounts</h3>
+                  <p>{guestAnalytics.totalGuestAccounts?.toLocaleString() || 0}</p>
+                </div>
+                <div className="stat-item">
+                  <h3>Messages Sent</h3>
+                  <p>{guestAnalytics.totalGuestMessages?.toLocaleString() || 0}</p>
+                </div>
+                <div className="stat-item">
+                  <h3>Conversions</h3>
+                  <p>{guestAnalytics.conversions?.toLocaleString() || 0}</p>
+                </div>
+                <div className="stat-item">
+                  <h3>Conversion Rate</h3>
+                  <p>{guestAnalytics.conversionRate || '0%'}</p>
+                </div>
+                <div className="stat-item">
+                  <h3>Msgs/Guest</h3>
+                  <p>{guestAnalytics.messagesPerGuest || '0'}</p>
+                </div>
+                <div className="stat-item">
+                  <h3>Last Updated</h3>
+                  <p>{formatDate(guestAnalytics.lastUpdated)}</p>
+                </div>
+              </div>
+            ) : (
+              <p>Loading guest analytics...</p>
+            )}
           </div>
           
           <div className="dashboard-grid">
