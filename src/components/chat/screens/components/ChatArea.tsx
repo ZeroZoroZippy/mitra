@@ -319,8 +319,8 @@ const handleSendMessage = async () => {
     console.log("Guest user check - count:", currentCount, "remaining:", remainingMsgs);
     console.log("About to check limit - isGuest:", isGuest, "remainingMsgs:", remainingMsgs, "showLimitModal:", showLimitModal);
     
-    if (remainingMsgs <= 0) {
-      console.log("Setting modal to true");
+    if (currentCount >= 5) {
+      console.log("Guest message limit reached - show modal");
       setShowLimitModal(true);
       return;
     }
