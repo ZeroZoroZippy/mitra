@@ -1,0 +1,321 @@
+/* src/components/discover/DiscoverScreen.css */
+
+/* Panel mode styles */
+.discover-panel {
+    position: fixed;
+    top: 0;
+    left: calc(4.5vw); /* Position after side nav with margin */
+    width: 22vw;
+    height: 100vh;
+    background-color: #1a1a1a; /* Dark theme */
+    border-right: 1px solid rgba(255, 255, 255, 0.05);
+    z-index: 70;
+    transform: translateX(-150%); /* Start off-screen */
+    transition: transform 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  
+  .discover-panel.open {
+    transform: translateX(0); /* Slide in */
+  }
+  
+  .discover-panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem 1.25rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  }
+  
+  .discover-panel-header h2 {
+    display: flex;
+    gap: 6px;
+    align-items: baseline;
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 500;
+    color: #fff;
+  }
+  
+  .discover-close-btn {
+    background: none;
+    border: none;
+    color: #aaa;
+    cursor: pointer;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+  }
+  
+  .discover-close-btn:hover {
+    color: white;
+  }
+  
+  /* Bento layout */
+  .discover-bento-container {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    padding: 1rem;
+    overflow-y: auto;
+    flex: 1;
+    scrollbar-width: none; /* Hides scrollbar in Firefox */
+    -ms-overflow-style: none; /* Hides scrollbar in IE and Edge */
+  }
+  
+  .discover-bento-container::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .bento-card {
+    background-color: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    height: 180px; /* Default height */
+    display: flex; /* Added flex display */
+    flex-direction: column; /* Stack content vertically */
+  }
+  
+  .bento-card.full {
+    grid-column: span 2;
+  }
+  
+  .bento-card.half {
+    grid-column: span 1;
+  }
+  
+  .bento-card.large {
+    height: 240px;
+  }
+  
+  .bento-card.small {
+    height: 140px;
+  }
+  
+  .bento-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+    background-color: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+  
+  .bento-image {
+    width: 100%;
+    height: 100%; /* Changed from 70% to 100% to fill card */
+    background-size: cover;
+    background-position: center;
+    position: absolute; /* Position absolute to fill the entire card */
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1; /* Ensure image is below the content */
+  }
+  
+  .bento-content {
+    padding: 0.75rem 1rem;
+    position: absolute; /* Keep absolute positioning */
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 2; /* Ensure content appears above image */
+    background: linear-gradient(
+      to top,
+      rgba(0, 0, 0, 0.9) 0%,     /* Darker at bottom */
+      rgba(0, 0, 0, 0.7) 40%,    /* Still dark in middle */
+      rgba(0, 0, 0, 0.4) 70%,    /* Fade out as we move up */
+      rgba(0, 0, 0, 0) 100%      /* Completely transparent at top */
+    );
+    padding-top: 2.5rem; /* Extend padding to make gradient taller */
+  }
+  
+  .bento-category {
+    font-size: 0.7rem;
+    color: #4a90e2;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: block;
+    margin-bottom: 0.25rem;
+    text-shadow: 0px 1px 3px rgba(0, 0, 0, 0.8); /* Add text shadow for better readability */
+  }
+  
+  .bento-title {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #fff;
+    text-shadow: 0px 1px 3px rgba(0, 0, 0, 0.8); /* Add text shadow for better readability */
+    line-height: 1.3;
+  }
+  
+  .user-name-style {
+    font-family: 'Spectral', serif;
+    font-style: italic;
+    font-weight: 500;
+    color: #63a4f0; /* Gives the name a special highlight color */
+  }
+  
+  /* Responsive design for larger screens */
+  @media (min-width: 1200px) {
+    /* Very large screens - larger text and comfortable spacing */
+    .bento-title {
+      font-size: 1.1rem;
+    }
+    
+    .bento-category {
+      font-size: 0.75rem;
+    }
+    
+    .discover-panel-header h2 {
+      font-size: 1.4rem;
+    }
+    
+    .discover-bento-container {
+      gap: 1.25rem;
+      padding: 1.25rem;
+    }
+    
+    .bento-card.large {
+      height: 260px;
+    }
+  }
+  
+  /* iPad/Tablet specific styles */
+  @media (min-width: 768px) and (max-width: 1199px) {
+    .discover-panel {
+      width: 320px; /* Fixed width instead of percentage for better layout */
+      left: 50px; /* Adjust position to account for sidebar */
+    }
+    
+    .discover-bento-container {
+      grid-template-columns: 1fr 1fr; /* Ensure two columns */
+      gap: 0.8rem;
+      padding: 1rem;
+    }
+    
+    /* Adjust card sizes for better proportions */
+    .bento-card {
+      height: 160px;
+    }
+    
+    .bento-card.large {
+      height: 200px;
+    }
+    
+    /* Better text sizes for iPad */
+    .bento-title {
+      font-size: 0.95rem;
+    }
+    
+    .bento-category {
+      font-size: 0.7rem;
+    }
+    
+    /* Ensure full-width cards span both columns */
+    .bento-card.full {
+      grid-column: span 2;
+    }
+    
+    /* Ensure proper height-to-width ratio */
+    .bento-content {
+      padding-top: 2rem;
+    }
+  }
+  
+  /* Mobile styles */
+  @media (max-width: 767px) {
+    .discover-panel {
+      /* Side panel consistent with side drawer */
+      top: 0;
+      left: 0;
+      width: 90%;
+      max-width: 320px;
+      height: 100vh;
+      border-radius: 0;
+      transform: translateX(-100%); /* Start off-screen from left side */
+      box-shadow: 4px 0px 20px rgba(0, 0, 0, 0.3);
+    }
+    
+    .discover-panel.open {
+      transform: translateX(0); /* Slide in from left */
+    }
+    
+    .discover-panel-header {
+      padding: 1rem 1.25rem;
+    }
+    
+    .discover-panel-header h2 {
+      font-size: 1.1rem;
+    }
+    
+    /* Maintain bento grid but with adjusted layout */
+    .discover-bento-container {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.75rem;
+      padding: 0.75rem;
+    }
+    
+    /* Adjust card sizes for mobile but keep grid layout */
+    .bento-card {
+      height: 110px; /* Smaller height for mobile */
+    }
+    
+    .bento-card.large {
+      height: 130px;
+    }
+    
+    .bento-card.full {
+      grid-column: span 2; /* Keep full-width cards spanning two columns */
+    }
+    
+    .bento-card.half {
+      /* Keep half-width cards as half */
+      grid-column: span 1;
+    }
+    
+    /* Adjust typography for mobile */
+    .bento-title {
+      font-size: 0.85rem;
+      line-height: 1.2;
+    }
+    
+    .bento-category {
+      font-size: 0.65rem;
+      margin-bottom: 0.15rem;
+    }
+    
+    .bento-content {
+      padding: 0.6rem 0.8rem;
+      padding-top: 1.5rem;
+    }
+  }
+  
+  /* Only use single column for extremely small screens */
+  @media (max-width: 350px) {
+    .discover-bento-container {
+      grid-template-columns: 1fr; /* Single column for very small screens */
+    }
+    
+    .bento-card.full,
+    .bento-card.half {
+      grid-column: span 1; /* All cards full width on very small screens */
+    }
+    
+    /* Make cards taller when in single column */
+    .bento-card {
+      height: 140px;
+    }
+    
+    .bento-card.large {
+      height: 160px;
+    }
+  }

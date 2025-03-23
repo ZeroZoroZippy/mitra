@@ -75,6 +75,17 @@
   transition: margin-left 0.3s ease-in-out;
 }
 
+.chat-area-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: transparent;
+  z-index: 990; /* Lower than sidebar but higher than chat content */
+  cursor: pointer;
+}
+
 @media (max-width: 768px) {
   .chat-layout.fullscreen .sidebar {
     display: block !important;
@@ -128,11 +139,19 @@
     opacity: 0.3;
     pointer-events: none;
   }
+  .chat-layout.sidebar-visible .chat-area-overlay {
+    width: 30%; /* Just cover the chat area */
+    left: 70%; /* Position it beside the sidebar */
+  }
 }
 
 /* ✅ Sidebar is hidden in fullscreen only on mobile */
 @media (min-width: 769px) {
   .chat-layout.fullscreen .sidebar {
     left: -250px; /* ✅ Hide it on desktop but allow toggle */
+  }
+  .chat-layout.sidebar-visible .chat-area-overlay {
+    width: 30%; /* Just cover the chat area */
+    left: 70%; /* Position it beside the sidebar */
   }
 }

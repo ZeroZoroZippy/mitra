@@ -7,9 +7,13 @@ import LandingPage from "./pages/LandingPage";
 import ChatLayout from "./components/chat/screens/components/ChatLayout";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import AdminDashboard from "./pages/AdminDashboard";
+import HomeScreen from "./pages/HomeScreen";
+import ConceptsLayout from "./components/concepts/ConceptsLayout";
+import DiscoverScreen from "./components/discover/DiscoverScreen";
+import ThreadsScreen from "./components/threads/ThreadsScreen";
 
 // Define current app version - update this when releasing new versions
-export const APP_VERSION = "2.2.5";
+export const APP_VERSION = "3.0.1";
 
 // Initialize the guest analytics function
 export const initializeGuestAnalytics = async () => {
@@ -27,7 +31,6 @@ export const initializeGuestAnalytics = async () => {
       conversions: 0,
       lastUpdated: serverTimestamp()
     });
-    console.log("Guest analytics document initialized");
   }
 };
 
@@ -77,7 +80,6 @@ function performUpdate() {
         window.location.reload();
       })
       .catch((error) => {
-        console.error("Error unregistering service worker:", error);
         window.location.reload();
       });
   } else {
@@ -251,23 +253,18 @@ const App: React.FC = () => {
     // Check for updates when app loads and after Firebase is initialized
     const checkForUpdates = async () => {
       try {
-        console.log("Checking for updates...");
         const db = getFirestore();
         const configRef = doc(db, "config", "appVersion");
         const configSnap = await getDoc(configRef);
         
         if (!configSnap.exists()) {
-          console.log("No version config found in Firestore");
           return;
         }
         
         const serverVersion = configSnap.data().version;
-        console.log(`Version check: Client=${APP_VERSION}, Server=${serverVersion}`);
         
         // Only show update if server version is newer
         if (isNewerVersion(serverVersion, APP_VERSION)) {
-          console.log("New version available, showing update notification");
-          
           // Check if it's a major update to determine notification type
           const isMajorUpdate = serverVersion.split('.')[0] > APP_VERSION.split('.')[0];
           
@@ -312,11 +309,13 @@ const App: React.FC = () => {
   return (
     <Routes>
       <Route path="/" element={<LandingPage featuresRef={featuresRef} />} />
-      <Route path="/home" element={<LandingPage featuresRef={featuresRef} />} />
+      <Route path="/home" element={<ProtectedRoute element={<HomeScreen />} />} />
       <Route path="/chat" element={<ProtectedRoute element={<ChatLayout />} />} />
+      <Route path="/concepts" element={<ProtectedRoute element={<ConceptsLayout />} />} />
       <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+      <Route path="/discover" element={<ProtectedRoute element={<DiscoverScreen />} />} />
+      <Route path="/threads" element={<ProtectedRoute element={<ThreadsScreen />} />} />
       <Route path="*" element={<LandingPage featuresRef={featuresRef} />} />
-      <Route path="/admin/dashboard" element={<AdminDashboard />} />
     </Routes>
   );
 };

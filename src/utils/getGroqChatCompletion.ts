@@ -11,8 +11,8 @@ interface ChatMessage {
 }
 
 // Define Chat interface
-interface ImportMeta {
-  readonly env: ImportMetaEnv;
+interface ImportMetaEnv {
+  readonly VITE_GROQ_API_KEY: string
 }
 
 // Token estimation function to calculate approximate token usage

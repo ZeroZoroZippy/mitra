@@ -167,7 +167,7 @@ const ChatArea: React.FC<ChatAreaProps> = ({
     const dateHeaders = document.querySelectorAll(".date-header");
     let newVisibleDate: string | null = null;
   
-    for (const header of dateHeaders) {
+    for (const header of Array.from(dateHeaders)) {
       const rect = header.getBoundingClientRect();
       
       // ✅ Check if the date header is within the visible viewport
@@ -587,7 +587,7 @@ const fetchMessages = async () => {
     const formatted = loadedMessages.map(msg => ({
       id: msg.id,
       text: msg.text,
-      sender: msg.sender === "ai" ? "assistant" : msg.sender === "user" ? "user" : "assistant",
+      sender: msg.sender as "assistant" | "user",
       timestamp: msg.timestamp,
       likeStatus: msg.likeStatus,
       encrypted: msg.encrypted ?? false
