@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { onAuthStateChanged } from "firebase/auth";
-import { signInWithGoogle, signInAsGuest, auth } from "../utils/firebaseAuth";
+import { signInWithGoogle, auth } from "../utils/firebaseAuth";
 import { storeUserDetails } from "../utils/firebaseDb";
 import { analytics } from "../utils/firebaseConfig";
 import { logEvent } from "firebase/analytics";
@@ -76,22 +76,6 @@ const LandingPage: React.FC<LandingPageProps> = ({ featuresRef }) => {
       }
     } catch (error) {
       console.error("Sign-in failed:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Handle sign-in as guest
-  const handleGuestSignIn = async () => {
-    try {
-      setIsLoading(true);
-      const user = await signInAsGuest();
-      if (user) {
-        logEvent(analytics, "login", { method: "Guest" });
-        navigate("/home");
-      }
-    } catch (error) {
-      console.error("Guest sign-in failed:", error);
     } finally {
       setIsLoading(false);
     }
@@ -230,28 +214,14 @@ const LandingPage: React.FC<LandingPageProps> = ({ featuresRef }) => {
           <div className="auth-modal" ref={modalRef}>
             <button className="auth-modal-close" onClick={() => setShowAuthModal(false)}>✕</button>
             <h3 className="auth-modal-title">Welcome to Saarth</h3>
-            <p className="auth-modal-subtitle">Choose how you'd like to get started</p>
+            <p className="auth-modal-subtitle">Sign in to get started</p>
             
             <button 
-              className={`auth-button google-button ${isLoading ? 'loading' : ''}`}
+              className="auth-button google-button"
               onClick={handleGoogleSignIn}
-              disabled={isLoading}
             >
               <FcGoogle size={24} />
               <span>Continue with Google</span>
-            </button>
-            
-            <div className="auth-divider">
-              <span>or</span>
-            </div>
-            
-            <button 
-              className={`auth-button guest-button ${isLoading ? 'loading' : ''}`}
-              onClick={handleGuestSignIn}
-              disabled={isLoading}
-            >
-              <span>Try as Guest</span>
-              <div className="guest-limit-note">5 free messages</div>
             </button>
             
             <p className="auth-privacy-note">
