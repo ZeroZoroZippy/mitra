@@ -1,0 +1,101 @@
+/* src/components/concepts/ConceptExplanation.css */
+
+.concept-explanation {
+    background-color: rgba(46, 49, 65, 0.7);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  
+  .approach-tabs {
+    display: flex;
+    background-color: rgba(0, 0, 0, 0.2);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  .approach-tab {
+    padding: 0.75rem 1rem;
+    background: none;
+    border: none;
+    color: #aaa;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border-bottom: 2px solid transparent;
+  }
+  
+  .approach-tab:hover {
+    color: white;
+  }
+  
+  .approach-tab.active {
+    color: white;
+    border-bottom-color: #4a90e2;
+  }
+  
+  .explanation-content {
+    padding: 1.5rem;
+    line-height: 1.6;
+    min-height: 150px;
+    border-left: 3px solid transparent;
+  }
+  
+  .explanation-content.basic {
+    border-left-color: #4a90e2;
+  }
+  
+  .explanation-content.analogy {
+    border-left-color: #e2984a;
+  }
+  
+  .explanation-content.steps {
+    border-left-color: #50c878;
+  }
+  
+  .explanation-content.examples {
+    border-left-color: #9370db;
+  }
+  
+  .understanding-controls {
+    display: flex;
+    padding: 1rem;
+    gap: 0.75rem;
+    background-color: rgba(0, 0, 0, 0.1);
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  
+  .understanding-button {
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  
+  .understanding-button.got-it {
+    background-color: rgba(80, 200, 120, 0.2);
+    color: #50c878;
+  }
+  
+  .understanding-button.got-it:hover {
+    background-color: rgba(80, 200, 120, 0.3);
+  }
+  
+  .understanding-button.more-detail {
+    background-color: rgba(226, 152, 74, 0.2);
+    color: #e2984a;
+  }
+  
+  .understanding-button.more-detail:hover {
+    background-color: rgba(226, 152, 74, 0.3);
+  }
+  
+  .understanding-button.related {
+    background-color: rgba(147, 112, 219, 0.2);
+    color: #9370db;
+  }
+  
+  .understanding-button.related:hover {
+    background-color: rgba(147, 112, 219, 0.3);
+  }

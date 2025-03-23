@@ -1,0 +1,89 @@
+/* src/components/concepts/ConceptMap.css */
+
+.concept-map {
+    padding: 1rem;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+  }
+  
+  .side-panel-title {
+    font-size: 1.2rem;
+    color: #4a90e2;
+    margin: 0 0 1.5rem 0;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    text-align: center;
+  }
+  
+  .concept-section {
+    margin-bottom: 2rem;
+  }
+  
+  .section-title {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    color: #aaa;
+    margin-bottom: 0.75rem;
+    padding-left: 0.5rem;
+  }
+  
+  .concept-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+  
+  .concept-bento-card {
+    background-color: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+    height: 130px;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .concept-bento-card:hover {
+    transform: translateY(-3px);
+    background-color: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+  }
+  
+  .concept-bento-card.active {
+    background-color: rgba(74, 144, 226, 0.15);
+    border: 1px solid rgba(74, 144, 226, 0.3);
+  }
+  
+  .concept-bento-image {
+    height: 70px;
+    width: 100%;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+  }
+  
+  .concept-bento-info {
+    padding: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+  }
+  
+  .concept-bento-category {
+    font-size: 0.7rem;
+    color: #4a90e2;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.25rem;
+  }
+  
+  .concept-bento-title {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 500;
+    line-height: 1.2;
+  }

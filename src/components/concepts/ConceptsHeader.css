@@ -1,0 +1,509 @@
+.concept-header-wrapper {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  height: 60px;
+  background-color: transparent;
+  position: relative;
+  z-index: 10;
+}
+
+.concept-current-title {
+  font-size: 1.2rem;
+  font-weight: 500;
+  color: white;
+  text-align: center;
+  max-width: 500px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: opacity 0.3s ease;
+  opacity: 0.9;
+  /* Removed the background */
+  /* Matching the font style from concepts-welcome h2 */
+  font-family: 'Bricolage Grotesque', sans-serif;
+  letter-spacing: -0.01em;
+  /* Optional: add subtle gradient like in the welcome screen */
+  background: linear-gradient(90deg, #fff, #b8d5ff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* Adding blur shadow effect at the bottom */
+.concept-header-wrapper::after {
+  content: '';
+  position: absolute;
+  bottom: -10px;
+  left: 0;
+  right: 0;
+  height: 10px;
+  background: #1d1d1d;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.concept-header-left-section {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* Menu button */
+.concept-menu-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  background-color: rgba(255, 255, 255, 0.15);
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.concept-menu-button:hover {
+  background-color: rgba(255, 255, 255, 0.25);
+}
+
+/* Home button */
+.concept-home-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(255, 255, 255, 0.15);
+  border: none;
+  color: white;
+  font-size: 0.9rem;
+  padding: 0.4rem 0.75rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.concept-home-button:hover {
+  background-color: rgba(255, 255, 255, 0.25);
+}
+
+/* Icon styling - explicit and specific to avoid conflicts */
+.concept-icon {
+  color: white;
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+}
+
+.concept-header-center-section {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  max-width: 500px;
+}
+
+.concept-search-container {
+  display: flex;
+  position: relative;
+  width: 100%;
+  animation: expandConceptSearch 0.3s ease-out;
+}
+
+.concept-search-field {
+  flex: 1;
+  background-color: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 8px;
+  padding: 0.5rem 2.5rem 0.5rem 1rem;
+  color: white;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+}
+
+.concept-search-field:focus {
+  outline: none;
+  background-color: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.4);
+  box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.3);
+}
+
+.concept-search-button {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  color: white;
+}
+
+.concept-header-right-section {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.concept-action-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background-color: rgba(255, 255, 255, 0.15);
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.concept-action-button:hover {
+  background-color: rgba(255, 255, 255, 0.25);
+}
+
+/* New Chat icon container */
+.new-chat-icon-container {
+  position: relative;
+}
+
+/* New Chat icon button - without background */
+.new-chat-icon-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  padding: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.new-chat-icon-button:hover {
+  transform: scale(1.1);
+}
+
+.concept-profile-avatar-wrapper {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%; /* Circular display */
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.concept-profile-avatar {
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* Ensures the image fills and scales properly */
+}
+
+.concept-profile-container {
+  position: relative;
+}
+
+.concept-logout-menu {
+  position: absolute;
+  margin-top: 1rem;    /* Adds some space between the avatar and dropdown */
+  top: 100%;              /* Places the dropdown right below the container */
+  right: 0;               /* Aligns it to the right of the avatar */
+  background-color: #182030; /* Matches a dark theme; adjust as needed */
+  border: 1px solid rgba(255, 255, 255, 0.1); /* Subtle border */
+  border-radius: 8px;     /* Rounded corners */
+  padding: 10px;          /* Inner spacing */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Slight shadow for depth */
+  z-index: 100;           /* Ensures it appears above other elements */
+  min-width: 150px;       /* Ensures the dropdown has enough width */
+}
+
+.concept-user-name {
+  color: white;          /* White text for visibility */
+  margin: 0;             /* Remove default margins */
+  padding: 5px 0;        /* Add some vertical spacing */
+}
+
+.concept-divider {
+  border: none;          /* Remove default border */
+  border-top: 1px solid rgba(255, 255, 255, 0.1); /* Light horizontal line */
+  margin: 5px 0;         /* Spacing above and below */
+}
+
+.concept-logout-button {
+  background: none;      /* No background */
+  border: none;          /* No border */
+  color: white;          /* White text */
+  padding: 5px 0;        /* Vertical spacing */
+  cursor: pointer;       /* Hand cursor on hover */
+  width: 100%;           /* Full width of dropdown */
+  text-align: left;      /* Align text to the left */
+}
+
+.concept-logout-button:hover {
+  color: #4a90e2;        /* Blue hover effect; adjust to match your theme */
+}
+
+/* New Chat Modal Styles */
+.new-chat-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.75);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  backdrop-filter: blur(5px);
+  animation: fadeIn 0.25s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+
+.new-chat-modal {
+  background: linear-gradient(to bottom, #202940, #171e2e);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(74, 144, 226, 0.1);
+  width: 90%;
+  max-width: 420px;
+  animation: slideUp 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  transform: translateZ(0);
+}
+
+.new-chat-modal-header {
+  padding: 20px 24px;
+  background: rgba(255, 255, 255, 0.03);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: relative;
+}
+
+.new-chat-modal-header::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(to right, 
+    rgba(74, 144, 226, 0) 0%, 
+    rgba(74, 144, 226, 0.3) 50%, 
+    rgba(74, 144, 226, 0) 100%
+  );
+}
+
+.new-chat-modal-header h3 {
+  margin: 0;
+  font-size: 1.3rem;
+  color: white;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  background: linear-gradient(to right, #ffffff, #b8d5ff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.new-chat-modal-close {
+  background: rgba(255, 255, 255, 0.05);
+  border: none;
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+}
+
+.new-chat-modal-close:hover {
+  color: white;
+  background: rgba(255, 255, 255, 0.15);
+  transform: rotate(90deg);
+}
+
+.new-chat-modal-content {
+  padding: 28px 24px;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 1.05rem;
+}
+
+.new-chat-modal-content p {
+  margin: 0;
+  line-height: 1.6;
+}
+
+.new-chat-modal-actions {
+  padding: 20px 24px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(0, 0, 0, 0.15);
+}
+
+.new-chat-modal-cancel {
+  background: rgba(255, 255, 255, 0.07);
+  color: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.25s;
+  font-weight: 500;
+  font-size: 0.95rem;
+  min-width: 100px;
+}
+
+.new-chat-modal-cancel:hover {
+  background: rgba(255, 255, 255, 0.15);
+  transform: translateY(-1px);
+}
+
+.new-chat-modal-cancel:active {
+  transform: translateY(1px);
+}
+
+.new-chat-modal-confirm {
+  background: linear-gradient(to bottom, #4a90e2, #3a80d2);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.25s;
+  font-weight: 500;
+  font-size: 0.95rem;
+  box-shadow: 0 2px 8px rgba(74, 144, 226, 0.4);
+  min-width: 140px;
+}
+
+.new-chat-modal-confirm:hover {
+  background: linear-gradient(to bottom, #5a9be8, #4a90e2);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(74, 144, 226, 0.5);
+}
+
+.new-chat-modal-confirm:active {
+  transform: translateY(1px);
+  box-shadow: 0 1px 4px rgba(74, 144, 226, 0.4);
+}
+
+@keyframes expandConceptSearch {
+  from {
+    width: 0;
+    opacity: 0;
+  }
+  to {
+    width: 100%;
+    opacity: 1;
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { 
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to { 
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Make buttons more noticeable */
+.concept-menu-button,
+.concept-action-button {
+  background-color: #1d1d1d;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+}
+
+.concept-menu-button:hover,
+.concept-action-button:hover {
+  background-color: rgba(74, 144, 226, 0.6);
+}
+
+.concept-home-button {
+  background-color: #182030;
+  color: white;
+}
+
+.concept-home-button:hover {
+  background-color: rgba(74, 144, 226, 0.6);
+}
+
+/* New Chat notification */
+.new-chat-notification {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%) translateY(100px);
+  background: rgba(74, 144, 226, 0.9);
+  color: white;
+  padding: 10px 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  z-index: 2000;
+  font-size: 14px;
+  font-weight: 500;
+  opacity: 0;
+  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease;
+}
+
+.new-chat-notification.show {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
+}
+
+@media (max-width: 768px) {
+  .concept-home-button span {
+    display: none;
+  }
+
+  .concept-menu-button, 
+  .concept-action-button {
+    width: 42px;
+    height: 42px;
+  }
+  
+  .concept-icon {
+    width: 16px;
+    height: 16px;
+  }
+  
+  /* Make the pen icon more visible on mobile */
+  .new-chat-icon-button {
+    padding: 10px;
+  }
+  
+  /* Modal responsive adjustments */
+  .new-chat-modal {
+    width: 95%;
+    max-width: none;
+  }
+  
+  .new-chat-modal-actions {
+    padding: 12px 16px;
+  }
+
+  .concept-current-title {
+    font-size: 0.9rem;
+    max-width: 200px;
+  }
+}

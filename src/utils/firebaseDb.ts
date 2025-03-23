@@ -12,6 +12,7 @@ import {
   updateDoc,
   serverTimestamp,
   onSnapshot,
+  Timestamp,
 } from "firebase/firestore";
 import { app } from "./firebaseConfig";
 import type { User } from "firebase/auth";
@@ -23,13 +24,13 @@ const db = getFirestore(app);
 const ENCRYPTION_KEY = import.meta.env.VITE_ENCRYPTION_KEY;
 
 /**
- * ✅ Use the existing TypeScript Type for Messages
+ * ✅ Updated TypeScript Type for Messages with proper sender type
  */
 interface Message {
   id: string;
   userId: string;
   text: string;
-  sender: "user" | "ai";
+  sender: "user" | "assistant"; // Changed from "ai" to match the rest of the code
   timestamp: string;
   likeStatus?: "like" | "dislike" | null;
   encrypted?: boolean;
@@ -93,7 +94,7 @@ export const saveMessage = async (
 };
 
 /**
- * ✅ Function to Retrieve Messages for a User (Now Restored)
+ * ✅ Fixed Function to Retrieve Messages for a User
  */
 export const getMessages = async (userId: string, activeChatId: number): Promise<Message[]> => {
   try {
@@ -110,47 +111,50 @@ export const getMessages = async (userId: string, activeChatId: number): Promise
     const messages: Message[] = [];
 
     querySnapshot.docs.forEach((doc) => {
-      const messageData = doc.data() as Message;
+      // Use any type temporarily to avoid type errors during processing
+      const messageData = doc.data() as any;
       let timestamp: string | null = null;
 
-      // Handle Firestore Timestamp object
-      if (messageData.timestamp && typeof messageData.timestamp === 'object' && 'toDate' in messageData.timestamp) {
-        try {
-          const date = (messageData.timestamp as any).toDate(); // Cast to any to access toDate()
-          if (!isNaN(date.getTime())) {
-            timestamp = date.toISOString();
+      // First check if timestamp exists at all
+      if (messageData.timestamp) {
+        // Handle Firestore Timestamp object
+        if (typeof messageData.timestamp === 'object' && 'toDate' in messageData.timestamp) {
+          try {
+            const date = messageData.timestamp.toDate();
+            if (!isNaN(date.getTime())) {
+              timestamp = date.toISOString();
+            }
+          } catch (error) {
+            console.error("Error converting Firestore timestamp:", error);
+            // Skip this message by not setting timestamp
           }
-        } catch (error) {
-          return; // Skip this message
-        }
-      } 
-      // Handle string timestamp
-      else if (typeof messageData.timestamp === 'string') {
-        try {
-          const date = new Date(messageData.timestamp);
-          if (!isNaN(date.getTime())) {
-            timestamp = date.toISOString();
+        } 
+        // Handle string timestamp
+        else if (typeof messageData.timestamp === 'string') {
+          try {
+            const date = new Date(messageData.timestamp);
+            if (!isNaN(date.getTime())) {
+              timestamp = date.toISOString();
+            }
+          } catch (error) {
+            console.error("Error parsing timestamp string:", error);
+            // Skip this message by not setting timestamp
           }
-        } catch (error) {
-          return; // Skip this message
         }
-      } 
-      // Handle missing or invalid timestamp
-      else {
-        return; // Skip this message
       }
 
-      // Only add message if timestamp is not null
+      // Only add message if timestamp is valid
       if (timestamp) {
-      messages.push({
-        id: doc.id,
-        userId: userId,
-        text: messageData.text,
-        sender: messageData.sender,
+        messages.push({
+          id: doc.id,
+          userId: userId,
+          text: messageData.text,
+          // Map "ai" to "assistant" for consistency if needed
+          sender: messageData.sender === "ai" ? "assistant" : messageData.sender,
           timestamp: timestamp,
-          encrypted: false, // Adjust based on your data
-        likeStatus: messageData.likeStatus || null,
-      });
+          encrypted: messageData.encrypted || false,
+          likeStatus: messageData.likeStatus || null,
+        });
       }
     });
 
@@ -161,6 +165,7 @@ export const getMessages = async (userId: string, activeChatId: number): Promise
 
     return sortedMessages;
   } catch (error) {
+    console.error("Error fetching messages:", error);
     return [];
   }
 };
@@ -188,6 +193,7 @@ export const storeUserDetails = async (user: User): Promise<void> => {
       });
     }
   } catch (error) {
+    console.error("Error storing user details:", error);
   }
 };
 
@@ -210,6 +216,7 @@ export const getUserProfile = async (userId: string) => {
       };
     }
   } catch (error) {
+    console.error("Error getting user profile:", error);
     return null;
   }
 };
@@ -224,11 +231,50 @@ export const listenForMessages = (
   const q = query(collection(db, `users/${userId}/messages`));
 
   return onSnapshot(q, (querySnapshot) => {
-    const messages = querySnapshot.docs
-      .map((doc) => ({ id: doc.id, ...doc.data() } as Message))
-      .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+    const messages: Message[] = [];
+    
+    querySnapshot.docs.forEach((doc) => {
+      const messageData = doc.data() as any;
+      let timestamp: string | null = null;
+      
+      // Process timestamp similar to getMessages
+      if (messageData.timestamp) {
+        if (typeof messageData.timestamp === 'object' && 'toDate' in messageData.timestamp) {
+          try {
+            timestamp = messageData.timestamp.toDate().toISOString();
+          } catch (error) {
+            // Skip invalid timestamp
+          }
+        } else if (typeof messageData.timestamp === 'string') {
+          try {
+            const date = new Date(messageData.timestamp);
+            if (!isNaN(date.getTime())) {
+              timestamp = date.toISOString();
+            }
+          } catch (error) {
+            // Skip invalid timestamp
+          }
+        }
+      }
+      
+      if (timestamp) {
+        messages.push({
+          id: doc.id,
+          userId: userId,
+          text: messageData.text,
+          sender: messageData.sender === "ai" ? "assistant" : messageData.sender,
+          timestamp: timestamp,
+          encrypted: messageData.encrypted || false,
+          likeStatus: messageData.likeStatus || null,
+        });
+      }
+    });
 
-    callback(messages);
+    const sortedMessages = messages.sort(
+      (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+    );
+
+    callback(sortedMessages);
   });
 };
 
@@ -246,6 +292,7 @@ export const updateLikeStatus = async (
     const messageRef = doc(db, `users/${user.uid}/messages`, messageId);
     await updateDoc(messageRef, { likeStatus: newStatus });
   } catch (error) {
+    console.error("Error updating like status:", error);
   }
 };
 

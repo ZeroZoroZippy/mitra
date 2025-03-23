@@ -196,6 +196,14 @@ const ChatLayout: React.FC = () => {
       showLimitModal={() => setShowLimitModal(true)} // Add this
     />
 
+    {/* Add this line for mobile overlay - it will cover the chat area */}
+    {isSidebarOpen && window.innerWidth <= 768 && (
+      <div 
+        className="chat-area-overlay" 
+        onClick={toggleSidebar}
+      ></div>
+    )}
+
       <ChatArea
         activeChatId={activeChatId}
         isChatFullScreen={isChatFullScreen}

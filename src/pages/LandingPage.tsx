@@ -40,7 +40,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ featuresRef }) => {
 
       if (user && location.pathname === "/" && !hasRedirected) {
         setHasRedirected(true);
-        navigate("/chat");
+        navigate("/home");
       }
     });
 
@@ -72,7 +72,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ featuresRef }) => {
       if (user) {
         await storeUserDetails(user);
         logEvent(analytics, "login", { method: "Google" });
-        navigate("/chat");
+        navigate("/home");
       }
     } catch (error) {
       console.error("Sign-in failed:", error);
@@ -88,7 +88,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ featuresRef }) => {
       const user = await signInAsGuest();
       if (user) {
         logEvent(analytics, "login", { method: "Guest" });
-        navigate("/chat");
+        navigate("/home");
       }
     } catch (error) {
       console.error("Guest sign-in failed:", error);
