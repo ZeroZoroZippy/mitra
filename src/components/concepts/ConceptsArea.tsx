@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { IoArrowUpCircleSharp } from "react-icons/io5";
 import './ConceptsArea.css';
 import Message from './Message';
+import ConceptSuggestions from './ConceptSuggestions'; // Import our new component
 import { getGroqConceptCompletion } from '../../utils/getGroqConceptCompletion';
 import { 
   saveConceptMessage, 
@@ -11,10 +12,6 @@ import {
   generateCustomConceptId,
   deleteConceptMessage
 } from '../../utils/firebaseConceptDb';
-import { 
-  getConceptWelcomeMessage, 
-  getCustomConceptFirstMessage 
-} from '../../utils/conceptWelcomeMessages';
 import { auth, db } from '../../utils/firebaseConfig';
 import { onAuthStateChanged } from 'firebase/auth';
 import { getUserProfile } from '../../utils/firebaseDb';
@@ -81,6 +78,7 @@ const ConceptsArea: React.FC<ConceptsAreaProps> = ({
   const previousConceptIdRef = useRef<string | null>(null);
   const inputContainerRef = useRef<HTMLDivElement>(null);
   const [userName, setUserName] = useState<string>("there");
+  const [hasConversationStarted, setHasConversationStarted] = useState<boolean>(false);
   
   // Define concept cards (your existing code)
   const conceptCards: ConceptCard[] = [
@@ -100,6 +98,11 @@ const ConceptsArea: React.FC<ConceptsAreaProps> = ({
     { id: 'universe-origins', title: 'Origins of the universe', imageUrl: universe, category: 'Cosmology' },
     { id: 'aging-biology', title: 'The biology of aging', imageUrl: biology_aging, category: 'Biology' }
   ];
+
+  // Function to check if a concept is custom
+  const isCustomConcept = (conceptId: string | null): boolean => {
+    return conceptId ? conceptId.startsWith('custom-') : false;
+  };
 
   // Function to fetch user's name
   useEffect(() => {
@@ -139,6 +142,7 @@ const ConceptsArea: React.FC<ConceptsAreaProps> = ({
     if (resetTrigger > 0) {
       setMessages([]);
       setRandomConcepts(getRandomConcepts());
+      setHasConversationStarted(false);
     }
   }, [resetTrigger]);
   
@@ -147,6 +151,7 @@ const ConceptsArea: React.FC<ConceptsAreaProps> = ({
     if (!activeConceptId) {
       setMessages([]);
       setRandomConcepts(getRandomConcepts());
+      setHasConversationStarted(false);
     }
   }, [activeConceptId]);
   
@@ -184,7 +189,7 @@ const ConceptsArea: React.FC<ConceptsAreaProps> = ({
     };
   };
   
-  // MODIFIED: Fetch messages for the current concept - Added welcome message
+  // Modified: Fetch messages for the current concept - without auto adding welcome message
   const fetchMessages = async () => {
     if (!activeConceptId) return;
     
@@ -196,38 +201,6 @@ const ConceptsArea: React.FC<ConceptsAreaProps> = ({
       
       // Load existing messages for this concept
       let conceptMessages = await getConceptMessages(activeConceptId);
-      
-      // Check if we already have a welcome message - look specifically for duplicate welcome messages
-      const welcomeMessages = conceptMessages.filter(msg => 
-        msg.sender === 'assistant' && (msg.type === 'greeting' || msg.type === 'introduction')
-      );
-      
-      // If we have multiple welcome messages, only keep the first one (oldest)
-      if (welcomeMessages.length > 1) {
-        console.log(`Found ${welcomeMessages.length} welcome messages for concept ${activeConceptId}. Cleaning up...`);
-        
-        // Sort welcome messages by timestamp (oldest first)
-        welcomeMessages.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
-        
-        // Keep the first welcome message, filter out the rest
-        const firstWelcomeMessage = welcomeMessages[0];
-        
-        // Filter out duplicates from the local array
-        conceptMessages = conceptMessages.filter(msg => 
-          !(msg.sender === 'assistant' && 
-            (msg.type === 'greeting' || msg.type === 'introduction') && 
-            msg.id !== firstWelcomeMessage.id)
-        );
-        
-        // Delete duplicate welcome messages from the database
-        // Skip the first one (oldest) which we want to keep
-        for (let i = 1; i < welcomeMessages.length; i++) {
-          if (welcomeMessages[i].id) {
-            console.log(`Deleting duplicate welcome message: ${welcomeMessages[i].id}`);
-            await deleteConceptMessage(welcomeMessages[i].id);
-          }
-        }
-      }
       
       if (conceptMessages.length > 0) {
         // Convert to chat message format for consistency
@@ -242,44 +215,12 @@ const ConceptsArea: React.FC<ConceptsAreaProps> = ({
         }));
         
         setMessages(chatMessages);
+        setHasConversationStarted(true);
       } else {
-        // No messages at all - Add a welcome message from Saarth
-        if (activeConceptTitle) {
-          // Double-check that we really don't have any messages in the database
-          // This is a safety check in case there was an issue with the initial query
-          const doubleCheckMessages = await getConceptMessages(activeConceptId);
-          
-          if (doubleCheckMessages.length === 0) {
-            // Get welcome message
-            const welcomeMessage = getConceptWelcomeMessage(
-              activeConceptId, 
-              activeConceptTitle,
-              userName
-            );
-            
-            // Create message object
-            const welcomeMessageObj = createMessage(welcomeMessage, 'assistant', 'greeting');
-            
-            // Save to Firestore
-            await saveConceptMessage(welcomeMessage, 'assistant', activeConceptId, 'greeting');
-            
-            // Add to UI
-            setMessages([welcomeMessageObj]);
-          } else {
-            // We got messages on the second try - weird but possible if there was a network hiccup
-            const chatMessages = doubleCheckMessages.map(msg => ({
-              id: msg.id,
-              text: msg.text,
-              sender: msg.sender,
-              timestamp: msg.timestamp,
-              encrypted: false,
-              type: msg.type,
-              language: msg.language
-            }));
-            
-            setMessages(chatMessages);
-          }
-        }
+        // No messages - don't add a welcome message automatically
+        // The user will see the question suggestions instead
+        setMessages([]);
+        setHasConversationStarted(false);
       }
     } catch (error) {
       console.error("❌ Error loading concept messages:", error);
@@ -288,11 +229,12 @@ const ConceptsArea: React.FC<ConceptsAreaProps> = ({
     }
   };
   
-  // Load messages when concept changes (your existing code)
+  // Load messages when concept changes (modified to reset conversation state)
   useEffect(() => {
     // Only fetch if the concept ID has actually changed to avoid unnecessary reloads
     if (activeConceptId && activeConceptId !== previousConceptIdRef.current) {
       setMessages([]);
+      setHasConversationStarted(false);
       
       // Track concept usage for analytics
       trackConceptUsage(activeConceptId, activeConceptTitle);
@@ -305,6 +247,7 @@ const ConceptsArea: React.FC<ConceptsAreaProps> = ({
     } else if (!activeConceptId) {
       // If there's no active concept, clear messages
       setMessages([]);
+      setHasConversationStarted(false);
       previousConceptIdRef.current = null;
     }
   }, [activeConceptId, activeConceptTitle]);
@@ -323,7 +266,20 @@ const ConceptsArea: React.FC<ConceptsAreaProps> = ({
     return () => unsubscribe();
   }, [activeConceptId]);
   
-  // MODIFIED: Handle sending a message - Added custom concept creation with first message
+  // Handle selecting a suggested question
+  const handleSelectQuestion = (question: string) => {
+    setInputValue(question);
+    
+    // Focus the input field
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+    
+    // Optional: can auto-send the message if desired
+    // setTimeout(() => handleSendMessage(), 100);
+  };
+  
+  // MODIFIED: Handle sending a message - removed automatic first response for custom concepts
   const handleSendMessage = async () => {
     // Check if input is empty or if user is disabled
     if (!inputValue.trim() || isInputDisabled) {
@@ -351,12 +307,6 @@ const ConceptsArea: React.FC<ConceptsAreaProps> = ({
           // Save the custom concept to Firebase
           await saveCustomConcept(conceptId, title);
           
-          // Get first message from Saarth
-          const firstMessage = getCustomConceptFirstMessage(title, userName);
-          
-          // Save first message from Saarth
-          await saveConceptMessage(firstMessage, 'assistant', conceptId, 'introduction');
-          
           // Select the newly created concept - this will trigger the fetchMessages function
           if (onSelectConcept) {
             onSelectConcept(conceptId, title);
@@ -374,6 +324,9 @@ const ConceptsArea: React.FC<ConceptsAreaProps> = ({
       
       // Add user message to conversation
       setMessages(prev => [...prev, userMessage]);
+      
+      // Update conversation started state
+      setHasConversationStarted(true);
       
       // Clear input value and reset height
       setInputValue('');
@@ -459,9 +412,6 @@ const ConceptsArea: React.FC<ConceptsAreaProps> = ({
     
     // Set the new height
     textarea.style.height = `${newHeight}px`;
-    
-    // Log for debugging
-    console.log(`Textarea resized to ${newHeight}px`);
   };
   
   useEffect(() => {
@@ -516,31 +466,30 @@ const ConceptsArea: React.FC<ConceptsAreaProps> = ({
           rect.right <= (window.innerWidth || document.documentElement.clientWidth)
         );
         
-        console.log("Input container visibility check:", isVisible, rect);
-        
-        // If not visible, try to adjust (could add more specific adjustments here)
+        // If not visible, try to adjust
         if (!isVisible && inputRef.current) {
           inputRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
         }
       }
     };
     
-    // Check visibility on mount and when relevant props change
     checkInputVisibility();
     
-    // Also check visibility on window resize
     window.addEventListener('resize', checkInputVisibility);
     return () => window.removeEventListener('resize', checkInputVisibility);
   }, [activeConceptId, isPanelOpen]);
 
   return (
     <div className={`concepts-area ${isPanelOpen ? 'panel-open' : ''}`}>
-      {activeConceptId && messages.length === 0 && !isTyping ? (
+      {activeConceptId && !hasConversationStarted && !isTyping ? (
         <div className="concepts-messages">
-          <div className="concept-intro">
-            <h2>{activeConceptTitle}</h2>
-            <p>What would you like to know about {activeConceptTitle}?</p>
-          </div>
+          {/* Display question suggestions instead of welcome message */}
+          <ConceptSuggestions
+            conceptId={activeConceptId}
+            conceptTitle={activeConceptTitle || ''}
+            onSelectQuestion={handleSelectQuestion}
+            isCustomConcept={isCustomConcept(activeConceptId)}
+          />
           <div ref={messagesEndRef} />
         </div>
       ) : activeConceptId && (messages.length > 0 || isTyping) ? (
@@ -602,7 +551,7 @@ const ConceptsArea: React.FC<ConceptsAreaProps> = ({
         </div>
       )}
       
-      {/* Fixed input container with improved positioning */}
+      {/* Fixed input container with improved positionin */}
       <div 
         ref={inputContainerRef}
         className={`concepts-input-container ${isPanelOpen ? 'panel-open' : ''}`}
