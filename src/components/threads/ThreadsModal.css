@@ -1,0 +1,260 @@
+/* src/components/threads/ThreadsModal.css */
+
+.threads-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.75);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    backdrop-filter: blur(5px);
+    animation: fadeIn 0.25s cubic-bezier(0.165, 0.84, 0.44, 1);
+  }
+  
+  .threads-modal {
+    background: linear-gradient(to bottom, #202940, #171e2e);
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(74, 144, 226, 0.1);
+    width: 90%;
+    max-width: 420px;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    animation: modalSlideUp 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+  
+  .threads-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px;
+    background: rgba(255, 255, 255, 0.03);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    position: relative;
+  }
+  
+  .threads-modal-header::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(to right, 
+      rgba(74, 144, 226, 0) 0%, 
+      rgba(74, 144, 226, 0.3) 50%, 
+      rgba(74, 144, 226, 0) 100%
+    );
+  }
+  
+  .threads-modal-header h3 {
+    margin: 0;
+    font-size: 1.3rem;
+    color: white;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+  
+  .threads-modal-close {
+    background: rgba(255, 255, 255, 0.05);
+    border: none;
+    color: rgba(255, 255, 255, 0.7);
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px;
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+  }
+  
+  .threads-modal-close:hover {
+    color: white;
+    background: rgba(255, 255, 255, 0.15);
+    transform: rotate(90deg);
+  }
+  
+  .threads-modal-search {
+    padding: 12px 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  }
+  
+  .threads-modal-search-input {
+    width: 100%;
+    background-color: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 8px;
+    padding: 10px 16px;
+    color: white;
+    font-size: 0.95rem;
+    transition: all 0.2s;
+  }
+  
+  .threads-modal-search-input:focus {
+    outline: none;
+    background-color: rgba(255, 255, 255, 0.15);
+    border-color: rgba(74, 144, 226, 0.5);
+    box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
+  }
+  
+  .threads-modal-content {
+    overflow-y: auto;
+    flex: 1;
+    padding: 0;
+    max-height: calc(90vh - 120px);
+  }
+  
+  .threads-list {
+    padding: 16px;
+  }
+  
+  /* Thread Card Styling */
+  .thread-card {
+    display: flex;
+    align-items: center;
+    padding: 14px;
+    background-color: rgba(40, 40, 50, 0.6);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-bottom: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+  
+  .thread-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    background-color: rgba(60, 60, 80, 0.4);
+    border-color: rgba(255, 255, 255, 0.15);
+  }
+  
+  .thread-card.unread {
+    background-color: rgba(74, 144, 226, 0.15);
+    border-color: rgba(74, 144, 226, 0.3);
+  }
+  
+  .thread-content {
+    flex: 1;
+    overflow: hidden;
+  }
+  
+  .thread-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.25rem;
+  }
+  
+  .thread-title {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: white;
+    letter-spacing: 0.02em;
+  }
+  
+  .thread-timestamp {
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.6);
+    white-space: nowrap;
+  }
+  
+  .thread-message {
+    margin: 0.4rem 0 0 0;
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.7);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    height: 1.4em;
+    line-height: 1.4;
+    font-style: italic;
+  }
+  
+  /* Empty state styling */
+  .threads-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 2rem 1rem;
+    height: 100%;
+    color: #aaa;
+  }
+  
+  .empty-icon {
+    background-color: rgba(74, 144, 226, 0.1);
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+    color: #4a90e2;
+  }
+  
+  .threads-empty-state h3 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.2rem;
+    color: white;
+    font-weight: 500;
+  }
+  
+  .threads-empty-state p {
+    margin: 0 0 2rem 0;
+    font-size: 0.9rem;
+    max-width: 250px;
+  }
+  
+  .explore-concepts-btn {
+    background-color: rgba(74, 144, 226, 0.2);
+    color: #4a90e2;
+    border: 1px solid rgba(74, 144, 226, 0.3);
+    border-radius: 20px;
+    padding: 0.75rem 1.5rem;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  
+  .explore-concepts-btn:hover {
+    background-color: rgba(74, 144, 226, 0.3);
+    transform: translateY(-2px);
+  }
+  
+  .threads-loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 2rem 0;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.9rem;
+  }
+  
+  /* Animations */
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  
+  @keyframes modalSlideUp {
+    from { 
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to { 
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }

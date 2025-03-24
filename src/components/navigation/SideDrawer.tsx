@@ -1,7 +1,8 @@
 import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { FaHome, FaComments, FaTimes } from 'react-icons/fa';
+import { FaHome, FaComments } from 'react-icons/fa';
 import { HiSparkles } from "react-icons/hi";
+import { IoCloseOutline } from "react-icons/io5";
 import './SideDrawer.css';
 
 interface SideDrawerProps {
@@ -38,7 +39,7 @@ const SideDrawer: React.FC<SideDrawerProps> = ({
             onClick={onClose}
             aria-label="Close navigation drawer"
           >
-            <FaTimes />
+            <IoCloseOutline size={24} />
           </button>
         </div>
         
