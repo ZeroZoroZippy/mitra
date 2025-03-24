@@ -8,7 +8,8 @@ import {
   getConceptMessages, 
   trackConceptUsage, 
   saveCustomConcept, 
-  generateCustomConceptId 
+  generateCustomConceptId,
+  deleteConceptMessage
 } from '../../utils/firebaseConceptDb';
 import { 
   getConceptWelcomeMessage, 
@@ -16,7 +17,6 @@ import {
 } from '../../utils/conceptWelcomeMessages';
 import { auth, db } from '../../utils/firebaseConfig';
 import { onAuthStateChanged } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
 import { getUserProfile } from '../../utils/firebaseDb';
 
 // Import concept images (your existing imports)
@@ -195,14 +195,41 @@ const ConceptsArea: React.FC<ConceptsAreaProps> = ({
       setIsTyping(true);
       
       // Load existing messages for this concept
-      const conceptMessages = await getConceptMessages(activeConceptId);
+      let conceptMessages = await getConceptMessages(activeConceptId);
       
-      if (conceptMessages.length > 0) {
-        // Check if we already have a welcome/greeting message
-        const hasWelcomeMessage = conceptMessages.some(msg => 
-          msg.sender === 'assistant' && (msg.type === 'greeting' || msg.type === 'introduction')
+      // Check if we already have a welcome message - look specifically for duplicate welcome messages
+      const welcomeMessages = conceptMessages.filter(msg => 
+        msg.sender === 'assistant' && (msg.type === 'greeting' || msg.type === 'introduction')
+      );
+      
+      // If we have multiple welcome messages, only keep the first one (oldest)
+      if (welcomeMessages.length > 1) {
+        console.log(`Found ${welcomeMessages.length} welcome messages for concept ${activeConceptId}. Cleaning up...`);
+        
+        // Sort welcome messages by timestamp (oldest first)
+        welcomeMessages.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+        
+        // Keep the first welcome message, filter out the rest
+        const firstWelcomeMessage = welcomeMessages[0];
+        
+        // Filter out duplicates from the local array
+        conceptMessages = conceptMessages.filter(msg => 
+          !(msg.sender === 'assistant' && 
+            (msg.type === 'greeting' || msg.type === 'introduction') && 
+            msg.id !== firstWelcomeMessage.id)
         );
         
+        // Delete duplicate welcome messages from the database
+        // Skip the first one (oldest) which we want to keep
+        for (let i = 1; i < welcomeMessages.length; i++) {
+          if (welcomeMessages[i].id) {
+            console.log(`Deleting duplicate welcome message: ${welcomeMessages[i].id}`);
+            await deleteConceptMessage(welcomeMessages[i].id);
+          }
+        }
+      }
+      
+      if (conceptMessages.length > 0) {
         // Convert to chat message format for consistency
         const chatMessages = conceptMessages.map(msg => ({
           id: msg.id,
@@ -215,28 +242,43 @@ const ConceptsArea: React.FC<ConceptsAreaProps> = ({
         }));
         
         setMessages(chatMessages);
-        
-        // If for some reason we don't have a welcome message but have other messages
-        // We don't add a welcome message to avoid confusion
-        
       } else {
         // No messages at all - Add a welcome message from Saarth
         if (activeConceptTitle) {
-          // Get welcome message
-          const welcomeMessage = getConceptWelcomeMessage(
-            activeConceptId, 
-            activeConceptTitle,
-            userName
-          );
+          // Double-check that we really don't have any messages in the database
+          // This is a safety check in case there was an issue with the initial query
+          const doubleCheckMessages = await getConceptMessages(activeConceptId);
           
-          // Create message object
-          const welcomeMessageObj = createMessage(welcomeMessage, 'assistant', 'greeting');
-          
-          // Save to Firestore
-          await saveConceptMessage(welcomeMessage, 'assistant', activeConceptId, 'greeting');
-          
-          // Add to UI
-          setMessages([welcomeMessageObj]);
+          if (doubleCheckMessages.length === 0) {
+            // Get welcome message
+            const welcomeMessage = getConceptWelcomeMessage(
+              activeConceptId, 
+              activeConceptTitle,
+              userName
+            );
+            
+            // Create message object
+            const welcomeMessageObj = createMessage(welcomeMessage, 'assistant', 'greeting');
+            
+            // Save to Firestore
+            await saveConceptMessage(welcomeMessage, 'assistant', activeConceptId, 'greeting');
+            
+            // Add to UI
+            setMessages([welcomeMessageObj]);
+          } else {
+            // We got messages on the second try - weird but possible if there was a network hiccup
+            const chatMessages = doubleCheckMessages.map(msg => ({
+              id: msg.id,
+              text: msg.text,
+              sender: msg.sender,
+              timestamp: msg.timestamp,
+              encrypted: false,
+              type: msg.type,
+              language: msg.language
+            }));
+            
+            setMessages(chatMessages);
+          }
         }
       }
     } catch (error) {

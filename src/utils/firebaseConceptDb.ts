@@ -5,9 +5,7 @@ import {
     query,
     where,
     getDocs,
-    orderBy,
     serverTimestamp,
-    DocumentData,
     doc,
     increment,
     updateDoc,
@@ -16,7 +14,7 @@ import {
     Timestamp,
     FieldValue,
     arrayUnion,
-    arrayRemove
+    deleteDoc
 } from "firebase/firestore";
 import { auth } from "./firebaseConfig";
 
@@ -444,6 +442,24 @@ export const convertToChatMessage = (conceptMessage: ConceptMessage) => {
         type: conceptMessage.type,
         language: conceptMessage.language
     };
+};
+
+export const deleteConceptMessage = async (messageId: string): Promise<boolean> => {
+  const user = auth.currentUser;
+  if (!user) {
+    console.warn("Cannot delete concept message: No authenticated user");
+    return false;
+  }
+  
+  try {
+    const messageRef = doc(db, `users/${user.uid}/preferences/concepts/messages/${messageId}`);
+    await deleteDoc(messageRef);
+    console.log(`Message ${messageId} deleted successfully`);
+    return true;
+  } catch (error) {
+    console.error(`Error deleting message ${messageId}:`, error);
+    return false;
+  }
 };
 
 export { db };
