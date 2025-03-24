@@ -551,7 +551,7 @@ const ConceptsArea: React.FC<ConceptsAreaProps> = ({
         </div>
       )}
       
-      {/* Fixed input container with improved positioning */}
+      {/* Fixed input container with improved positionin */}
       <div 
         ref={inputContainerRef}
         className={`concepts-input-container ${isPanelOpen ? 'panel-open' : ''}`}
