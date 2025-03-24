@@ -25,6 +25,7 @@
     flex-direction: column;
     overflow: hidden;
     border: none;
+    padding-bottom: env(safe-area-inset-bottom, 0);
   }
   
   .concepts-messages {
@@ -47,6 +48,17 @@
     display: none;
     width: 0;
     height: 0;
+  }
+
+  .concepts-messages::after {
+    content: '';
+    position: fixed;
+    bottom: 80px;
+    left: 0;
+    right: 0;
+    height: 40px;
+    background: linear-gradient(to top, rgba(29, 29, 45, 1), rgba(29, 29, 45, 0));
+    pointer-events: none;
   }
   
   /* ----- CONCEPT INTRO ----- */
@@ -100,9 +112,11 @@
     max-width: 800px;
     margin: 0 auto;
     padding: 0 1rem;
-    z-index: 10;  /* Increased z-index */
+    z-index: 50;  /* Increased z-index */
     transition: all 0.3s ease;
-    background-color: transparent;
+    background-color: rgba(29, 29, 45, 0.85);
+    backdrop-filter: blur(8px);
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
   }
   
   /* When panel is open, adjust position */
@@ -1354,7 +1368,10 @@
         width: 100%;
         padding: 0 0.75rem;
         padding-bottom: env(safe-area-inset-bottom, 10px); /* iOS safe area */
-        z-index: 10; /* Even higher z-index on mobile */
+        z-index: 50; /* Even higher z-index on mobile */
+        background-color: rgba(29, 29, 45, 0.85);
+        backdrop-filter: blur(8px);
+        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
       }
     
     .concepts-input {
@@ -1381,8 +1398,9 @@
     }
   
     .concepts-welcome {
-      padding: 1.5rem;
+      padding: 1rem;
       padding-bottom: 4rem;
+      height: calc(100vh - 70px);
     }
   
     .concepts-welcome h2 {
@@ -1396,6 +1414,8 @@
     /* Safe area handling for iOS devices */
     .concepts-input-container {
       padding-bottom: env(safe-area-inset-bottom, 10px);
+      background-color: rgba(29, 29, 45, 0.85);
+      backdrop-filter: blur(8px);
     }
   
     .example-menu {
@@ -1417,12 +1437,12 @@
     }
 
     .concepts-suggestion-grid {
-        gap: 0.75rem;
-        max-width: 90%;
-      }
+      margin: 1rem auto;
+      max-width: 90%;
+    }
       
       .concept-suggestion-card {
-        height: 130px;
+        height: 110px;
       }
       
       .concept-suggestion-title {
@@ -1459,7 +1479,7 @@
     }
     
     .concept-suggestion-card {
-      height: 110px;
+      height: 90px;
     }
     
     .concept-suggestion-title {
