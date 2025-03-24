@@ -1,0 +1,282 @@
+/* src/components/discover/DiscoverModal.css - with added description styling */
+
+.discover-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.75);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    backdrop-filter: blur(5px);
+    animation: fadeIn 0.25s cubic-bezier(0.165, 0.84, 0.44, 1);
+  }
+  
+  .discover-modal {
+    background: linear-gradient(to bottom, #202940, #171e2e);
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(74, 144, 226, 0.1);
+    width: 90%;
+    max-width: 420px;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    animation: modalSlideUp 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+  
+  .discover-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start; /* Changed from center to align with top of greeting section */
+    padding: 20px 24px;
+    background: rgba(255, 255, 255, 0.03);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    position: relative;
+  }
+  
+  .discover-modal-header::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(to right, 
+      rgba(74, 144, 226, 0) 0%, 
+      rgba(74, 144, 226, 0.3) 50%, 
+      rgba(74, 144, 226, 0) 100%
+    );
+  }
+  
+  /* New greeting container for both header and description */
+  .discover-modal-greeting {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .discover-modal-greeting h3 {
+    margin: 0;
+    font-size: 1.3rem;
+    color: white;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    display: flex;
+    gap: 6px;
+    align-items: baseline;
+  }
+  
+  /* New description styling */
+  .discover-modal-description {
+    margin: 0;
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.7);
+    font-weight: 400;
+    max-width: 300px;
+    line-height: 1.4;
+    font-family: 'Bricolage Grotesque', sans-serif;
+  }
+  
+  .discover-modal-close {
+    background: rgba(255, 255, 255, 0.05);
+    border: none;
+    color: rgba(255, 255, 255, 0.7);
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px;
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    margin-top: 4px; /* Added to align with top header row */
+  }
+  
+  .discover-modal-close:hover {
+    color: white;
+    background: rgba(255, 255, 255, 0.15);
+    transform: rotate(90deg);
+  }
+  
+  .discover-modal-search {
+    padding: 12px 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  }
+  
+  .discover-modal-search-input {
+    width: 100%;
+    background-color: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 8px;
+    padding: 10px 16px;
+    color: white;
+    font-size: 0.95rem;
+    transition: all 0.2s;
+  }
+  
+  .discover-modal-search-input:focus {
+    outline: none;
+    background-color: rgba(255, 255, 255, 0.15);
+    border-color: rgba(74, 144, 226, 0.5);
+    box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
+  }
+  
+  .discover-modal-content {
+    overflow-y: auto;
+    flex: 1;
+    padding: 0;
+    max-height: calc(90vh - 120px);
+  }
+  
+  .discover-bento-container {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    padding: 16px;
+  }
+  
+  /* Bento Card Styles - Similar to your existing styles but adapted for modal */
+  .bento-card {
+    background-color: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    height: 150px;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .bento-card.full {
+    grid-column: span 2;
+  }
+  
+  .bento-card.half {
+    grid-column: span 1;
+  }
+  
+  .bento-card.large {
+    height: 180px;
+  }
+  
+  .bento-card.small {
+    height: 120px;
+  }
+  
+  .bento-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+    background-color: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+  
+  .bento-image {
+    width: 100%;
+    height: 100%;
+    background-size: cover;
+    background-position: center;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1;
+  }
+  
+  .bento-content {
+    padding: 0.75rem 1rem;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 2;
+    background: linear-gradient(
+      to top,
+      rgba(0, 0, 0, 0.9) 0%,
+      rgba(0, 0, 0, 0.7) 40%,
+      rgba(0, 0, 0, 0.4) 70%,
+      rgba(0, 0, 0, 0) 100%
+    );
+    padding-top: 2.5rem;
+  }
+  
+  .bento-category {
+    font-size: 0.7rem;
+    color: #4a90e2;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: block;
+    margin-bottom: 0.25rem;
+    text-shadow: 0px 1px 3px rgba(0, 0, 0, 0.8);
+  }
+  
+  .bento-title {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #fff;
+    text-shadow: 0px 1px 3px rgba(0, 0, 0, 0.8);
+    line-height: 1.3;
+  }
+  
+  .user-name-style {
+    font-family: 'Spectral', serif;
+    font-style: italic;
+    font-weight: 500;
+    color: #63a4f0;
+  }
+  
+  /* Smaller phones require special handling */
+  @media (max-width: 375px) {
+    .discover-modal {
+      width: 95%;
+    }
+    
+    .discover-bento-container {
+      grid-template-columns: 1fr;
+      gap: 8px;
+    }
+    
+    .bento-card.full,
+    .bento-card.half {
+      grid-column: span 1;
+    }
+    
+    .bento-card {
+      height: 130px;
+    }
+    
+    .bento-card.large {
+      height: 160px;
+    }
+    
+    .discover-modal-description {
+      font-size: 0.8rem;
+      max-width: 220px;
+    }
+  }
+  
+  /* Animation for modal */
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  
+  @keyframes modalSlideUp {
+    from { 
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to { 
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }

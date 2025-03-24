@@ -11,7 +11,7 @@ interface SideNavigationProps {
   isThreadsOpen?: boolean;
 }
 
-// Updated to accept props
+// Updated to handle concept click events
 const SideNavigation: React.FC<SideNavigationProps> = ({
   onDiscoverClick,
   onThreadsClick,

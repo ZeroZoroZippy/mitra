@@ -1,4 +1,4 @@
-// ConceptsLayout.tsx - Updated with reset functionality
+// ConceptsLayout.tsx - Updated with modal functionality for mobile
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import SideNavigation from '../navigation/SideNavigation';
@@ -7,9 +7,11 @@ import ConceptsHeader from './ConceptsHeader';
 import ConceptsArea from './ConceptsArea';
 import DiscoverScreen from '../discover/DiscoverScreen';
 import ThreadsScreen from '../threads/ThreadsScreen';
+// Import new modal components
+import DiscoverModal from '../discover/DiscoverModal';
+import ThreadsModal from '../threads/ThreadsModal';
 import './ConceptsLayout.css';
 import { isCreator } from '../../utils/firebaseAuth';
-
 
 const ConceptsLayout: React.FC = () => {
   const navigate = useNavigate();
@@ -20,13 +22,31 @@ const ConceptsLayout: React.FC = () => {
   const [isThreadsOpen, setIsThreadsOpen] = useState(false);
   const [isSideDrawerOpen, setIsSideDrawerOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  const [isTablet, setIsTablet] = useState(window.innerWidth <= 1024 && window.innerWidth > 768);
+  // Add states for modals
+  const [showDiscoverModal, setShowDiscoverModal] = useState(false);
+  const [showThreadsModal, setShowThreadsModal] = useState(false);
   const mainContentRef = useRef<HTMLDivElement>(null);
   // Add a counter to trigger reset in child components
   const [resetTrigger, setResetTrigger] = useState(0);
   
   useEffect(() => {
     const handleResize = () => {
-      setIsMobile(window.innerWidth <= 768);
+      const width = window.innerWidth;
+      setIsMobile(width <= 768);
+      setIsTablet(width <= 1024 && width > 768);
+      
+      // When transitioning from mobile to desktop, close any open modals
+      if (width > 768) {
+        setShowDiscoverModal(false);
+        setShowThreadsModal(false);
+      }
+      
+      // When transitioning from desktop to mobile, close panels
+      if (width <= 768) {
+        setIsDiscoverOpen(false);
+        setIsThreadsOpen(false);
+      }
     };
     
     window.addEventListener('resize', handleResize);
@@ -47,12 +67,26 @@ const ConceptsLayout: React.FC = () => {
     setActiveConceptId(conceptId);
     setActiveConceptTitle(conceptTitle);
     
+    // Close any open modals or panels
+    setShowDiscoverModal(false);
+    setShowThreadsModal(false);
+    
     if (isMobile) {
       setIsDiscoverOpen(false);
+      setIsThreadsOpen(false);
     }
   };
   
   const toggleDiscover = () => {
+    // For mobile/tablet devices, show modal instead of panel
+    if (isMobile || isTablet) {
+      setShowDiscoverModal(!showDiscoverModal);
+      // Also close threads modal if open
+      if (showThreadsModal) setShowThreadsModal(false);
+      return;
+    }
+    
+    // Desktop behavior - use panels
     if (isThreadsOpen) {
       setIsThreadsOpen(false);
       setTimeout(() => {
@@ -64,6 +98,15 @@ const ConceptsLayout: React.FC = () => {
   };
   
   const toggleThreads = () => {
+    // For mobile/tablet devices, show modal instead of panel
+    if (isMobile || isTablet) {
+      setShowThreadsModal(!showThreadsModal);
+      // Also close discover modal if open
+      if (showDiscoverModal) setShowDiscoverModal(false);
+      return;
+    }
+    
+    // Desktop behavior - use panels
     if (isDiscoverOpen) {
       setIsDiscoverOpen(false);
       setTimeout(() => {
@@ -100,9 +143,11 @@ const ConceptsLayout: React.FC = () => {
     // Increment the reset trigger to force child components to clear their state
     setResetTrigger(prev => prev + 1);
     
-    // Close any open panels
-    if (isDiscoverOpen) setIsDiscoverOpen(false);
-    if (isThreadsOpen) setIsThreadsOpen(false);
+    // Close any open panels or modals
+    setIsDiscoverOpen(false);
+    setIsThreadsOpen(false);
+    setShowDiscoverModal(false);
+    setShowThreadsModal(false);
   };
 
   return (
@@ -123,23 +168,41 @@ const ConceptsLayout: React.FC = () => {
         onThreadsClick={toggleThreads}
       />
 
-      <DiscoverScreen 
-        isOpen={isDiscoverOpen} 
+      {/* Only use panel approach for desktop */}
+      {!isMobile && !isTablet && (
+        <>
+          <DiscoverScreen 
+            isOpen={isDiscoverOpen} 
+            onSelectConcept={handleConceptSelect}
+            onClose={() => setIsDiscoverOpen(false)}
+            asPanel={true}
+          />
+          
+          <ThreadsScreen 
+            isOpen={isThreadsOpen}
+            onClose={() => setIsThreadsOpen(false)}
+            onSelectThread={handleConceptSelect}
+            asPanel={true}
+          />
+        </>
+      )}
+      
+      {/* Use modals for mobile and tablet */}
+      <DiscoverModal
+        isOpen={showDiscoverModal}
+        onClose={() => setShowDiscoverModal(false)}
         onSelectConcept={handleConceptSelect}
-        onClose={() => setIsDiscoverOpen(false)}
-        asPanel={true}
       />
       
-      <ThreadsScreen 
-        isOpen={isThreadsOpen}
-        onClose={() => setIsThreadsOpen(false)}
+      <ThreadsModal
+        isOpen={showThreadsModal}
+        onClose={() => setShowThreadsModal(false)}
         onSelectThread={handleConceptSelect}
-        asPanel={true}
       />
 
       <div 
         ref={mainContentRef}
-        className={`concepts-main-area ${(isDiscoverOpen || isThreadsOpen) && !isMobile ? 'panel-open' : ''}`}
+        className={`concepts-main-area ${(isDiscoverOpen || isThreadsOpen) && !isMobile && !isTablet ? 'panel-open' : ''}`}
         onClick={handleMainContentClick}
       >
         <ConceptsHeader 
