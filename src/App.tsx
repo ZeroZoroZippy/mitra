@@ -13,7 +13,7 @@ import DiscoverScreen from "./components/discover/DiscoverScreen";
 import ThreadsScreen from "./components/threads/ThreadsScreen";
 
 // Define current app version - update this when releasing new versions
-export const APP_VERSION = "3.0.2";
+export const APP_VERSION = "3.0.3";
 
 // Initialize the guest analytics function
 export const initializeGuestAnalytics = async () => {
