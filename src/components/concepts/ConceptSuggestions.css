@@ -1,0 +1,136 @@
+.concept-questions-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 1rem;
+    animation: fadeIn 0.5s ease-out;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+  }
+  
+  .concept-questions-heading {
+    font-size: 1.2rem;
+    color: #fff;
+    margin-bottom: 1.5rem;
+    text-align: center;
+    font-weight: 500;
+    background: linear-gradient(90deg, #4a90e2, #a29bfe);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  
+  .concept-questions-list {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    gap: 0.75rem;
+  }
+  
+  .concept-question-button {
+    background: rgba(45, 45, 65, 0.5);
+    border: 1px solid rgba(74, 144, 226, 0.3);
+    color: white;
+    padding: 0.9rem 1.2rem;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: left;
+    font-size: 0.95rem;
+    line-height: 1.4;
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-weight: 300;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .concept-question-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: linear-gradient(to bottom, #4a90e2, #a29bfe);
+    opacity: 0.5;
+    transition: all 0.2s ease;
+  }
+  
+  .concept-question-button:hover {
+    background: rgba(45, 45, 65, 0.7);
+    transform: translateY(-2px);
+    border-color: rgba(74, 144, 226, 0.5);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  }
+  
+  .concept-question-button:hover::before {
+    opacity: 1;
+    width: 6px;
+  }
+  
+  .concept-question-button:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  }
+  
+  /* Special styling for "Ask your own question" button */
+  .concept-question-button.custom-question {
+    background: rgba(74, 144, 226, 0.15);
+    border: 1px dashed rgba(74, 144, 226, 0.4);
+    color: rgba(255, 255, 255, 0.9);
+    font-style: italic;
+    margin-top: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .concept-question-button.custom-question::before {
+    background: linear-gradient(to bottom, rgba(74, 144, 226, 0.8), rgba(162, 155, 254, 0.8));
+    opacity: 0.3;
+  }
+  
+  .concept-question-button.custom-question:hover {
+    background: rgba(74, 144, 226, 0.25);
+    border-color: rgba(74, 144, 226, 0.6);
+  }
+  
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  /* Responsive styles */
+  @media (max-width: 768px) {
+    .concept-questions-container {
+      padding: 0.75rem;
+    }
+    
+    .concept-questions-heading {
+      font-size: 1.1rem;
+      margin-bottom: 1.25rem;
+    }
+    
+    .concept-question-button {
+      padding: 0.8rem 1rem;
+      font-size: 0.9rem;
+    }
+  }
+  
+  /* Dark theme enhancement for better readability */
+  @media (prefers-color-scheme: dark) {
+    .concept-question-button {
+      background: rgba(30, 30, 45, 0.6);
+    }
+    
+    .concept-question-button:hover {
+      background: rgba(40, 40, 60, 0.8);
+    }
+  }
