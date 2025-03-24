@@ -116,36 +116,36 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
         touchStartY.current = e.touches[0].clientY;
       };
       
+      const touchStartX = useRef<number | null>(null);
       const handleTouchMove = (e: TouchEvent) => {
-        if (touchStartY.current === null) return;
+        if (touchStartY.current === null || touchStartX.current === null) return;
         
         const touchY = e.touches[0].clientY;
-        const diff = touchY - touchStartY.current;
+        const touchX = e.touches[0].clientX;
+        const diffY = touchY - touchStartY.current;
+        const diffX = touchX - touchStartX.current;
         
-        // For side panels on mobile, we want to track horizontal swipes
-        // This is adapted for translateX instead of translateY
-        if (diff > 0) {
-          // Apply transform directly for smooth movement
-          panel.style.transform = `translateX(${diff}px)`;
+        // Only apply transform and prevent default for horizontal swipes
+        if (Math.abs(diffX) > Math.abs(diffY) && diffX > 0) {
+          panel.style.transform = `translateX(${diffX}px)`;
           e.preventDefault();
         }
       };
       
       const handleTouchEnd = (e: TouchEvent) => {
-        if (touchStartY.current === null) return;
+        if (touchStartX.current === null) return;
         
-        const touchY = e.changedTouches[0].clientY;
-        const diff = touchY - touchStartY.current;
+        const touchX = e.changedTouches[0].clientX;
+        const diffX = touchX - touchStartX.current;
         
-        // Reset the inline transform
         panel.style.transform = '';
         
-        // If swiped more than 100px, close the panel
-        if (diff > 100 && onClose) {
+        if (diffX > 100 && onClose) {
           onClose();
         }
         
         touchStartY.current = null;
+        touchStartX.current = null; // Reset both refs
       };
       
       panel.addEventListener('touchstart', handleTouchStart);
