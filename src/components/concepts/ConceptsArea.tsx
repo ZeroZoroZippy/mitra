@@ -198,6 +198,11 @@ const ConceptsArea: React.FC<ConceptsAreaProps> = ({
       const conceptMessages = await getConceptMessages(activeConceptId);
       
       if (conceptMessages.length > 0) {
+        // Check if we already have a welcome/greeting message
+        const hasWelcomeMessage = conceptMessages.some(msg => 
+          msg.sender === 'assistant' && (msg.type === 'greeting' || msg.type === 'introduction')
+        );
+        
         // Convert to chat message format for consistency
         const chatMessages = conceptMessages.map(msg => ({
           id: msg.id,
@@ -210,8 +215,12 @@ const ConceptsArea: React.FC<ConceptsAreaProps> = ({
         }));
         
         setMessages(chatMessages);
+        
+        // If for some reason we don't have a welcome message but have other messages
+        // We don't add a welcome message to avoid confusion
+        
       } else {
-        // Add a welcome message from Saarth
+        // No messages at all - Add a welcome message from Saarth
         if (activeConceptTitle) {
           // Get welcome message
           const welcomeMessage = getConceptWelcomeMessage(
