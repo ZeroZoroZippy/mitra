@@ -12,7 +12,7 @@
     z-index: 70;
     transform: translateX(-150%); /* Start off-screen */
     transition: transform 0.3s ease;
-    /* display: flex; */
+    display: flex;
     flex-direction: column;
     overflow: hidden;
   }
@@ -254,10 +254,11 @@
   /* Thread List */
   .threads-list-container {
     flex: 1;
-    overflow-y: auto;
+    overflow-y: auto; /* This enables scrolling */
     padding: 1rem;
     scrollbar-width: none; /* Hides scrollbar in Firefox */
     -ms-overflow-style: none; /* Hides scrollbar in IE and Edge */
+    overscroll-behavior: contain;
   }
   
   .threads-list-container::-webkit-scrollbar {
@@ -354,44 +355,27 @@
     gap: 0.75rem;
   }
   
-  .threads-search-container {
-    display: flex;
-    position: relative;
-    width: 200px;
-    animation: expandThreadsSearch 0.3s ease-out;
+  .threads-modal-search {
+    padding: 12px 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
   }
   
-  .threads-search-field {
-    flex: 1;
-    background-color: rgba(255, 255, 255, 0.15);
-    border: 1px solid rgba(255, 255, 255, 0.25);
+  .threads-modal-search-input {
+    width: 100%;
+    background-color: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.15);
     border-radius: 8px;
-    padding: 0.5rem 2.5rem 0.5rem 1rem;
+    padding: 10px 16px;
     color: white;
-    font-size: 0.9rem;
-    transition: all 0.2s ease;
+    font-size: 0.95rem;
+    transition: all 0.2s;
   }
   
-  .threads-search-field:focus {
+  .threads-modal-search-input:focus {
     outline: none;
-    background-color: rgba(255, 255, 255, 0.2);
-    border-color: rgba(255, 255, 255, 0.4);
-    box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.3);
-  }
-  
-  .threads-search-close {
-    position: absolute;
-    right: 8px;
-    top: 50%;
-    transform: translateY(-50%);
-    background: none;
-    border: none;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 6px;
-    color: white;
+    background-color: rgba(255, 255, 255, 0.15);
+    border-color: rgba(74, 144, 226, 0.5);
+    box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
   }
   
   /* Empty state styling */

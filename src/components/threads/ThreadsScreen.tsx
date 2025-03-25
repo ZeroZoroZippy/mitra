@@ -1,4 +1,4 @@
-// ThreadsScreen.tsx
+// Modified ThreadsScreen.tsx with search UI matching ThreadsModal
 import React, { useState, useEffect, useRef } from 'react';
 import { HiOutlineBookOpen } from "react-icons/hi2";
 import { IoCloseOutline } from "react-icons/io5";
@@ -250,16 +250,27 @@ const ThreadsScreen: React.FC<ThreadsScreenProps> = ({
       <div className="threads-panel-header">
         <h2>Concept Discussions</h2>
         <div className="threads-header-actions">
-        {onClose && (
-          <button
-          className="threads-close-btn"
-          onClick={onClose}
-          aria-label="Close threads panel"
-          >
-          <IoCloseOutline size={24} />
-          </button>
-        )}
+          {onClose && (
+            <button
+            className="threads-close-btn"
+            onClick={onClose}
+            aria-label="Close threads panel"
+            >
+            <IoCloseOutline size={24} />
+            </button>
+          )}
         </div>
+      </div>
+      
+      {/* Search input - styled just like in ThreadsModal */}
+      <div className="threads-modal-search">
+        <input
+          type="text"
+          className="threads-modal-search-input"
+          placeholder="Search conversations..."
+          value={searchQuery}
+          onChange={handleSearchChange}
+        />
       </div>
         
         <div className="threads-list-container">
