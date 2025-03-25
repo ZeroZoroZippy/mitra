@@ -32,9 +32,9 @@
     overflow-y: auto;
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
+    gap: 1.15rem;
     padding: 1.5rem;
-    padding-bottom: 80px;
+    /* padding-bottom: 40px; */
     max-height: calc(100vh - 150px);
     margin: 0 auto;
     width: 100%;
@@ -199,6 +199,7 @@
   /* ----- MESSAGE STYLING ----- */
   .message {
     max-width: 90%;
+    min-height: auto;
     width: fit-content;
     position: relative;
     clear: both;
@@ -206,6 +207,19 @@
     animation: messageEntrance 0.5s cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
     display: flex;
     flex-direction: column;
+  }
+
+  .message.typing-animation {
+    position: relative;
+  }
+
+  .message.typing-animation::after {
+    position: relative;
+    display: inline-block;
+    opacity: 1;
+    animation: cursor-blink 1s infinite;
+    margin-left: 2px;
+    font-weight: normal;
   }
   
   .user-message {
@@ -325,7 +339,7 @@
   
   /* Message spacing */
   .message + .message {
-    margin-top: 1rem;
+    margin-top: 0rem;
   }
   
   .user-message + .assistant-message,
@@ -1310,6 +1324,11 @@
   @keyframes fadeIn {
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes cursor-blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
   }
   
   /* ----- RESPONSIVE STYLES ----- */

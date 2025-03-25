@@ -10,6 +10,7 @@ interface MessageProps {
   sender: 'user' | 'assistant';
   type?: string;
   isLatest?: boolean;
+  isTyping?: boolean;
   onRegenerateResponse?: () => void;
   onGenerateExample?: (exampleType: string) => void;
 }
@@ -19,6 +20,7 @@ const Message: React.FC<MessageProps> = ({
   sender, 
   type,
   isLatest = false,
+  isTyping = false,
   onRegenerateResponse,
   onGenerateExample
 }) => {
@@ -112,7 +114,7 @@ const Message: React.FC<MessageProps> = ({
   const tagText = getTagText();
   
   return (
-    <div className={`message ${sender === 'user' ? 'user-message' : 'assistant-message'}${type ? ` ${type}` : ''}`}>
+    <div className={`message ${sender === 'user' ? 'user-message' : 'assistant-message'}${type ? ` ${type}` : ''}${isTyping ? ' typing-animation' : ''}`}>
       {sender === 'assistant' && tagText && (
         <div className={`message-tag ${type}`}>
           {type === 'real-world' && <FaGlobeAmericas className="tag-icon" />}
