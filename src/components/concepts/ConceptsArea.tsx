@@ -79,6 +79,9 @@ const ConceptsArea: React.FC<ConceptsAreaProps> = ({
   const inputContainerRef = useRef<HTMLDivElement>(null);
   const [userName, setUserName] = useState<string>("there");
   const [hasConversationStarted, setHasConversationStarted] = useState<boolean>(false);
+  const [currentTypingMessage, setCurrentTypingMessage] = useState<string>("");
+  const [isTypingAnimation, setIsTypingAnimation] = useState<boolean>(false);
+  const [typingMessageId, setTypingMessageId] = useState<string | null>(null);
   
   // Define concept cards (your existing code)
   const conceptCards: ConceptCard[] = [
@@ -280,6 +283,8 @@ const ConceptsArea: React.FC<ConceptsAreaProps> = ({
   };
   
   // MODIFIED: Handle sending a message - removed automatic first response for custom concepts
+  // Helper function for adding slight delays
+  const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
   const handleSendMessage = async () => {
     // Check if input is empty or if user is disabled
     if (!inputValue.trim() || isInputDisabled) {
@@ -346,7 +351,7 @@ const ConceptsArea: React.FC<ConceptsAreaProps> = ({
         contextMessages,
         activeConceptTitle,
         undefined,
-        messages.length <= 1 ? "concise" : "default"
+        messages.length <= 0 ? "concise" : "default"
       );
       
       if (!chatCompletionStream) {
@@ -356,15 +361,55 @@ const ConceptsArea: React.FC<ConceptsAreaProps> = ({
         return;
       }
       
-      // Process streaming response
-      let message = "";
-      for await (const chunk of chatCompletionStream) {
-        const chunkText = chunk.choices?.[0]?.delta?.content || "";
-        message += chunkText;
-      }
+      // Create a temporary message ID for the typing message
+      const tempId = 'typing-' + Date.now().toString();
+      setTypingMessageId(tempId);
       
-      // Create and add AI message
-      const aiMessage = createMessage(message, 'assistant', 'explanation');
+      // Initialize typing animation
+      setCurrentTypingMessage("");
+      setIsTypingAnimation(true);
+      
+      // Hide the typing indicator dots once we start showing actual text
+      setIsTyping(false);
+      
+      // Process streaming response
+      let fullMessage = "";
+        for await (const chunk of chatCompletionStream) {
+          const chunkText = chunk.choices?.[0]?.delta?.content || "";
+          fullMessage += chunkText;
+        
+        // Update the currently displayed typing message
+        setCurrentTypingMessage(fullMessage);
+
+          // Add variable delays based on content
+          if (chunkText.includes('.') || chunkText.includes('!') || chunkText.includes('?')) {
+            // Longer pause after sentences
+            await sleep(400);
+          } else if (chunkText.includes(',') || chunkText.includes(';')) {
+            // Medium pause after clauses
+            await sleep(200);
+          } else if (chunkText.includes('\n')) {
+            // Pause after line breaks
+            await sleep(300);
+          } else {
+            // Base typing speed for regular characters
+            const delayMs = Math.min(100, Math.max(50, chunkText.length * 20));
+            await sleep(delayMs);
+          }
+          
+          // Make sure to scroll as typing happens
+          scrollToBottom();
+        }
+
+        // Increase end pause for more natural effect
+        await sleep(600);
+      
+      // Animation complete - create the final message
+      setIsTypingAnimation(false);
+      setTypingMessageId(null);
+      
+      // Create final AI message with the complete text
+      const aiMessage = createMessage(fullMessage, 'assistant', 'explanation');
       setMessages(prev => [...prev, aiMessage]);
       
       // Save AI message to Firestore
@@ -373,14 +418,14 @@ const ConceptsArea: React.FC<ConceptsAreaProps> = ({
     } catch (error) {
       console.error("Error generating concept response:", error);
     } finally {
-      // Always ensure typing indicator is removed and input is re-enabled
+      // Cleanup
       setIsTyping(false);
       setIsInputDisabled(false);
+      setIsTypingAnimation(false);
+      setTypingMessageId(null);
       
-      // Scroll to the bottom after a short delay to ensure new messages are rendered
+      // Scroll and refocus as before
       setTimeout(scrollToBottom, 100);
-      
-      // Re-focus the input after a short delay
       setTimeout(() => {
         if (inputRef.current) {
           inputRef.current.focus();
@@ -499,6 +544,7 @@ const ConceptsArea: React.FC<ConceptsAreaProps> = ({
             const isLatestAiMessage = 
               message.sender === 'assistant' && 
               message.id === [...messages].filter(m => m.sender === 'assistant').pop()?.id;
+              message.id === [...messages].filter(m => m.sender === 'assistant').pop()?.id;
               
             return (
               <Message 
@@ -512,8 +558,20 @@ const ConceptsArea: React.FC<ConceptsAreaProps> = ({
               />
             );
           })}
+
+          {/* Add the typing animation message if active */}
+          {isTypingAnimation && (
+            <Message 
+              key={typingMessageId || 'typing'}
+              text={currentTypingMessage}
+              sender="assistant"
+              type="explanation"
+              isLatest={true}
+              isTyping={true} // Add this prop to the Message component
+            />
+          )}
           
-          {isTyping && (
+          {isTyping && !isTypingAnimation && (
             <div className="message assistant-message typing">
               <div className="typing-indicator">
                 <span></span>
