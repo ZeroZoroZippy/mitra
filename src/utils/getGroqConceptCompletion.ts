@@ -79,7 +79,7 @@ For first responses to a new concept, be concise and intriguing:
 - Use a hook or surprising fact to create interest
 - End with an implicit question or a cliff-hanger that invites further exploration
 - Focus on the most fascinating aspect of the concept rather than comprehensive coverage
-- Use *italic styling* sparingly for only the most important 1-2 key terms
+- Use *italic styling* sparingly for only the most important 2-4 key terms
 
 For follow-up responses after the user engages:
 - Provide more depth based on what interests them
