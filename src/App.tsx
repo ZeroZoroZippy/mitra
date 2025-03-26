@@ -6,14 +6,13 @@ import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from "firebase/fir
 import LandingPage from "./pages/LandingPage";
 import ChatLayout from "./components/chat/screens/components/ChatLayout";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
-import AdminDashboard from "./pages/AdminDashboard";
-import HomeScreen from "./pages/HomeScreen";
+import ExperienceHub from "./pages/ExperienceHub"; // Updated import name
 import ConceptsLayout from "./components/concepts/ConceptsLayout";
 import DiscoverScreen from "./components/discover/DiscoverScreen";
 import ThreadsScreen from "./components/threads/ThreadsScreen";
 
 // Define current app version - update this when releasing new versions
-export const APP_VERSION = "3.0.5";
+export const APP_VERSION = "3.0.6";
 
 // Initialize the guest analytics function
 export const initializeGuestAnalytics = async () => {
@@ -309,12 +308,14 @@ const App: React.FC = () => {
   return (
     <Routes>
       <Route path="/" element={<LandingPage featuresRef={featuresRef} />} />
-      <Route path="/home" element={<ProtectedRoute element={<HomeScreen />} />} />
+      <Route path="/experience" element={<ProtectedRoute element={<ExperienceHub />} />} /> {/* New route name */}
       <Route path="/chat" element={<ProtectedRoute element={<ChatLayout />} />} />
       <Route path="/concepts" element={<ProtectedRoute element={<ConceptsLayout />} />} />
       <Route path="/privacy-policy" element={<PrivacyPolicy />} />
       <Route path="/discover" element={<ProtectedRoute element={<DiscoverScreen />} />} />
       <Route path="/threads" element={<ProtectedRoute element={<ThreadsScreen />} />} />
+      {/* Redirect /home to /experience for backward compatibility */}
+      <Route path="/home" element={<Navigate replace to="/experience" />} />
       <Route path="*" element={<LandingPage featuresRef={featuresRef} />} />
     </Routes>
   );

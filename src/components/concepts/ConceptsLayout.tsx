@@ -1,4 +1,4 @@
-// ConceptsLayout.tsx - Updated with modal functionality for mobile
+// ConceptsLayout.tsx - Updated with modal functionality for mobile and new route
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import SideNavigation from '../navigation/SideNavigation';
@@ -7,7 +7,7 @@ import ConceptsHeader from './ConceptsHeader';
 import ConceptsArea from './ConceptsArea';
 import DiscoverScreen from '../discover/DiscoverScreen';
 import ThreadsScreen from '../threads/ThreadsScreen';
-// Import new modal components
+// Import modal components
 import DiscoverModal from '../discover/DiscoverModal';
 import ThreadsModal from '../threads/ThreadsModal';
 import './ConceptsLayout.css';
@@ -53,8 +53,9 @@ const ConceptsLayout: React.FC = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
   
-  const handleBackToHome = () => {
-    navigate('/home');
+  const handleBackToExperienceHub = () => {
+    // Updated to use the new route
+    navigate('/experience');
   };
   
   const handleSearch = (query: string) => {
@@ -206,7 +207,7 @@ const ConceptsLayout: React.FC = () => {
         onClick={handleMainContentClick}
       >
         <ConceptsHeader 
-          onBackToHome={handleBackToHome}
+          onBackToHome={handleBackToExperienceHub} // Function renamed for clarity but keeps same purpose
           onSearch={handleSearch}
           onToggleSidebar={toggleSideDrawer}
           onNewChat={handleNewChat}

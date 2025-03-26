@@ -109,9 +109,6 @@ const Header: React.FC<HeaderProps> = ({ featuresRef }) => {
 
         {/* Desktop Navigation */}
         <nav className="header-nav">
-          <a onClick={scrollToFeatures} className="nav-link" role="button">
-            Features
-          </a>
           <button className="cta-button" onClick={handleCTAClick}>
             {isAuthenticated ? "Continue Chat" : "Try Saarth"}
           </button>
@@ -160,17 +157,7 @@ const Header: React.FC<HeaderProps> = ({ featuresRef }) => {
             </button>
             
             <div className="auth-divider">
-              <span>or</span>
             </div>
-            
-            <button 
-              className={`auth-button guest-button ${isLoading ? 'loading' : ''}`}
-              onClick={handleGuestSignIn}
-              disabled={isLoading}
-            >
-              <span>Try as Guest</span>
-              <div className="guest-limit-note">5 free messages</div>
-            </button>
             
             <p className="auth-privacy-note">
               By continuing, you agree to our <a href="/privacy-policy">Privacy Policy</a>

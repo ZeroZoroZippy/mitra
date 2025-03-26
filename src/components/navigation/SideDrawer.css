@@ -1,4 +1,4 @@
-/* src/components/navigation/SideDrawer.css - with updated close button */
+/* src/components/navigation/SideDrawer.css - fixed for mobile */
 
 .side-drawer-backdrop {
   position: fixed;
@@ -24,6 +24,7 @@
   display: flex;
   flex-direction: column;
   box-shadow: 4px 0 10px rgba(0, 0, 0, 0.2);
+  overflow-y: auto; /* Enable scrolling */
 }
 
 .side-drawer.open {
@@ -37,6 +38,7 @@
   padding: 1.25rem 1.5rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   position: relative;
+  min-height: 60px; /* Ensure minimum height */
 }
 
 .side-drawer-header::after {
@@ -60,7 +62,6 @@
   color: white;
 }
 
-/* Updated close button to match DiscoverModal style */
 .side-drawer-close-btn {
   background: rgba(255, 255, 255, 0.05);
   border: none;
@@ -86,16 +87,20 @@
   flex: 1;
   padding: 1.5rem 0;
   overflow-y: auto;
+  display: block; /* Force display mode */
+  min-height: 200px; /* Ensure minimum height on mobile */
 }
 
 .side-drawer-items {
   list-style: none;
   margin: 0;
-  padding: 0;
+  padding: 0 1.5rem;
+  display: block; /* Force display mode */
 }
 
 .side-drawer-item {
   margin-bottom: 1rem;
+  display: block; /* Force display mode */
 }
 
 .side-drawer-link,
@@ -103,7 +108,7 @@
   display: flex;
   align-items: center;
   gap: 1rem;
-  padding: 0.75rem 1.5rem;
+  padding: 0.75rem 1rem;
   text-decoration: none;
   color: rgba(255, 255, 255, 0.7);
   font-size: 1rem;
@@ -114,6 +119,7 @@
   background: none;
   border: none;
   cursor: pointer;
+  border-radius: 8px; /* Add rounded corners */
 }
 
 .side-drawer-link:hover,
@@ -133,10 +139,12 @@
   align-items: center;
   justify-content: center;
   width: 24px;
+  min-width: 24px; /* Ensure icon doesn't shrink */
 }
 
 .side-drawer-label {
   flex: 1;
+  white-space: nowrap; /* Prevent text wrapping */
 }
 
 @keyframes fadeIn {
@@ -153,5 +161,30 @@
   .side-drawer {
     padding-top: env(safe-area-inset-top);
     height: calc(100vh - env(safe-area-inset-bottom));
+  }
+}
+
+/* Mobile-specific adjustments */
+@media (max-width: 768px) {
+  .side-drawer {
+    width: 80%; /* Wider on small screens */
+    max-width: 300px;
+  }
+  
+  .side-drawer-link,
+  .side-drawer-button {
+    padding: 1rem 1rem; /* Larger touch targets */
+  }
+  
+  .side-drawer-nav {
+    padding: 1rem 0;
+  }
+  
+  .side-drawer-icon {
+    font-size: 1.4rem; /* Larger icons on mobile */
+  }
+  
+  .side-drawer-label {
+    font-size: 1.1rem; /* Larger text on mobile */
   }
 }

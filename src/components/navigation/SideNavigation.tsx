@@ -1,7 +1,8 @@
 import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { FaHome, FaComments } from 'react-icons/fa';
+import { FaComments } from 'react-icons/fa';
 import { HiSparkles } from "react-icons/hi";
+import { FiLayout } from 'react-icons/fi'; // Better icon for Experience Hub
 import './SideNavigation.css';
 
 interface SideNavigationProps {
@@ -88,16 +89,16 @@ const SideNavigation: React.FC<SideNavigationProps> = ({
 
         <li className="nav-item">
           <NavLink 
-            to="/home" 
+            to="/experience" 
             className={({ isActive }) => 
               `nav-link ${isActive ? 'active' : ''}`
             }
-            title="Home"
+            title="Experience Hub"
           >
             <div className="nav-icon">
-              <FaHome />
+              <FiLayout />
             </div>
-            <span className="nav-label">Home</span>
+            <span className="nav-label">Hub</span>
           </NavLink>
         </li>
 

@@ -41,9 +41,12 @@ const Sidebar: React.FC<SidebarProps> = ({
     }
   };
 
-  const handleGoHome = () => {
-    navigate("/home");
-    window.location.reload();
+  const handleGoToExperienceHub = () => {
+    navigate("/experience");
+    // Add slight delay before reload to ensure navigation completes
+    setTimeout(() => {
+      window.location.reload();
+    }, 100);
   };
 
   const handleFeedback = () => {
@@ -62,8 +65,8 @@ const Sidebar: React.FC<SidebarProps> = ({
       </div>
 
       <div className="sidebar-nav">
-        <button className="home-button" onClick={handleGoHome}>
-          🏠 Home
+        <button className="home-button" onClick={handleGoToExperienceHub}>
+          🏠 Experience Hub
         </button>
         <button className="sidebar-button feedback-button" onClick={handleFeedback}>
           ✉️ Feedback
