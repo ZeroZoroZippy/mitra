@@ -1,8 +1,9 @@
 import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { FaHome, FaComments } from 'react-icons/fa';
+import { FaComments } from 'react-icons/fa';
 import { HiSparkles } from "react-icons/hi";
 import { IoCloseOutline } from "react-icons/io5";
+import { FiLayout } from 'react-icons/fi';
 import './SideDrawer.css';
 
 interface SideDrawerProps {
@@ -104,18 +105,19 @@ const SideDrawer: React.FC<SideDrawerProps> = ({
                 </NavLink>
               )}
             </li>
+            
             <li className="side-drawer-item">
               <NavLink 
-                to="/home" 
+                to="/experience" 
                 className={({ isActive }) => 
                   `side-drawer-link ${isActive ? 'active' : ''}`
                 }
                 onClick={onClose}
               >
                 <div className="side-drawer-icon">
-                  <FaHome />
+                  <FiLayout />
                 </div>
-                <span className="side-drawer-label">Home</span>
+                <span className="side-drawer-label">Experience Hub</span>
               </NavLink>
             </li>
           </ul>
