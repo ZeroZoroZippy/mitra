@@ -532,7 +532,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ featuresRef }) => {
         </section>
 
         {/* Testimonials Section */}
-        <section className="section">
+        {/* <section className="section">
           <div className="section-title fade-in">
             <h2>What People Are Saying</h2>
             <p>Hear from users who've experienced Saarth's unique combination of support and learning.</p>
@@ -562,7 +562,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ featuresRef }) => {
               </div>
             ))}
           </div>
-        </section>
+        </section> */}
 
         {/* CTA Section */}
         <section className="cta-section fade-in" ref={ctaSectionRef}>
