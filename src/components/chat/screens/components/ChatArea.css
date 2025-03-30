@@ -93,7 +93,7 @@ html, body {
   .input-send-container {
     display: flex;
     align-items: flex-end;
-    width: 60%;
+    width: 95%;
     max-width: 800px;
     background-color: #2d2d2d;
     border: 1px solid #3d3d3d;
@@ -102,6 +102,7 @@ html, body {
     color: #fff;
     gap: 10px;
     overflow: hidden;
+    margin: 0 auto;
   }
   
   /* Unified input styling */
@@ -879,6 +880,13 @@ html, body {
       padding: 0.6rem 1rem;
       font-size: 0.9rem;
     }
+  }
+
+  .message-container,
+  .message-bubble,
+  .input-send-container {
+    max-width: 100%;
+    box-sizing: border-box;
   }
   
   /* Mobile (480px and below) */

@@ -122,4 +122,8 @@ textarea {
   .keyboard-open .messages-container {
     padding-bottom: calc(var(--vh, 1vh) * 12); /* ✅ Adds space when keyboard opens */
   }
+
+  .keyboard-open .chat-area {
+    height: -webkit-fill-available;
+  }
 }
