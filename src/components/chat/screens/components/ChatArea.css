@@ -263,7 +263,6 @@
   .user-bubble {
     align-self: flex-end;
     background: linear-gradient(45deg, #FDD844, #FFEC9F);
-    border-bottom-right-radius: 0;
     animation: messageEntrance 0.5s cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
     transition: all 0.2s ease;
   }
