@@ -85,6 +85,12 @@
   z-index: 990; /* Lower than sidebar but higher than chat content */
   cursor: pointer;
 }
+ 
+.chat-area {
+  width: 100%; /* Use % instead of viewport calculations */
+  max-width: 100%;
+  overflow-x: hidden;
+}
 
 @media (max-width: 768px) {
   .chat-layout.fullscreen .sidebar {

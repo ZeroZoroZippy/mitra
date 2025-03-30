@@ -134,6 +134,13 @@
     width: 0;
     overflow: hidden;
   }
+
+  .concepts-main-area,
+  .concepts-area {
+    width: 100%; /* Use % instead of viewport calculations */
+    max-width: 100%;
+    overflow-x: hidden;
+}
   
   /* Responsive design for mobile */
   @media (max-width: 768px) {
@@ -173,5 +180,14 @@
       .concepts-main-area {
         margin-bottom: env(safe-area-inset-bottom);
       }
+    }
+  }
+
+  @supports (-webkit-touch-callout: none) {
+    .concepts-layout-container,
+    .chat-layout {
+      width: 100%;
+      max-width: 100vw;
+      overflow-x: hidden;
     }
   }
