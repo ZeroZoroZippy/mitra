@@ -17,13 +17,13 @@ import AdminDashboard from '../../../../pages/AdminDashboard';
 
 const db = getFirestore();
 const welcomeTitles: { [key: number]: string } = {
-  1: "Chat about friendship, companionship, or anything general...",
-  2: "Talk relationships, love, or emotional connections...",
-  3: "Discuss your dreams, goals, or manifestations...",
-  4: "Share feelings, emotional struggles, or seek healing...",
-  5: "Talk about your ambitions, career goals, or life's purpose...",
-  6: "Share thoughts about mindfulness, peace, or managing anxiety...",
-  7: "Let’s turn those sparks into flames of creativity.",
+  1: "Sit with me. Let’s talk about anything or nothing at all.",
+  2: "Open up about love, connections, or feelings left unsaid.",
+  3: "Share your desires, dreams, or the visions you’re chasing.",
+  4: "Release what’s heavy. This space is for healing and letting go.",
+  5: "Talk ambitions, purpose, or the fire that keeps you moving.",
+  6: "Breathe. Let’s speak about peace, anxiety, or quieting the mind.",
+  7: "Let’s turn those sparks into flames of creation." // if creative room is added
 };
 
 const genericInstruction =
