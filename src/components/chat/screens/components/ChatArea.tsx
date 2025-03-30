@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import ReactMarkdown from "react-markdown";
 import "./ChatArea.css";
 import ChatHeader from "./ChatHeader";
-import { FaPaperPlane } from "react-icons/fa6";
+import { IoArrowUpCircleSharp } from "react-icons/io5";
 import { IoCopyOutline } from "react-icons/io5";
 import { auth } from "../../../../utils/firebaseConfig";
 import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
@@ -240,18 +240,18 @@ const groupMessagesByDate = (messages: ChatMessage[]) => {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInputMessage(e.target.value);
-
+  
     if (e.target instanceof HTMLTextAreaElement) {
-        e.target.style.height = "auto"; // ✅ Reset height first
-        e.target.style.height = `${Math.min(e.target.scrollHeight, 150)}px`; // ✅ Recalculate height
-
-        // ✅ Fix for iOS: Force reflow by toggling display
-        if (navigator.userAgent.includes("iPhone") || navigator.userAgent.includes("iPad")) {
-            e.target.style.display = "block";
-            setTimeout(() => e.target.style.display = "", 0);
-        }
+      e.target.style.height = "auto"; // Reset height first
+      e.target.style.height = `${Math.min(e.target.scrollHeight, 120)}px`; // Recalculate height
+      
+      // iOS fix
+      if (navigator.userAgent.includes("iPhone") || navigator.userAgent.includes("iPad")) {
+        e.target.style.display = "block";
+        setTimeout(() => e.target.style.display = "", 0);
+      }
     }
-};
+  };
 
 // Function to normalize text
 // Function to normalize text
@@ -766,7 +766,7 @@ const fetchAndAppendTechSummary = async () => {
               disabled={isInputDisabled}
             />
             <button className="send-icon-button" onClick={handleSendMessage}>
-              <FaPaperPlane />
+              <IoArrowUpCircleSharp />
             </button>
           </div>
         </div>
@@ -940,8 +940,11 @@ const fetchAndAppendTechSummary = async () => {
                 }}
                 disabled={isInputDisabled}
               />
-              <button className="send-icon-button" onClick={handleSendMessage} disabled={isInputDisabled}>
-                <FaPaperPlane />
+              <button className="send-icon-button" 
+                      onClick={handleSendMessage} 
+                      disabled={!inputMessage.trim() || isInputDisabled} 
+                      aria-label="Send message">
+                <IoArrowUpCircleSharp />
               </button>
             </div>
           </div>
