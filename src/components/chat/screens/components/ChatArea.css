@@ -90,39 +90,37 @@ html, body {
   /* =======================
      INPUT AREA
      ======================= */
-  .input-send-container {
-    display: flex;
-    align-items: flex-end;
-    width: 95%;
-    max-width: 800px;
-    background-color: #2d2d2d;
-    border: 1px solid #3d3d3d;
-    border-radius: 24px;
-    padding: 0.5rem 1rem;
-    color: #fff;
-    gap: 10px;
-    overflow: hidden;
-    margin: 0 auto;
-  }
+     .input-send-container {
+      position: relative;
+      width: 100%;
+      background-color: rgba(45, 45, 60, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 24px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+      transition: border-color 0.2s, background-color 0.2s;
+    }
   
   /* Unified input styling */
   .input-send-container input.centered-input,
   .input-send-container .chat-input {
-    flex: 1;
-    max-width: 100%;
-    max-height: 150px;
-    min-height: 40px;
-    resize: none;
-    border: none;
-    background: transparent;
-    color: #fff;
-    font-family: 'Poppins', 'SF Pro Text', Helvetica, Arial, sans-serif;
+    width: 100%;
+    color: white;
+    padding: 14px 18px;
+    padding-right: 65px;
+    padding-bottom: 18px;
     font-size: 1rem;
-    padding: 0.5rem;
-    white-space: pre-wrap;
-    overflow-wrap: break-word;
-    overflow-y: auto;
-    word-break: break-word;
+    line-height: 1.5;
+    min-height: 54px;
+    max-height: 120px;
+    resize: none;
+    outline: none;
+    box-sizing: border-box;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    background-color: transparent;
+    border: none;
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-weight: 200;
   }
   
   .input-send-container .chat-input:focus,
@@ -139,20 +137,53 @@ html, body {
   
   /* Send button */
   .input-send-container .send-icon-button {
+    position: absolute;
+    right: 20px;
+    bottom: 12px;
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    min-height: 32px;
     background: none;
     border: none;
-    color: #007bff;
-    cursor: pointer;
-    font-size: 1.2rem;
+    color: #4a90e2;
+    font-size: 32px;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: color 0.2s ease, transform 0.2s ease;
+    cursor: pointer;
+    z-index: 1000;
+    transition: all 0.2s ease;
+    border-radius: 50%;
+    overflow: visible;
+    padding: 0;
   }
   
   .input-send-container .send-icon-button:hover {
-    color: #0056b3;
-    transform: translateY(-2px);
+    color: #ffffff;
+    background-color: rgba(74, 144, 226, 0.2);
+    transform: scale(1.05);
+  }
+
+  .send-icon-button:not(:disabled) {
+    color: #4a90e2;
+  }
+
+  .send-icon-button:not(:disabled):hover {
+    color: #ffffff;
+    background-color: #4a90e2;
+    transform: scale(1.05);
+  }
+
+  .input-send-container .chat-input::-webkit-scrollbar {
+    display: none;
+  }
+
+  .send-icon-button {
+    width: 38px;
+    height: 38px;
+    right: 16px;
+    bottom: 8px;
   }
   
   /* =======================
@@ -373,17 +404,18 @@ html, body {
   /* =======================
      INPUT BAR
      ======================= */
-  .input-bar {
-    bottom: 60px;
-    width: 100%;
-    background-color: #1d1d1d;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    z-index: 20;
-    animation: slideUp 0.3s ease-out;
-  }
+     .input-bar {
+      position: fixed;
+      bottom: 20px;
+      left: 0;
+      right: 0;
+      width: 100%;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 0 1rem;
+      z-index: 20;
+      background-color: transparent;
+    }
   
   .precaution-message-container {
     width: 100%;
@@ -855,7 +887,9 @@ html, body {
     }
   
     .input-bar {
-      bottom: 0;
+      bottom: 10px;
+      padding: 0 0.75rem;
+      padding-bottom: env(safe-area-inset-bottom, 10px);
     }
   
     .input-send-container {
@@ -887,6 +921,16 @@ html, body {
   .input-send-container {
     max-width: 100%;
     box-sizing: border-box;
+  }
+
+  .input-send-container .chat-input {
+    min-height: 44px;
+    height: 44px;
+    padding: 12px 16px;
+    padding-right: 55px;
+    padding-bottom: 12px;
+    border-radius: 20px;
+    font-size: 15px;
   }
   
   /* Mobile (480px and below) */
@@ -923,6 +967,16 @@ html, body {
       padding: 0.4rem 0.8rem;
       margin: 0;
     }
+
+    .input-send-container .chat-input {
+      min-height: 44px;
+      height: 44px;
+      padding: 12px 16px;
+      padding-right: 55px;
+      padding-bottom: 12px;
+      border-radius: 20px;
+      font-size: 15px;
+    }
   
     /* iPhone 14, 15, 16 Fix */
     @media screen and (max-width: 430px) {
@@ -934,6 +988,16 @@ html, body {
       .input-send-container {
         width: 100%;
         max-width: 100%;
+      }
+
+      .input-send-container .chat-input {
+        min-height: 44px;
+        height: 44px;
+        padding: 12px 16px;
+        padding-right: 55px;
+        padding-bottom: 12px;
+        border-radius: 20px;
+        font-size: 15px;
       }
     }
   }
