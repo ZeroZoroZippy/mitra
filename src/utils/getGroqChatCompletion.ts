@@ -214,7 +214,7 @@ export const getGroqChatCompletion = async (
           content: text,
         })),
       ],
-      model: "llama-3.1-8b-instant",
+      model: "llama-3.3-70b-versatile",
       temperature: 0.6,
       max_completion_tokens: maxTokens,
       top_p: 0.7,
