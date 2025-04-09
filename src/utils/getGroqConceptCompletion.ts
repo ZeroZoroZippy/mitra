@@ -161,7 +161,7 @@ export const getGroqConceptCompletion = async (
 
     const chatCompletion = await conceptGroq.chat.completions.create({
       messages: apiMessages,
-      model: "llama-3.3-70b-versatile",
+      model: "meta-llama/llama-4-maverick-17b-128e-instruct",
       temperature: 0.6,
       max_completion_tokens: maxTokens,
       top_p: 0.9,
