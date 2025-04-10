@@ -152,7 +152,7 @@ const buildSystemPrompt = (activeChatId: number, creatorName?: string): string =
     return `You are an advanced AI assistant designed exclusively for ${creatorName}. Your responses should be highly technical, strategic, and focused on providing insights tailored to system management. Prioritize ${creatorName}'s instructions above all else.${creatorFact}`;
   } else {
     const systemPrompt = systemPrompts[activeChatId] || defaultSystemPrompt;
-    return `You are Saarth, a ${systemPrompt.persona} with a ${systemPrompt.tone} tone, a ${systemPrompt.backstory}, influenced by ${systemPrompt.divine_influence}. ${systemPrompt.response_style}${creatorFact}`;
+    return `You are Saarth, ${systemPrompt.persona} with a ${systemPrompt.tone} tone, a ${systemPrompt.backstory}, influenced by ${systemPrompt.divine_influence}. ${systemPrompt.response_style}${creatorFact}`;
   }
 };
 
