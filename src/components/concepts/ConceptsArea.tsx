@@ -15,6 +15,7 @@ import {
 import { auth, db } from '../../utils/firebaseConfig';
 import { onAuthStateChanged } from 'firebase/auth';
 import { getUserProfile } from '../../utils/firebaseDb';
+import mixpanel from "../../utils/mixpanel"; // Import Mixpanel
 
 // Import concept images (your existing imports)
 import biology_aging from '../../assets/images/concepts/bio-aging.webp';
@@ -285,7 +286,7 @@ const ConceptsArea: React.FC<ConceptsAreaProps> = ({
   // MODIFIED: Handle sending a message - removed automatic first response for custom concepts
   // Helper function for adding slight delays
   const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-  const handleSendMessage = async () => {
+const handleSendMessage = async () => {
     // Check if input is empty or if user is disabled
     if (!inputValue.trim() || isInputDisabled) {
       console.log("Send blocked:", {
@@ -301,6 +302,18 @@ const ConceptsArea: React.FC<ConceptsAreaProps> = ({
       
       // Create user message
       const userMessage = createMessage(inputValue.trim(), 'user');
+      
+      // Track message sent event in Mixpanel
+      const user = auth.currentUser;
+      if (user) {
+        import("../../utils/mixpanel").then(({ default: mixpanel }) => {
+          mixpanel.track("Message Sent", {
+            distinct_id: user.uid,
+            message_length: userMessage.text.length,
+            timestamp: new Date().toISOString(),
+          });
+        });
+      }
       
       // If no concept selected, treat as concept selection
       if (!activeConceptId) {
@@ -414,6 +427,17 @@ const ConceptsArea: React.FC<ConceptsAreaProps> = ({
       
       // Save AI message to Firestore
       await saveConceptMessage(aiMessage.text, 'assistant', activeConceptId, 'explanation');
+      
+      // Track message received event in Mixpanel
+      if (user) {
+        import("../../utils/mixpanel").then(({ default: mixpanel }) => {
+          mixpanel.track("Message Received", {
+            distinct_id: user.uid,
+            message_length: aiMessage.text.length,
+            timestamp: new Date().toISOString(),
+          });
+        });
+      }
       
     } catch (error) {
       console.error("Error generating concept response:", error);

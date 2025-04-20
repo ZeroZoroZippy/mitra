@@ -14,6 +14,7 @@ import { getFirestore, doc, getDoc, updateDoc, increment, setDoc } from "firebas
 import { isCreator } from "../../../../utils/firebaseAuth";
 import { trackMessage } from "../../../../utils/analytics";
 import AdminDashboard from '../../../../pages/AdminDashboard';
+import mixpanel from "../../../../utils/mixpanel"; // Import Mixpanel
 
 const db = getFirestore();
 const welcomeTitles: { [key: number]: string } = {
@@ -321,61 +322,61 @@ const animateMessageReveal = (fullMessage: string, messageId: string) => {
 const handleSendMessage = async () => {
   if (!inputMessage.trim() || isInputDisabled) return;
 
-  // Guest message limit check using localStorage
+  // 1. Guest message‑limit logic (unchanged)
   if (isGuestUser()) {
     const db = getFirestore();
     const statsRef = doc(db, "statistics", "guestUsage");
     const currentCount = parseInt(localStorage.getItem("guestMessageCount") || "0");
-    
-    // Check if we've already hit the limit
     if (currentCount >= 5) {
       setIsInputDisabled(true);
       setShowLimitModal(true);
       return;
     }
-    
-    // Increment the count in localStorage BEFORE any async operations
     const newCount = currentCount + 1;
     localStorage.setItem("guestMessageCount", newCount.toString());
-    
-    // Update UI counter
     setRemainingMessages(5 - newCount);
-    
-    // Force modal if this was the 5th message
     if (newCount === 5) {
       console.log("Fifth message sent, next attempt will show modal");
     }
-
-    updateDoc(statsRef, {
-      totalGuestMessages: increment(1)
-    });
+    updateDoc(statsRef, { totalGuestMessages: increment(1) });
   }
 
-  // Dismiss welcome screen if needed
+  // 2. Dismiss welcome screen once
   if (!welcomeDismissed) {
     setWelcomeDismissed(true);
     localStorage.setItem(`welcomeDismissed_${activeChatId}`, "true");
   }
 
+  // 3. Create the user message object
   const userMessage = createMessage(inputMessage.trim(), "user");
   const user = auth.currentUser;
 
+  // 4. If we have a logged‑in user, save + track
   if (user) {
+    // Save message to Firestore or your DB
     await saveMessage(userMessage.text, "user", null, activeChatId);
-    trackMessage(user.uid, activeChatId, userMessage.text);
+
+    // Track the message in Mixpanel
+    mixpanel.track("Message Sent", {
+      distinct_id: user.uid,
+      message_length: userMessage.text.length,
+      chat_id: activeChatId,
+      timestamp: new Date().toISOString(),
+    });
   }
 
+  // 5. Update UI state
   setMessages(prev => [...prev, userMessage]);
   setInputMessage("");
   setIsWelcomeActive(false);
   setIsInputDisabled(true);
-
   if (inputRef.current) {
     inputRef.current.style.height = "40px";
   }
 
+  // 6. Handle AI response (unchanged)
   const seenDelay = Math.floor(Math.random() * 4000) + 1000;
-
+  
   // Check for hardcoded response
   const hardcodedResponse = getAIResponse(userMessage.text);
   if (hardcodedResponse !== null) {

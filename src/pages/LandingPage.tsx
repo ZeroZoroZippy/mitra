@@ -1,3 +1,4 @@
+// src/pages/LandingPage.tsx
 import React, { useEffect, useState, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { onAuthStateChanged } from "firebase/auth";
@@ -5,6 +6,7 @@ import { signInWithGoogle, auth } from "../utils/firebaseAuth";
 import { storeUserDetails } from "../utils/firebaseDb";
 import { analytics } from "../utils/firebaseConfig";
 import { logEvent } from "firebase/analytics";
+import mixpanel from "../utils/mixpanel";                // ← Mixpanel import
 import { Helmet } from "react-helmet-async";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
@@ -32,14 +34,22 @@ const LandingPage: React.FC<LandingPageProps> = ({ featuresRef }) => {
   const modalRef = useRef<HTMLDivElement>(null);
   const heroRef = useRef<HTMLDivElement>(null);
 
+  // 1. Page view + visibility tracking
   useEffect(() => {
+    // Firebase Analytics
     logEvent(analytics, "page_view", { page_path: location.pathname });
-    
-    // Add scroll listener for animations
+    // Mixpanel
+    mixpanel.track("Page Viewed", { page: location.pathname });
+
+    // Add scroll listener for animations & floating CTA
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 50);
-      
-      // Add fade-in effect for elements as they come into view
+      const scrolled = window.scrollY > 50;
+      setIsScrolled(scrolled);
+      if (scrolled) {
+        mixpanel.track("Floating CTA Visible");
+      }
+
+      // Fade-in effect
       document.querySelectorAll('.fade-in-up').forEach(el => {
         const rect = el.getBoundingClientRect();
         if (rect.top <= window.innerHeight * 0.8) {
@@ -47,12 +57,12 @@ const LandingPage: React.FC<LandingPageProps> = ({ featuresRef }) => {
         }
       });
     };
-    
+
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, [location.pathname]);
 
-  // Handle authentication state and update CTA button
+  // 2. Handle authentication state and redirect
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setIsAuthenticated(!!user);
@@ -66,10 +76,11 @@ const LandingPage: React.FC<LandingPageProps> = ({ featuresRef }) => {
     return () => unsubscribe();
   }, [navigate, location.pathname, hasRedirected]);
 
-  // Handle click outside modal to close it
+  // 3. Handle click outside modal to close it
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (modalRef.current && !modalRef.current.contains(event.target as Node)) {
+        mixpanel.track("Auth Modal Closed");
         setShowAuthModal(false);
       }
     };
@@ -77,42 +88,68 @@ const LandingPage: React.FC<LandingPageProps> = ({ featuresRef }) => {
     if (showAuthModal) {
       document.addEventListener("mousedown", handleClickOutside);
     }
-    
+
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [showAuthModal]);
 
-  // Handle sign-in with Google
+  // 4. Handle sign-in with Google
   const handleGoogleSignIn = async () => {
     try {
       setIsLoading(true);
       const user = await signInWithGoogle();
       if (user) {
-        await storeUserDetails(user);
-        logEvent(analytics, "login", { method: "Google" });
-        navigate("/experience");
+        // 1. Tie future events to this user
+        mixpanel.identify(user.uid);
+  
+        // 2. Populate their Mixpanel profile
+        mixpanel.people.set({
+          distinct_id: user.uid,
+          $email: user.email || "",
+          $name: user.displayName || "",
+        });
+  
+        // 3. Fire the login event
+        mixpanel.track("Login", {
+          distinct_id: user.uid,
+          method: "Google",
+          location: "Header",
+        });
+  
+        navigate("/chat");
       }
     } catch (error) {
-      console.error("Sign-in failed:", error);
+      console.error("Sign‑in failed:", error);
     } finally {
       setIsLoading(false);
+      setShowAuthModal(false);
     }
   };
 
-  // Dynamic CTA button functionality
+  // 5. Dynamic CTA button functionality
   const handleCTAClick = () => {
     if (isAuthenticated) {
+      // Firebase Analytics
       logEvent(analytics, "cta_clicked", { button: "Continue Chat" });
+      // Mixpanel
+      mixpanel.track("CTA Clicked", { button: "Continue Chat" });
+
       navigate("/chat");
     } else {
+      // Firebase Analytics
       logEvent(analytics, "cta_clicked", { button: "Start Talking" });
+      // Mixpanel
+      mixpanel.track("CTA Clicked", { button: "Start Talking" });
+      mixpanel.track("Auth Modal Opened");
+
       setShowAuthModal(true);
     }
   };
 
-  // Scroll to features section
+  // 6. Scroll to features section
   const scrollToFeatures = () => {
+    mixpanel.track("Scroll to Features", { from: location.pathname });
     featuresRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
@@ -136,42 +173,52 @@ const LandingPage: React.FC<LandingPageProps> = ({ featuresRef }) => {
     <>
       <Helmet>
         <title>Saarth – Your AI Companion for Meaningful Conversations</title>
-        <meta name="description" content="Saarth is where AI conversation evolves beyond tools and utilities. Experience personalized dialogue that adapts to you, offers genuine insights, and creates meaningful connections - available whenever you need it." />        
+        <meta
+          name="description"
+          content="Saarth is where AI conversation evolves beyond tools and utilities. Experience personalized dialogue that adapts to you, offers genuine insights, and creates meaningful connections - available whenever you need it."
+        />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://saarth.netlify.app/" />
         <meta property="og:title" content="Saarth – Your AI Companion for Meaningful Conversations" />
-        <meta property="og:description" content="Discover Saarth - where AI finally understands the nuances of real conversation. Not just another utility bot, but a companion that adapts, listens, and responds with depth." />        
+        <meta
+          property="og:description"
+          content="Discover Saarth - where AI finally understands the nuances of real conversation. Not just another utility bot, but a companion that adapts, listens, and responds with depth."
+        />
         <meta property="og:image" content={slugImage} />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="Saarth – Your AI Companion for Meaningful Conversations" />
-        <meta name="twitter:description" content="Saarth is here to chat, share insights, and be your late-night confidant. Connect, explore, and grow together." />
+        <meta
+          name="twitter:description"
+          content="Saarth is here to chat, share insights, and be your late-night confidant. Connect, explore, and grow together."
+        />
         <meta name="twitter:image" content={slugImage} />
 
         <script type="application/ld+json">
           {JSON.stringify({
             "@context": "https://schema.org",
             "@type": "SoftwareApplication",
-            "name": "Saarth",
-            "applicationCategory": "AIApplication",
-            "offers": {
+            name: "Saarth",
+            applicationCategory: "AIApplication",
+            offers: {
               "@type": "Offer",
-              "price": "0",
-              "priceCurrency": "USD"
+              price: "0",
+              priceCurrency: "USD",
             },
-            "description": "Saarth is your AI companion for meaningful conversations.",
-            "operatingSystem": "Web"
+            description: "Saarth is your AI companion for meaningful conversations.",
+            operatingSystem: "Web",
           })}
         </script>
 
         <link rel="preconnect" href="https://firebasestorage.googleapis.com" />
         <link rel="preconnect" href="https://www.googleapis.com" />
-        
-        <link rel="canonical" href="https://saarth.netlify.app${location.pathname}" />    
+
+        <link rel="canonical" href={`https://saarth.netlify.app${location.pathname}`} />
       </Helmet>
 
       <Header featuresRef={featuresRef} />
+
       <main className="landing-page-container landing-page">
-      {/* Hero Section */}
+        {/* Hero Section */}
         <section className="hero" ref={heroRef}>
           <div className="hero-text fade-in-up">
             <h1>Saarth: Where AI Meets You</h1>
@@ -189,7 +236,11 @@ const LandingPage: React.FC<LandingPageProps> = ({ featuresRef }) => {
             </div>
           </div>
           <div className="hero-image fade-in-up" style={{ animationDelay: '0.3s' }}>
-            <img src={two_male_friends} alt="Saarth AI companion in meaningful conversation" loading="lazy" />
+            <img
+              src={two_male_friends}
+              alt="Saarth AI companion in meaningful conversation"
+              loading="lazy"
+            />
           </div>
         </section>
 
@@ -198,21 +249,36 @@ const LandingPage: React.FC<LandingPageProps> = ({ featuresRef }) => {
           <h2 className="features-title fade-in-up">Beyond Question & Answer</h2>
           <div className="features-grid">
             <div className="feature-item fade-in-up" style={{ animationDelay: '0.2s' }}>
-              <img src={two_friends} alt="Personalized AI learning from conversation patterns" className="feature-icon" loading="lazy" />
+              <img
+                src={two_friends}
+                alt="Personalized AI learning from conversation patterns"
+                className="feature-icon"
+                loading="lazy"
+              />
               <h3 className="feature-title">Learns You, Not Just Data</h3>
               <p className="feature-description">
                 I learn from you—growing and adapting to make every conversation feel uniquely yours.
               </p>
             </div>
             <div className="feature-item fade-in-up" style={{ animationDelay: '0.4s' }}>
-              <img src={scrapbook} alt="Saarth providing insightful guidance and wisdom" className="feature-icon" loading="lazy" />
+              <img
+                src={scrapbook}
+                alt="Saarth providing insightful guidance and wisdom"
+                className="feature-icon"
+                loading="lazy"
+              />
               <h3 className="feature-title">Depth Where Others Skim</h3>
               <p className="feature-description">
                 With insights drawn from everyday wisdom, I offer down-to-earth advice to help you navigate life's ups and downs.
               </p>
             </div>
             <div className="feature-item fade-in-up" style={{ animationDelay: '0.6s' }}>
-              <img src={hand} alt="Authentic AI companionship beyond algorithms" className="feature-icon" loading="lazy" />
+              <img
+                src={hand}
+                alt="Authentic AI companionship beyond algorithms"
+                className="feature-icon"
+                loading="lazy"
+              />
               <h3 className="feature-title">Present When Algorithms Aren't</h3>
               <p className="feature-description">
                 I'm not here to replace real connections—I'm here to add a caring, attentive voice to your day.
@@ -256,7 +322,11 @@ const LandingPage: React.FC<LandingPageProps> = ({ featuresRef }) => {
           <h2 className="faq-title fade-in-up">Frequently Asked Questions</h2>
           <div className="faq-grid">
             {faqs.map((faq, index) => (
-              <div key={index} className="faq-item fade-in-up" style={{ animationDelay: `${0.2 + index * 0.2}s` }}>
+              <div
+                key={index}
+                className="faq-item fade-in-up"
+                style={{ animationDelay: `${0.2 + index * 0.2}s` }}
+              >
                 <h3>{faq.question}</h3>
                 <p>{faq.answer}</p>
               </div>
@@ -285,7 +355,10 @@ const LandingPage: React.FC<LandingPageProps> = ({ featuresRef }) => {
         </section>
 
         {/* Floating CTA Button */}
-        <button className={`floating-cta ${isScrolled ? 'visible' : ''}`} onClick={handleCTAClick}>
+        <button
+          className={`floating-cta ${isScrolled ? 'visible' : ''}`}
+          onClick={handleCTAClick}
+        >
           Start Chatting
         </button>
       </main>
@@ -294,11 +367,19 @@ const LandingPage: React.FC<LandingPageProps> = ({ featuresRef }) => {
       {showAuthModal && (
         <div className="auth-modal-overlay">
           <div className="auth-modal" ref={modalRef}>
-            <button className="auth-modal-close" onClick={() => setShowAuthModal(false)}>✕</button>
+            <button
+              className="auth-modal-close"
+              onClick={() => {
+                mixpanel.track("Auth Modal Closed");
+                setShowAuthModal(false);
+              }}
+            >
+              ✕
+            </button>
             <h3 className="auth-modal-title">Welcome to Saarth</h3>
             <p className="auth-modal-subtitle">Sign in to get started</p>
-            
-            <button 
+
+            <button
               className={`auth-button google-button ${isLoading ? 'loading' : ''}`}
               onClick={handleGoogleSignIn}
               disabled={isLoading}
@@ -306,7 +387,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ featuresRef }) => {
               <FcGoogle size={24} />
               <span>{isLoading ? "Connecting..." : "Continue with Google"}</span>
             </button>
-            
+
             <p className="auth-privacy-note">
               By continuing, you agree to our <a href="/privacy-policy">Privacy Policy</a>
             </p>
