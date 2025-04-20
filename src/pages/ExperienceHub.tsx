@@ -1,40 +1,48 @@
+// src/pages/ExperienceHub.tsx
+
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './ExperienceHub.css';
 import { 
-  FiMessageCircle, 
   FiBook, 
   FiArrowRight, 
-  FiHeart, 
-  FiTarget, 
-  FiFeather, 
-  FiZap, 
-  FiLayers 
+  FiHeart 
 } from 'react-icons/fi';
+import mixpanel from '../utils/mixpanel';          // ← Mixpanel import
+import { auth } from '../utils/firebaseAuth';      // ← to get current user
 
 const ExperienceHub: React.FC = () => {
   const navigate = useNavigate();
   const containerRef = useRef<HTMLDivElement>(null);
   const [isLoaded, setIsLoaded] = useState(false);
 
+  // 1. Track page view when component mounts
   useEffect(() => {
-    // Add animation class after component mounts for smooth entrance
+    mixpanel.track('Experience Hub Viewed', {
+      distinct_id: auth.currentUser?.uid || 'anonymous',
+      timestamp: new Date().toISOString()
+    });
+
+    // Add animation class after mount
     const timer = setTimeout(() => {
       setIsLoaded(true);
-      if (containerRef.current) {
-        containerRef.current.classList.add('animate-in');
-      }
+      containerRef.current?.classList.add('animate-in');
     }, 100);
 
     return () => clearTimeout(timer);
   }, []);
 
+  // 2. Handle Emotional Companion selection
   const handleEmotionalCompanion = () => {
-    // Add exit animation before navigation
+    mixpanel.track('Experience Selected', {
+      distinct_id: auth.currentUser?.uid || 'anonymous',
+      experience: 'Emotional Companion',
+      timestamp: new Date().toISOString()
+    });
+
+    // Exit animation then navigate
     if (containerRef.current) {
       containerRef.current.classList.remove('animate-in');
-      
-      // Allow time for exit animation before navigation
       setTimeout(() => {
         navigate('/chat');
       }, 300);
@@ -43,12 +51,16 @@ const ExperienceHub: React.FC = () => {
     }
   };
 
+  // 3. Handle Educational Experience selection
   const handleEducationalExperience = () => {
-    // Add exit animation before navigation
+    mixpanel.track('Experience Selected', {
+      distinct_id: auth.currentUser?.uid || 'anonymous',
+      experience: 'Educational',
+      timestamp: new Date().toISOString()
+    });
+
     if (containerRef.current) {
       containerRef.current.classList.remove('animate-in');
-      
-      // Allow time for exit animation before navigation
       setTimeout(() => {
         navigate('/concepts');
       }, 300);
@@ -76,11 +88,13 @@ const ExperienceHub: React.FC = () => {
       </div>
 
       <div className="experience-options">
-        <div className="experience-card emotional" onClick={handleEmotionalCompanion}>
+        {/* Emotional Companion Card */}
+        <div 
+          className="experience-card emotional" 
+          onClick={handleEmotionalCompanion}
+        >
           <div className="card-content">
-            <div className="card-icon">
-              <FiHeart />
-            </div>
+            <div className="card-icon"><FiHeart /></div>
             <h2>Talk with Saarth</h2>
             <p>Share your thoughts, seek guidance, or just have a friendly chat in a safe, judgment-free space.</p>
             <ul className="experience-features">
@@ -89,17 +103,18 @@ const ExperienceHub: React.FC = () => {
               <li>Meaningful, thoughtful conversations</li>
             </ul>
             <button className="experience-button">
-              Get Started
-              <FiArrowRight className="button-icon" />
+              Get Started <FiArrowRight className="button-icon" />
             </button>
           </div>
         </div>
 
-        <div className="experience-card educational" onClick={handleEducationalExperience}>
+        {/* Educational Experience Card */}
+        <div 
+          className="experience-card educational" 
+          onClick={handleEducationalExperience}
+        >
           <div className="card-content">
-            <div className="card-icon">
-              <FiBook />
-            </div>
+            <div className="card-icon"><FiBook /></div>
             <h2>Learn with Saarth</h2>
             <p>Explore concepts and ideas through natural, adaptive conversations tailored to your interests.</p>
             <ul className="experience-features">
@@ -108,8 +123,7 @@ const ExperienceHub: React.FC = () => {
               <li>Knowledge exploration and discovery</li>
             </ul>
             <button className="experience-button">
-              Start Learning
-              <FiArrowRight className="button-icon" />
+              Start Learning <FiArrowRight className="button-icon" />
             </button>
           </div>
         </div>

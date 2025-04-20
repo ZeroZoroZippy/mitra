@@ -1,208 +1,177 @@
-import React, { useState, useEffect } from "react";
+// src/pages/ChatLayout.tsx
+import React, { useState, useEffect, useRef } from "react";
 import "./ChatLayout.css";
 import Sidebar from "./Sidebar";
 import ChatArea from "./ChatArea";
 import { isCreator } from "../../../../utils/firebaseAuth";
-import { trackUserActivity, trackSessionStart, trackSessionEnd } from "../../../../utils/analytics";
 import { auth } from "../../../../utils/firebaseConfig";
+import mixpanel from "../../../../utils/mixpanel";
+import { trackSessionStart, trackSessionEnd } from "../../../../utils/analytics";
 
 interface Chat {
   id: number;
   title: string;
   timestamp: string;
-  // Optionally, you can add fields like systemPrompt, icon, color, etc.
 }
 
 const ChatLayout: React.FC = () => {
-  // Determine if the current user is the admin/creator.
+  /* ──────────────────────────────  User + room state  ─────────────────────────────── */
   const userIsAdmin = isCreator();
 
-  // Get the activeChatId from localStorage (default to 1)
+  // Load or default to room #1
   const [activeChatId, setActiveChatId] = useState<number>(() => {
-    const savedChatId = localStorage.getItem("activeChatId");
-    const chatHistory = localStorage.getItem("chats");
-    // Default to thread with id 1 ("Chat with Saarth")
-    return savedChatId && chatHistory ? parseInt(savedChatId, 10) : 1;
+    const saved   = localStorage.getItem("activeChatId");
+    const history = localStorage.getItem("chats");
+    return saved && history ? parseInt(saved, 10) : 1;
   });
-  
-  // Open sidebar by default for first-time sign-ins
-  const [isSidebarOpen, setIsSidebarOpen] = useState(() => {
-    const chatHistory = localStorage.getItem("chats");
-    return chatHistory ? false : true;
-  });
-  
+
+  const [isSidebarOpen, setIsSidebarOpen]     = useState(() => !localStorage.getItem("chats"));
   const [isChatFullScreen, setIsChatFullScreen] = useState(true);
 
-  // Define the standard chat rooms.
+  /* ───────────────────────────────  Static room list  ─────────────────────────────── */
   const baseChatList: Chat[] = [
-    {
-      id: 1,
-      title: "The Companion",
-      timestamp: new Date().toLocaleString("en-US", {
-        hour: "numeric",
-        minute: "numeric",
-        hour12: true,
-        month: "short",
-        day: "numeric",
-      }),
-    },
-    {
-      id: 2,
-      title: "Love & Connections",
-      timestamp: new Date().toLocaleString("en-US", {
-        hour: "numeric",
-        minute: "numeric",
-        hour12: true,
-        month: "short",
-        day: "numeric",
-      }),
-    },
-    {
-      id: 3,
-      title: "Dreams & Manifestations",
-      timestamp: new Date().toLocaleString("en-US", {
-        hour: "numeric",
-        minute: "numeric",
-        hour12: true,
-        month: "short",
-        day: "numeric",
-      }),
-    },
-    {
-      id: 4,
-      title: "Healing & Emotional Release",
-      timestamp: new Date().toLocaleString("en-US", {
-        hour: "numeric",
-        minute: "numeric",
-        hour12: true,
-        month: "short",
-        day: "numeric",
-      }),
-    },
-    {
-      id: 5,
-      title: "Purpose & Ambition",
-      timestamp: new Date().toLocaleString("en-US", {
-        hour: "numeric",
-        minute: "numeric",
-        hour12: true,
-        month: "short",
-        day: "numeric",
-      }),
-    },
-    {
-      id: 6,
-      title: "Mental Well-Being",
-      timestamp: new Date().toLocaleString("en-US", {
-        hour: "numeric",
-        minute: "numeric",
-        hour12: true,
-        month: "short",
-        day: "numeric",
-      }),
-    },
+    { id: 1, title: "The Companion",          timestamp: new Date().toLocaleString() },
+    { id: 2, title: "Love & Connections",     timestamp: new Date().toLocaleString() },
+    { id: 3, title: "Dreams & Manifestations",timestamp: new Date().toLocaleString() },
+    { id: 4, title: "Healing & Emotional Release", timestamp: new Date().toLocaleString() },
+    { id: 5, title: "Purpose & Ambition",     timestamp: new Date().toLocaleString() },
+    { id: 6, title: "Mental Well‑Being",      timestamp: new Date().toLocaleString() },
   ];
 
-  // Room names mapping for analytics
-  const roomLabels: {[key: number]: string} = {};
-  baseChatList.forEach(chat => {
-    roomLabels[chat.id] = chat.title;
-  });
-
-  // Conditionally add the admin-only dashboard room.
   const chatList: Chat[] = userIsAdmin
-    ? [
-        ...baseChatList,
-        {
-          id: 7, // Use a unique id that doesn't conflict with others.
-          title: "Admin Dashboard",
-          timestamp: new Date().toLocaleString("en-US", {
-            hour: "numeric",
-            minute: "numeric",
-            hour12: true,
-            month: "short",
-            day: "numeric",
-          }),
-        },
-      ]
+    ? [...baseChatList, { id: 7, title: "Admin Dashboard", timestamp: new Date().toLocaleString() }]
     : baseChatList;
 
-  // Track room changes
-  const handleRoomChange = (roomId: number) => {
-    setActiveChatId(roomId);
-    
-    // Track the room change in analytics
-    if (auth.currentUser) {
-      trackUserActivity(auth.currentUser.uid, roomId, roomLabels[roomId] || "Unknown");
-    }
-  };
+  /* Map IDs ⇒ titles for analytics */
+  const roomLabels: Record<number, string> = {};
+  chatList.forEach(c => { roomLabels[c.id] = c.title; });
 
-  // Session tracking
+  /* ──────────────────────────────  Mixpanel boot‑strap  ───────────────────────────── */
   useEffect(() => {
-    // Track session start when component mounts
-    trackSessionStart();
-    
-    // Track session end when component unmounts
-    return () => {
-      trackSessionEnd();
-    };
+    // Register super‑properties once per load
+    mixpanel.register({
+      app_version: import.meta.env.VITE_APP_VERSION || "dev",
+      device: /Mobi/.test(navigator.userAgent) ? "mobile" : "desktop",
+    });
+
+    // Identify or alias once Firebase tells us who the user is
+    const unsubscribe = auth.onAuthStateChanged(user => {
+      if (!user) return;
+      const mpId = mixpanel.get_distinct_id();
+      if (mpId && mpId !== user.uid) {
+        // Visitor was anonymous, now signed in → stitch the profiles
+        mixpanel.alias(user.uid);
+      }
+      mixpanel.identify(user.uid);
+    });
+    return () => unsubscribe();
   }, []);
 
-  const toggleFullScreen = () => {
-    setIsChatFullScreen((prev) => {
-      const newState = !prev;
-      if (!newState && window.innerWidth <= 768) {
-        setIsSidebarOpen(true);
-      } else if (window.innerWidth > 768) {
-        setIsSidebarOpen((prev) => prev);
-      }
-      return newState;
+  /* ─────────────────────  Helpers to time session + room dwell  ───────────────────── */
+  const roomStartRef     = useRef<Date>(new Date());
+  const previousRoomRef  = useRef<number>(activeChatId);
+
+  const finishRoomTiming = (roomId: number) => {
+    const now = new Date();
+    const durationSec = (now.getTime() - roomStartRef.current.getTime()) / 1000;
+
+    mixpanel.track("Room Duration", {
+      room_id: roomId,
+      room_name: roomLabels[roomId] || "Unknown Room",
+      duration_sec: durationSec,
+    });
+
+    // prepare for next room
+    roomStartRef.current    = now;
+    previousRoomRef.current = roomId;
+  };
+
+  /* ────────────────────────────────  Session timing  ─────────────────────────────── */
+  useEffect(() => {
+    trackSessionStart();           // your wrapper
+    mixpanel.time_event("Session");
+
+    const onUnload = () => {
+      // Close out the last room before leaving
+      finishRoomTiming(previousRoomRef.current);
+      trackSessionEnd();           // your wrapper
+      mixpanel.track("Session");   // Mixpanel auto‑adds duration
+    };
+
+    window.addEventListener("beforeunload", onUnload);
+    return () => {
+      onUnload();                  // also fire when React unmounts
+      window.removeEventListener("beforeunload", onUnload);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  /* ─────────────────────  Track the very first room view  ───────────────────── */
+  useEffect(() => {
+    mixpanel.track("Room Viewed", {
+      room_id: activeChatId,
+      room_name: roomLabels[activeChatId] || "Unknown Room",
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);   // run exactly once on first paint
+
+  /* ───────────────────────────  Room change handler  ─────────────────────────────── */
+  const handleRoomChange = (roomId: number) => {
+    // Finish timing previous room before switching
+    finishRoomTiming(previousRoomRef.current);
+
+    // Switch room in UI + localStorage
+    setActiveChatId(roomId);
+    localStorage.setItem("activeChatId", roomId.toString());
+
+    // Emit “Room Selected”
+    mixpanel.track("Room Selected", {
+      room_id: roomId,
+      room_name: roomLabels[roomId] || "Unknown Room",
+      timestamp: new Date().toISOString(),
     });
   };
 
-  const toggleSidebar = () => {
-    setIsSidebarOpen((prev) => !prev);
+  /* ────────────────────────────────  UI helpers  ──────────────────────────────── */
+  const toggleFullScreen = () => {
+    setIsChatFullScreen(prev => {
+      const next = !prev;
+      if (!next && window.innerWidth <= 768) setIsSidebarOpen(true);
+      return next;
+    });
   };
+
+  const toggleSidebar = () => setIsSidebarOpen(p => !p);
 
   const handleNewChat = () => {
-    // Placeholder for new chat functionality; not needed for switching threads
-    setActiveChatId(Date.now());
+    const newId = Date.now();
+    setActiveChatId(newId);
+    localStorage.setItem("activeChatId", newId.toString());
+
+    mixpanel.track("Room Created", { room_id: newId, room_name: "Untitled Chat" });
   };
 
-  useEffect(() => {
-    if (activeChatId !== 0) {
-      localStorage.setItem("activeChatId", activeChatId.toString());
-    }
-  }, [activeChatId]);
-
-  const [showLimitModal, setShowLimitModal] = useState(false);
-
+  /* ─────────────────────────────────  Render  ─────────────────────────────────── */
   return (
     <div
       className={`chat-layout ${isChatFullScreen ? "fullscreen" : ""} ${
         isSidebarOpen ? "sidebar-visible" : ""
       }`}
     >
-      {isSidebarOpen && (
-        <div className="sidebar-overlay" onClick={toggleSidebar}></div>
+      {isSidebarOpen && <div className="sidebar-overlay" onClick={toggleSidebar} />}
+
+      <Sidebar
+        chatList={chatList}
+        activeChatId={activeChatId}
+        onSelectChat={handleRoomChange}
+        onClose={toggleSidebar}
+        isSidebarOpen={isSidebarOpen}
+        showLimitModal={() => {}}   // kept for compatibility
+      />
+
+      {isSidebarOpen && window.innerWidth <= 768 && (
+        <div className="chat-area-overlay" onClick={toggleSidebar} />
       )}
-
-    <Sidebar
-      chatList={chatList}
-      activeChatId={activeChatId}
-      onSelectChat={handleRoomChange}
-      onClose={toggleSidebar}
-      isSidebarOpen={isSidebarOpen}
-      showLimitModal={() => setShowLimitModal(true)} // Add this
-    />
-
-    {/* Add this line for mobile overlay - it will cover the chat area */}
-    {isSidebarOpen && window.innerWidth <= 768 && (
-      <div 
-        className="chat-area-overlay" 
-        onClick={toggleSidebar}
-      ></div>
-    )}
 
       <ChatArea
         activeChatId={activeChatId}

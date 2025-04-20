@@ -10,9 +10,10 @@ import ExperienceHub from "./pages/ExperienceHub"; // Updated import name
 import ConceptsLayout from "./components/concepts/ConceptsLayout";
 import DiscoverScreen from "./components/discover/DiscoverScreen";
 import ThreadsScreen from "./components/threads/ThreadsScreen";
+import AdminDashboard from "./pages/AdminDashboard";
 
 // Define current app version - update this when releasing new versions
-export const APP_VERSION = "3.0.9";
+export const APP_VERSION = "3.0.10";
 
 // Initialize the guest analytics function
 export const initializeGuestAnalytics = async () => {
@@ -314,8 +315,8 @@ const App: React.FC = () => {
       <Route path="/privacy-policy" element={<PrivacyPolicy />} />
       <Route path="/discover" element={<ProtectedRoute element={<DiscoverScreen />} />} />
       <Route path="/threads" element={<ProtectedRoute element={<ThreadsScreen />} />} />
-      {/* Redirect /home to /experience for backward compatibility */}
       <Route path="/home" element={<Navigate replace to="/experience" />} />
+      <Route path="/admin/dashboard" element={<ProtectedRoute element={<AdminDashboard />} />} />
       <Route path="*" element={<LandingPage featuresRef={featuresRef} />} />
     </Routes>
   );

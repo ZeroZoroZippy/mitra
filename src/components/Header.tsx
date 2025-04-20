@@ -1,9 +1,12 @@
+// src/components/Header.tsx
+
 import React, { useState, RefObject, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import "./Header.css";
 import { signInWithGoogle, signInAsGuest, auth } from "../utils/firebaseAuth";
 import { onAuthStateChanged } from "firebase/auth";
-import { FcGoogle } from "react-icons/fc"; // Import Google icon
+import mixpanel from "../utils/mixpanel";               // ← Mixpanel import
+import { FcGoogle } from "react-icons/fc";
 
 interface HeaderProps {
   featuresRef: RefObject<HTMLDivElement>;
@@ -24,21 +27,17 @@ const Header: React.FC<HeaderProps> = ({ featuresRef }) => {
     return () => unsubscribe();
   }, []);
 
-  // Handle click outside modal to close it
+  // Close modal on outside click
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (modalRef.current && !modalRef.current.contains(event.target as Node)) {
         setShowAuthModal(false);
       }
     };
-
     if (showAuthModal) {
       document.addEventListener("mousedown", handleClickOutside);
     }
-    
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [showAuthModal]);
 
   const toggleMenu = () => {
@@ -46,55 +45,81 @@ const Header: React.FC<HeaderProps> = ({ featuresRef }) => {
   };
 
   const scrollToFeatures = () => {
-    if (featuresRef.current) {
-      featuresRef.current.scrollIntoView({ behavior: "smooth" });
-    }
+    featuresRef.current?.scrollIntoView({ behavior: "smooth" });
     setIsMobileMenuOpen(false);
   };
 
-  // Handle sign-in with Google
+  // Sign in via Google
   const handleGoogleSignIn = async () => {
     try {
       setIsLoading(true);
       const user = await signInWithGoogle();
       if (user) {
+        // 1. Tie future events to this user
+        mixpanel.identify(user.uid);
+  
+        // 2. Populate their Mixpanel profile
+        mixpanel.people.set({
+          distinct_id: user.uid,
+          $email: user.email || "",
+          $name: user.displayName || "",
+        });
+  
+        // 3. Fire the login event
+        mixpanel.track("Login", {
+          distinct_id: user.uid,
+          method: "Google",
+          location: "Header",
+        });
+  
         navigate("/chat");
       }
     } catch (error) {
-      console.error("Sign-in failed:", error);
+      console.error("Sign‑in failed:", error);
     } finally {
       setIsLoading(false);
       setShowAuthModal(false);
     }
   };
 
-  // Handle sign-in as guest
+  // Sign in as guest
   const handleGuestSignIn = async () => {
     try {
       setIsLoading(true);
       const user = await signInAsGuest();
       if (user) {
+        mixpanel.track("Login", {
+          distinct_id: user.uid,
+          method: "Guest",
+          location: "Header",
+        });
         navigate("/chat");
       }
     } catch (error) {
-      console.error("Guest sign-in failed:", error);
+      console.error("Guest sign‑in failed:", error);
     } finally {
       setIsLoading(false);
       setShowAuthModal(false);
     }
   };
 
-  // Handle CTA click
+  // **Header CTA** click tracking
   const handleCTAClick = () => {
+    const buttonLabel = isAuthenticated ? "Continue Chat" : "Try Saarth";
+    // Firebase auth modal logic remains
     if (isAuthenticated) {
+      mixpanel.track("Header CTA Clicked", { button: buttonLabel, location: "Header" });
       navigate("/chat");
     } else {
+      mixpanel.track("Header CTA Clicked", { button: buttonLabel, location: "Header" });
       setShowAuthModal(true);
     }
+    setIsMobileMenuOpen(false);
   };
 
-  // Function to open email app
+  // Open mail client
   const handleContactClick = () => {
+    mixpanel.track("Contact Clicked", { method: "Email Link" });
     window.location.href = "mailto:feedback@saarth.com?subject=Contact Saarth&body=Hi Saarth Team,";
     setIsMobileMenuOpen(false);
   };
@@ -107,14 +132,14 @@ const Header: React.FC<HeaderProps> = ({ featuresRef }) => {
           <a href="/">Saarth</a>
         </div>
 
-        {/* Desktop Navigation */}
+        {/* Desktop Nav */}
         <nav className="header-nav">
           <button className="cta-button" onClick={handleCTAClick}>
             {isAuthenticated ? "Continue Chat" : "Try Saarth"}
           </button>
         </nav>
 
-        {/* Hamburger Icon for Mobile */}
+        {/* Mobile Menu Icon */}
         <button
           className={`menu-icon ${isMobileMenuOpen ? "open" : ""}`}
           aria-label="Toggle Mobile Menu"
@@ -130,7 +155,7 @@ const Header: React.FC<HeaderProps> = ({ featuresRef }) => {
           <a onClick={scrollToFeatures} className="mobile-link" role="button">
             Features
           </a>
-          <a className="mobile-link" onClick={handleContactClick} role="button">
+          <a onClick={handleContactClick} className="mobile-link" role="button">
             Contact
           </a>
           <button className="mobile-cta-button" onClick={handleCTAClick}>
@@ -143,22 +168,23 @@ const Header: React.FC<HeaderProps> = ({ featuresRef }) => {
       {showAuthModal && (
         <div className="auth-modal-overlay">
           <div className="auth-modal" ref={modalRef}>
-            <button className="auth-modal-close" onClick={() => setShowAuthModal(false)}>✕</button>
+            <button className="auth-modal-close" onClick={() => setShowAuthModal(false)}>
+              ✕
+            </button>
             <h3 className="auth-modal-title">Welcome to Saarth</h3>
             <p className="auth-modal-subtitle">Choose how you'd like to get started</p>
-            
-            <button 
-              className={`auth-button google-button ${isLoading ? 'loading' : ''}`}
+
+            <button
+              className={`auth-button google-button ${isLoading ? "loading" : ""}`}
               onClick={handleGoogleSignIn}
               disabled={isLoading}
             >
               <FcGoogle size={24} />
               <span>Continue with Google</span>
             </button>
-            
-            <div className="auth-divider">
-            </div>
-            
+
+            <div className="auth-divider"></div>
+
             <p className="auth-privacy-note">
               By continuing, you agree to our <a href="/privacy-policy">Privacy Policy</a>
             </p>
