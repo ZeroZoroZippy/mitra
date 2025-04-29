@@ -194,12 +194,18 @@
     .discover-panel {
       width: 320px; /* Fixed width instead of percentage for better layout */
       left: 50px; /* Adjust position to account for sidebar */
+      height: 100%;
+      display: flex;
+      flex-direction: column;
     }
     
     .discover-bento-container {
       grid-template-columns: 1fr 1fr; /* Ensure two columns */
       gap: 0.8rem;
       padding: 1rem;
+      flex: 1;
+      height: 0;
+      -webkit-overflow-scrolling: touch;
     }
     
     /* Adjust card sizes for better proportions */
