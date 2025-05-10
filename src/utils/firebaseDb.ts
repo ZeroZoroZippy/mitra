@@ -86,7 +86,8 @@ export const saveMessage = async (
   await addDoc(collection(db, `users/${user.uid}/messages`), {
     text: text,
     sender,
-    timestamp: new Date().toISOString(),
+    timestamp: serverTimestamp(), // CHANGE: Use Firestore serverTimestamp()
+    clientTimestamp: new Date().toISOString(), // Add client timestamp as backup
     likeStatus,
     encrypted: false,
     threadId,
@@ -111,57 +112,52 @@ export const getMessages = async (userId: string, activeChatId: number): Promise
     const messages: Message[] = [];
 
     querySnapshot.docs.forEach((doc) => {
-      // Use any type temporarily to avoid type errors during processing
       const messageData = doc.data() as any;
-      let timestamp: string | null = null;
-
-      // First check if timestamp exists at all
-      if (messageData.timestamp) {
-        // Handle Firestore Timestamp object
-        if (typeof messageData.timestamp === 'object' && 'toDate' in messageData.timestamp) {
-          try {
-            const date = messageData.timestamp.toDate();
-            if (!isNaN(date.getTime())) {
-              timestamp = date.toISOString();
-            }
-          } catch (error) {
-            console.error("Error converting Firestore timestamp:", error);
-            // Skip this message by not setting timestamp
-          }
-        } 
-        // Handle string timestamp
-        else if (typeof messageData.timestamp === 'string') {
-          try {
-            const date = new Date(messageData.timestamp);
-            if (!isNaN(date.getTime())) {
-              timestamp = date.toISOString();
-            }
-          } catch (error) {
-            console.error("Error parsing timestamp string:", error);
-            // Skip this message by not setting timestamp
-          }
-        }
+      let timestamp: string;
+      
+      // Get timestamp in UTC first, then convert to IST
+      let utcTimestamp: Date;
+      
+      if (messageData.timestamp && typeof messageData.timestamp === 'object' && 'toDate' in messageData.timestamp) {
+        // For Firestore server timestamps
+        utcTimestamp = messageData.timestamp.toDate();
+      } else if (messageData.clientTimestamp && typeof messageData.clientTimestamp === 'string') {
+        // For client timestamps (fallback)
+        utcTimestamp = new Date(messageData.clientTimestamp);
+      } else if (messageData.timestamp && typeof messageData.timestamp === 'string') {
+        // For legacy string timestamps
+        utcTimestamp = new Date(messageData.timestamp);
+      } else {
+        // Last resort fallback
+        utcTimestamp = new Date();
+        console.warn("Using current time as fallback for message: ", doc.id);
       }
+      
+      // Convert to IST format
+      timestamp = utcTimestamp.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
 
-      // Only add message if timestamp is valid
-      if (timestamp) {
-        messages.push({
-          id: doc.id,
-          userId: userId,
-          text: messageData.text,
-          // Map "ai" to "assistant" for consistency if needed
-          sender: messageData.sender === "ai" ? "assistant" : messageData.sender,
-          timestamp: timestamp,
-          encrypted: messageData.encrypted || false,
-          likeStatus: messageData.likeStatus || null,
-        });
-      }
+      messages.push({
+        id: doc.id,
+        userId: userId,
+        text: messageData.text,
+        // Map "ai" to "assistant" for consistency if needed
+        sender: messageData.sender === "ai" ? "assistant" : messageData.sender,
+        timestamp: timestamp,
+        encrypted: messageData.encrypted || false,
+        likeStatus: messageData.likeStatus || null,
+      });
     });
 
-    // Sort messages by timestamp
-    const sortedMessages = messages.sort(
-      (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
-    );
+    // Store original Date objects for sorting
+    const messagesWithDateObj = messages.map(msg => ({
+      ...msg,
+      _dateObj: new Date(msg.timestamp) // Store Date object for sorting
+    }));
+    
+    // Sort messages by timestamp using the Date objects
+    const sortedMessages = messagesWithDateObj
+      .sort((a, b) => a._dateObj.getTime() - b._dateObj.getTime())
+      .map(({ _dateObj, ...msg }) => msg); // Remove _dateObj from final result
 
     return sortedMessages;
   } catch (error) {

@@ -46,6 +46,7 @@ interface ConceptDocData {
     language: string | null;
     createdAt: string;
     encrypted: boolean;
+    clientTimestamp: string;
 }
 
 /**
@@ -235,51 +236,52 @@ export const getCustomConceptById = async (conceptId: string): Promise<CustomCon
  * Save a concept message to Firestore
  */
 export const saveConceptMessage = async (
-    text: string,
-    sender: "user" | "assistant",
-    conceptId: string | null = null,
-    type?: string,
-    language?: string
+  text: string,
+  sender: "user" | "assistant",
+  conceptId: string | null = null,
+  type?: string,
+  language?: string
 ): Promise<string | null> => {
-    const user = auth.currentUser;
-    if (!user) {
-        console.warn("Cannot save concept message: No authenticated user");
-        return null;
-    }
+  const user = auth.currentUser;
+  if (!user) {
+      console.warn("Cannot save concept message: No authenticated user");
+      return null;
+  }
 
-    if (conceptId) {
-      // Update the last accessed timestamp for the concept
-      await updateConceptAccess(conceptId);
-    }
+  if (conceptId) {
+    // Update the last accessed timestamp for the concept
+    await updateConceptAccess(conceptId);
+  }
 
-    try {
-        const messageData: ConceptDocData = {
-            text,
-            sender,
-            timestamp: serverTimestamp(),
-            conceptId,
-            type: type || null,
-            language: language || null,
-            createdAt: new Date().toISOString(),
-            encrypted: false
-        };
+  try {
+      const messageData: ConceptDocData = {
+          text,
+          sender,
+          timestamp: serverTimestamp(), // Keep using serverTimestamp()
+          clientTimestamp: new Date().toISOString(), // Add client timestamp as backup
+          conceptId,
+          type: type || null,
+          language: language || null,
+          createdAt: new Date().toISOString(),
+          encrypted: false
+      };
 
-        console.log(`Saving concept message with conceptId: ${conceptId}`);
+      console.log(`Saving concept message with conceptId: ${conceptId}`);
 
-        const docRef = await addDoc(
-            collection(db, `users/${user.uid}/preferences/concepts/messages`),
-            messageData
-        );
+      const docRef = await addDoc(
+          collection(db, `users/${user.uid}/preferences/concepts/messages`),
+          messageData
+      );
 
-        // Update analytics - ensure document exists first
-        await updateConceptAnalytics(sender);
+      // Update analytics - ensure document exists first
+      await updateConceptAnalytics(sender);
 
-        console.log("✅ Concept message saved with ID:", docRef.id);
-        return docRef.id;
-    } catch (error) {
-        console.error("❌ Error saving concept message:", error);
-        return null;
-    }
+      console.log("✅ Concept message saved with ID:", docRef.id);
+      return docRef.id;
+  } catch (error) {
+      console.error("❌ Error saving concept message:", error);
+      return null;
+  }
 };
 
 /**
@@ -343,19 +345,29 @@ export const getConceptMessages = async (
       querySnapshot.docs.forEach((doc) => {
           const data = doc.data();
           
-          // Handle Firestore timestamp consistently
-          let timestamp: string;
+          // UPDATED: Get timestamp in UTC first, then convert to IST
+          let utcTimestamp: Date;
           
           if (data.timestamp && typeof data.timestamp === 'object' && 'toDate' in data.timestamp) {
-              // For Firestore Timestamp objects
-              timestamp = data.timestamp.toDate().toISOString();
-          } else if (typeof data.timestamp === 'string') {
-              // For string timestamps
-              timestamp = data.timestamp;
+              // For Firestore server timestamps
+              utcTimestamp = data.timestamp.toDate();
+          } else if (data.clientTimestamp && typeof data.clientTimestamp === 'string') {
+              // For client timestamps (fallback)
+              utcTimestamp = new Date(data.clientTimestamp);
+          } else if (data.timestamp && typeof data.timestamp === 'string') {
+              // For legacy string timestamps
+              utcTimestamp = new Date(data.timestamp);
+          } else if (data.createdAt && typeof data.createdAt === 'string') {
+              // Fallback to createdAt
+              utcTimestamp = new Date(data.createdAt);
           } else {
-              // Fallback to createdAt or current time
-              timestamp = data.createdAt || new Date().toISOString();
+              // Last resort fallback
+              utcTimestamp = new Date();
+              console.warn("Using current time as fallback for message: ", doc.id);
           }
+          
+          // Convert to IST format (Indian Standard Time)
+          let timestamp = utcTimestamp.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
 
           messages.push({
               id: doc.id,
@@ -369,14 +381,19 @@ export const getConceptMessages = async (
           });
       });
 
-      // We'll still sort messages by timestamp in memory
-      const sortedMessages = messages.sort(
-          (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
-      );
+      // Store original Date objects for sorting
+      const messagesWithDateObj = messages.map(msg => ({
+        ...msg,
+        _dateObj: new Date(msg.timestamp.replace(/(\d+)\/(\d+)\/(\d+)/, '$2/$1/$3')) // Handle Indian date format dd/mm/yyyy
+      }));
+      
+      // Sort messages by timestamp using the Date objects
+      const sortedMessages = messagesWithDateObj
+        .sort((a, b) => a._dateObj.getTime() - b._dateObj.getTime())
+        .map(({ _dateObj, ...msg }) => msg); // Remove _dateObj from final result
 
       console.log(`Returning ${sortedMessages.length} sorted concept messages`);
       return sortedMessages;
-
   } catch (error) {
       console.error("❌ Error fetching concept messages:", error);
       return [];
