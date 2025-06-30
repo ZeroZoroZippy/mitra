@@ -4,7 +4,7 @@ import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "./utils/firebaseAuth";
 import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 import LandingPage from "./pages/LandingPage";
-import ChatLayout from "./components/chat/screens/components/ChatLayout";
+import ChatLayout from "./components/chat/ChatLayout";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import ExperienceHub from "./pages/ExperienceHub"; // Updated import name
 import ConceptsLayout from "./components/concepts/ConceptsLayout";

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import "./ChatHeader.css";
-import { getUserProfile } from "../../../../utils/firebaseDb";
-import { auth } from "../../../../utils/firebaseAuth";
+import { getUserProfile } from "../../utils/firebaseDb";
+import { auth } from "../../utils/firebaseAuth";
 import { FaUserCircle, FaBars } from "react-icons/fa";
 import { signOut } from "firebase/auth";
 import { useNavigate } from "react-router-dom";

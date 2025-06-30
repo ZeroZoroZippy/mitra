@@ -3,10 +3,10 @@ import React, { useState, useEffect, useRef } from "react";
 import "./ChatLayout.css";
 import Sidebar from "./Sidebar";
 import ChatArea from "./ChatArea";
-import { isCreator } from "../../../../utils/firebaseAuth";
-import { auth } from "../../../../utils/firebaseConfig";
-import mixpanel from "../../../../utils/mixpanel";
-import { trackSessionStart, trackSessionEnd } from "../../../../utils/analytics";
+import { isCreator } from "../../utils/firebaseAuth";
+import { auth } from "../../utils/firebaseConfig";
+import mixpanel from "../../utils/mixpanel";
+import { trackSessionStart, trackSessionEnd } from "../../utils/analytics";
 
 interface Chat {
   id: number;

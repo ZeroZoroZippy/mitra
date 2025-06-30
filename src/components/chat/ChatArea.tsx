@@ -4,17 +4,17 @@ import "./ChatArea.css";
 import ChatHeader from "./ChatHeader";
 import { IoArrowUpCircleSharp } from "react-icons/io5";
 import { IoCopyOutline } from "react-icons/io5";
-import { auth } from "../../../../utils/firebaseConfig";
+import { auth } from "../../utils/firebaseConfig";
 import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
 import { AiFillLike, AiFillDislike, AiOutlineLike, AiOutlineDislike } from "react-icons/ai";
-import { getMessages, saveMessage, updateLikeStatus, decryptMessage} from "../../../../utils/firebaseDb";
-import { getGroqChatCompletion, getRecentMessages } from "../../../../utils/getGroqChatCompletion";
-import { exportToGoogleSheets, syncFirestoreToGoogleSheets } from "../../../../utils/googleSheets";
+import { getMessages, saveMessage, updateLikeStatus, decryptMessage} from "../../utils/firebaseDb";
+import { getGroqChatCompletion, getRecentMessages } from "../../utils/getGroqChatCompletion";
+import { exportToGoogleSheets, syncFirestoreToGoogleSheets } from "../../utils/googleSheets";
 import { getFirestore, doc, getDoc, updateDoc, increment, setDoc } from "firebase/firestore";
-import { isCreator } from "../../../../utils/firebaseAuth";
-import { trackMessage } from "../../../../utils/analytics";
-import AdminDashboard from '../../../../pages/AdminDashboard';
-import mixpanel from "../../../../utils/mixpanel"; // Import Mixpanel
+import { isCreator } from "../../utils/firebaseAuth";
+import { trackMessage } from "../../utils/analytics";
+import AdminDashboard from '../../pages/AdminDashboard';
+import mixpanel from "../../utils/mixpanel"; // Import Mixpanel
 
 const db = getFirestore();
 const welcomeTitles: { [key: number]: string } = {
