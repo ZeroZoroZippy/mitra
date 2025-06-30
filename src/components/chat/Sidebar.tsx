@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { signOut, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
 import "./Sidebar.css";
-import { auth } from "../../../../utils/firebaseAuth";
+import { auth } from "../../utils/firebaseAuth";
 
 interface Chat {
   id: number;
