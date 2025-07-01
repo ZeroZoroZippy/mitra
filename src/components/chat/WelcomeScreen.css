@@ -1,72 +1,88 @@
 .welcome-screen {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    height: 100vh;
-    background-color: #f7f7f7;
-    text-align: center;
-  }
-  
-  .welcome-header h1 {
-    font-size: 2rem;
-    margin-bottom: 0.5rem;
-    color: #333;
-  }
-  
-  .welcome-header p {
-    font-size: 1.25rem;
-    color: #555;
-  }
-  
-  .welcome-input-bar {
-    display: flex;
-    margin-top: 2rem;
-    width: 80%;
-    max-width: 600px;
-  }
-  
-  .welcome-input-bar input {
-    flex: 1;
-    padding: 0.75rem;
-    font-size: 1rem;
-    border: 1px solid #ddd;
-    border-radius: 8px 0 0 8px;
-  }
-  
-  .welcome-input-bar button {
-    padding: 0.75rem 1.5rem;
-    font-size: 1rem;
-    background-color: #007bff;
-    color: white;
-    border: none;
-    border-radius: 0 8px 8px 0;
-    cursor: pointer;
-    transition: background-color 0.3s;
-  }
-  
-  .welcome-input-bar button:hover {
-    background-color: #0056b3;
-  }
-  
-  .welcome-suggestions {
-    display: flex;
-    gap: 1rem;
-    margin-top: 2rem;
-  }
-  
-  .welcome-suggestions button {
-    padding: 0.75rem 1.25rem;
-    font-size: 1rem;
-    border: 1px solid #007bff;
-    background-color: white;
-    color: #007bff;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.3s;
-  }
-  
-  .welcome-suggestions button:hover {
-    background-color: #007bff;
-    color: white;
-  }
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  background-color: #1d1d1d; /* Changed to match your app's dark theme */
+  color: #fff; /* Changed to match your app's dark theme */
+  text-align: center;
+  padding: 2rem;
+}
+
+.welcome-header h1 {
+  font-size: 2.5rem;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+  color: #fff;
+}
+
+.welcome-header p {
+  font-size: 1.25rem;
+  color: #aaa;
+}
+
+.welcome-input-bar {
+  display: flex;
+  margin-top: 2rem;
+  width: 100%;
+  max-width: 700px;
+}
+
+.welcome-input-bar input {
+  flex: 1;
+  padding: 14px 18px;
+  font-size: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 24px 0 0 24px;
+  background-color: rgba(45, 45, 60, 0.5);
+  color: white;
+}
+
+.welcome-input-bar input:focus {
+    outline: none;
+    border-color: #4a90e2;
+}
+
+.welcome-input-bar button {
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  background-color: #4a90e2;
+  color: white;
+  border: none;
+  border-radius: 0 24px 24px 0;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.welcome-input-bar button:hover {
+  background-color: #3471f4;
+}
+
+.welcome-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 2rem;
+  max-width: 700px;
+}
+
+.welcome-suggestions button {
+  padding: 0.6rem 1.5rem;
+  background-color: #1d1d1d;
+  color: #888;
+  border: solid 1px #2d2d2d;
+  border-radius: 24px;
+  cursor: pointer;
+  font-size: 0.975rem;
+  font-weight: 300;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.welcome-suggestions button:hover {
+  background: linear-gradient(45deg, #FDD844, #FFEC9F);
+  color: #1d1d1d;
+  border-color: #FDD844;
+  transform: scale(1.05);
+}
