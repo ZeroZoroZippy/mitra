@@ -69,7 +69,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ featuresRef }) => {
 
       if (user && location.pathname === "/" && !hasRedirected) {
         setHasRedirected(true);
-        navigate("/experience");
+        navigate("/chat");
       }
     });
 

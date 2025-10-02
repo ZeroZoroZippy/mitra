@@ -107,9 +107,9 @@ const SideDrawer: React.FC<SideDrawerProps> = ({
             </li>
             
             <li className="side-drawer-item">
-              <NavLink 
-                to="/experience" 
-                className={({ isActive }) => 
+              <NavLink
+                to="/chat"
+                className={({ isActive }) =>
                   `side-drawer-link ${isActive ? 'active' : ''}`
                 }
                 onClick={onClose}
@@ -117,7 +117,7 @@ const SideDrawer: React.FC<SideDrawerProps> = ({
                 <div className="side-drawer-icon">
                   <FiLayout />
                 </div>
-                <span className="side-drawer-label">Experience Hub</span>
+                <span className="side-drawer-label">Chat</span>
               </NavLink>
             </li>
           </ul>

@@ -88,17 +88,17 @@ const SideNavigation: React.FC<SideNavigationProps> = ({
         </li>
 
         <li className="nav-item">
-          <NavLink 
-            to="/experience" 
-            className={({ isActive }) => 
+          <NavLink
+            to="/chat"
+            className={({ isActive }) =>
               `nav-link ${isActive ? 'active' : ''}`
             }
-            title="Experience Hub"
+            title="Chat"
           >
             <div className="nav-icon">
               <FiLayout />
             </div>
-            <span className="nav-label">Hub</span>
+            <span className="nav-label">Chat</span>
           </NavLink>
         </li>
 

@@ -54,8 +54,8 @@ const ConceptsLayout: React.FC = () => {
   }, []);
   
   const handleBackToExperienceHub = () => {
-    // Updated to use the new route
-    navigate('/experience');
+    // Navigate directly to chat
+    navigate('/chat');
   };
   
   const handleSearch = (query: string) => {

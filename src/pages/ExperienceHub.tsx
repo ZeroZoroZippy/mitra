@@ -3,10 +3,9 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './ExperienceHub.css';
-import { 
-  FiBook, 
-  FiArrowRight, 
-  FiHeart 
+import {
+  FiArrowRight,
+  FiHeart
 } from 'react-icons/fi';
 import mixpanel from '../utils/mixpanel';          // ← Mixpanel import
 import { auth } from '../utils/firebaseAuth';      // ← to get current user
@@ -51,23 +50,6 @@ const ExperienceHub: React.FC = () => {
     }
   };
 
-  // 3. Handle Educational Experience selection
-  const handleEducationalExperience = () => {
-    mixpanel.track('Experience Selected', {
-      distinct_id: auth.currentUser?.uid || 'anonymous',
-      experience: 'Educational',
-      timestamp: new Date().toISOString()
-    });
-
-    if (containerRef.current) {
-      containerRef.current.classList.remove('animate-in');
-      setTimeout(() => {
-        navigate('/concepts');
-      }, 300);
-    } else {
-      navigate('/concepts');
-    }
-  };
 
   return (
     <div 
@@ -108,25 +90,6 @@ const ExperienceHub: React.FC = () => {
           </div>
         </div>
 
-        {/* Educational Experience Card */}
-        <div 
-          className="experience-card educational" 
-          onClick={handleEducationalExperience}
-        >
-          <div className="card-content">
-            <div className="card-icon"><FiBook /></div>
-            <h2>Learn with Saarth</h2>
-            <p>Explore concepts and ideas through natural, adaptive conversations tailored to your interests.</p>
-            <ul className="experience-features">
-              <li>In-depth concept explanations</li>
-              <li>Personalized learning journeys</li>
-              <li>Knowledge exploration and discovery</li>
-            </ul>
-            <button className="experience-button">
-              Start Learning <FiArrowRight className="button-icon" />
-            </button>
-          </div>
-        </div>
       </div>
     </div>
   );

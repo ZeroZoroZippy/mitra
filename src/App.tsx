@@ -6,7 +6,6 @@ import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from "firebase/fir
 import LandingPage from "./pages/LandingPage";
 import ChatLayout from "./components/chat/ChatLayout";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
-import ExperienceHub from "./pages/ExperienceHub"; // Updated import name
 import ConceptsLayout from "./components/concepts/ConceptsLayout";
 import DiscoverScreen from "./components/discover/DiscoverScreen";
 import ThreadsScreen from "./components/threads/ThreadsScreen";
@@ -309,13 +308,13 @@ const App: React.FC = () => {
   return (
     <Routes>
       <Route path="/" element={<LandingPage featuresRef={featuresRef} />} />
-      <Route path="/experience" element={<ProtectedRoute element={<ExperienceHub />} />} /> {/* New route name */}
       <Route path="/chat" element={<ProtectedRoute element={<ChatLayout />} />} />
       <Route path="/concepts" element={<ProtectedRoute element={<ConceptsLayout />} />} />
       <Route path="/privacy-policy" element={<PrivacyPolicy />} />
       <Route path="/discover" element={<ProtectedRoute element={<DiscoverScreen />} />} />
       <Route path="/threads" element={<ProtectedRoute element={<ThreadsScreen />} />} />
-      <Route path="/home" element={<Navigate replace to="/experience" />} />
+      <Route path="/home" element={<Navigate replace to="/chat" />} />
+      <Route path="/experience" element={<Navigate replace to="/chat" />} />
       <Route path="/admin/dashboard" element={<ProtectedRoute element={<AdminDashboard />} />} />
       <Route path="*" element={<LandingPage featuresRef={featuresRef} />} />
     </Routes>
