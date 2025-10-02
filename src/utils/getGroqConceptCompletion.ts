@@ -27,9 +27,19 @@ const MAX_TOKENS = 7500;
 const MAX_MESSAGES = 5;
 const MAX_CONCEPT_COMPLETION_TOKENS = 1000;
 
+// Resolve Groq credentials with fallback for legacy env naming.
+const conceptGroqApiKey =
+  import.meta.env.VITE_GROQ_CONCEPT_API_KEY || import.meta.env.VITE_GROQ_API_KEY;
+
+if (!conceptGroqApiKey) {
+  console.error(
+    "❌ Missing Groq API key. Set VITE_GROQ_CONCEPT_API_KEY or VITE_GROQ_API_KEY in your environment."
+  );
+}
+
 // Initialize Groq Client
 const conceptGroq = new Groq({
-  apiKey: import.meta.env.VITE_GROQ_CONCEPT_API_KEY,
+  apiKey: conceptGroqApiKey,
   dangerouslyAllowBrowser: true,
 });
 
