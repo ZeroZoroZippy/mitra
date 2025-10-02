@@ -3,7 +3,7 @@ import { IoArrowUpCircleSharp } from "react-icons/io5";
 import './ConceptsArea.css';
 import Message from './Message';
 import ConceptSuggestions from './ConceptSuggestions'; // Import our new component
-import { getGroqConceptCompletion } from '../../utils/getGroqConceptCompletion';
+import { getOpenAIConceptCompletion } from '../../utils/getOpenAIConceptCompletion';
 import { 
   saveConceptMessage, 
   getConceptMessages, 
@@ -360,7 +360,7 @@ const handleSendMessage = async () => {
       
       // Get AI response
       const contextMessages = [...messages, userMessage];
-      const chatCompletionStream = await getGroqConceptCompletion(
+      const chatCompletionStream = await getOpenAIConceptCompletion(
         contextMessages,
         activeConceptTitle,
         undefined,

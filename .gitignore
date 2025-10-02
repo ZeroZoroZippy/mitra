@@ -24,8 +24,14 @@ dist-ssr
 *.sln
 *.sw?
 
-.env
+.env.local
+.env.production
+.env.development
 .bak
+
+# Environment files with sensitive data
+*.env.local
+*.env.*.local
 
 # Ignore Google Cloud Service Account Credentials
 serviceAccountKey.json

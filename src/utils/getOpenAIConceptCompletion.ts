@@ -1,4 +1,4 @@
-import Groq from "groq-sdk";
+import OpenAI from "openai";
 
 // Define ChatMessage interface
 interface ChatMessage {
@@ -12,9 +12,10 @@ interface ChatMessage {
   language?: string;
 }
 
-// Define ImportMeta interface
-interface ImportMeta {
-  readonly env: ImportMetaEnv;
+// Define ImportMetaEnv interface
+interface ImportMetaEnv {
+  readonly VITE_OPENAI_API_KEY: string;
+  readonly VITE_OPENAI_CONCEPT_API_KEY?: string;
 }
 
 // Token estimation function
@@ -27,19 +28,19 @@ const MAX_TOKENS = 7500;
 const MAX_MESSAGES = 5;
 const MAX_CONCEPT_COMPLETION_TOKENS = 1000;
 
-// Resolve Groq credentials with fallback for legacy env naming.
-const conceptGroqApiKey =
-  import.meta.env.VITE_GROQ_CONCEPT_API_KEY || import.meta.env.VITE_GROQ_API_KEY;
+// Resolve OpenAI credentials with fallback for legacy env naming.
+const conceptOpenAIApiKey =
+  import.meta.env.VITE_OPENAI_CONCEPT_API_KEY || import.meta.env.VITE_OPENAI_API_KEY;
 
-if (!conceptGroqApiKey) {
+if (!conceptOpenAIApiKey) {
   console.error(
-    "❌ Missing Groq API key. Set VITE_GROQ_CONCEPT_API_KEY or VITE_GROQ_API_KEY in your environment."
+    "❌ Missing OpenAI API key. Set VITE_OPENAI_CONCEPT_API_KEY or VITE_OPENAI_API_KEY in your environment."
   );
 }
 
-// Initialize Groq Client
-const conceptGroq = new Groq({
-  apiKey: conceptGroqApiKey,
+// Initialize OpenAI Client
+const conceptOpenAI = new OpenAI({
+  apiKey: conceptOpenAIApiKey,
   dangerouslyAllowBrowser: true,
 });
 
@@ -136,23 +137,23 @@ Your creator is Yuvaan.`;
 };
 
 /**
- * Fetch Groq concept completion
+ * Fetch OpenAI concept completion
  */
-export const getGroqConceptCompletion = async (
+export const getOpenAIConceptCompletion = async (
   messages: ChatMessage[],
   concept: string | null,
   explainType?: string,
   language?: string
 ) => {
   const systemPrompt = buildConceptSystemPrompt(concept, explainType, language);
-  
+
   const { messages: recentMessages } = getRecentConceptMessages(messages);
-  
+
   console.log("🧠 Processing concept messages:", recentMessages);
-  
+
   const estimatedTokens = estimateTokenUsage(recentMessages);
   const maxTokens = Math.min(MAX_CONCEPT_COMPLETION_TOKENS, 8000 - estimatedTokens);
-  
+
   try {
     if (estimatedTokens > 6000) {
       console.error("❌ Request blocked: Token usage exceeded safe limit (6000).");
@@ -162,17 +163,16 @@ export const getGroqConceptCompletion = async (
     console.log(`🚀 Sending request with ${estimatedTokens} tokens (max completion tokens: ${maxTokens})...`);
 
     const apiMessages = [
-      { role: "system", content: systemPrompt } as any,
+      { role: "system", content: systemPrompt } as const,
       ...recentMessages.map(({ sender, text }) => ({
-        role: sender === "assistant" ? "assistant" : "user",
+        role: sender === "assistant" ? ("assistant" as const) : ("user" as const),
         content: text,
-      } as any)),
+      })),
     ];
 
-    const chatCompletion = await conceptGroq.chat.completions.create({
+    const chatCompletion = await conceptOpenAI.chat.completions.create({
       messages: apiMessages,
-      model: "meta-llama/llama-4-scout-17b-16e-instruct",
-      temperature: 0.6,
+      model: "gpt-5-nano",
       max_completion_tokens: maxTokens,
       top_p: 0.9,
       stream: true,
@@ -181,8 +181,29 @@ export const getGroqConceptCompletion = async (
     return chatCompletion;
   } catch (error) {
     console.error("❌ Error fetching AI response:", error);
+
+    // Handle OpenAI-specific errors
+    if (error instanceof OpenAI.APIError) {
+      console.error("OpenAI API Error:", {
+        status: error.status,
+        message: error.message,
+        code: error.code,
+        type: error.type,
+      });
+
+      // Handle rate limits (429 errors)
+      if (error.status === 429) {
+        console.error("Rate limit exceeded. Please try again later.");
+      }
+
+      // Handle authentication errors
+      if (error.status === 401) {
+        console.error("Invalid API key. Please check your VITE_OPENAI_API_KEY.");
+      }
+    }
+
     return null;
   }
 };
 
-export default getGroqConceptCompletion;
+export default getOpenAIConceptCompletion;

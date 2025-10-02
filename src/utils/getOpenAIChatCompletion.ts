@@ -1,4 +1,4 @@
-import Groq from "groq-sdk";
+import OpenAI from "openai";
 
 // Define ChatMessage interface
 interface ChatMessage {
@@ -10,9 +10,9 @@ interface ChatMessage {
   encrypted: boolean;
 }
 
-// Define Chat interface
+// Define ImportMetaEnv interface
 interface ImportMetaEnv {
-  readonly VITE_GROQ_API_KEY: string
+  readonly VITE_OPENAI_API_KEY: string
 }
 
 // Token estimation function to calculate approximate token usage
@@ -135,9 +135,9 @@ export const getRecentMessages = (
   return { messages: selectedMessages, shouldPurge };
 };
 
-// Initialize Groq Client
-const groq = new Groq({
-  apiKey: import.meta.env.VITE_GROQ_API_KEY,
+// Initialize OpenAI Client
+const openai = new OpenAI({
+  apiKey: import.meta.env.VITE_OPENAI_API_KEY,
   dangerouslyAllowBrowser: true,
 });
 
@@ -157,13 +157,13 @@ const buildSystemPrompt = (activeChatId: number, creatorName?: string): string =
 };
 
 /**
- * Function to call Groq API with dynamic system prompt injection.
+ * Function to call OpenAI API with dynamic system prompt injection.
  * @param messages - Chat messages to include in the request context.
  * @param activeChatId - The active thread ID used to select the appropriate system prompt.
  * @param creatorName - Optional name of the creator; if provided, add creator context.
  * @param customSystemPrompt - Optional custom system prompt to override the default prompt.
  */
-export const getGroqChatCompletion = async (
+export const getOpenAIChatCompletion = async (
   messages: ChatMessage[],
   activeChatId: number,
   creatorName?: string,
@@ -203,7 +203,7 @@ export const getGroqChatCompletion = async (
 
     console.log(`🚀 Sending AI request with ${estimatedTokens} tokens and max completion tokens: ${maxTokens}...`);
 
-    const chatCompletion = await groq.chat.completions.create({
+    const chatCompletion = await openai.chat.completions.create({
       messages: [
         {
           role: "system",
@@ -214,19 +214,38 @@ export const getGroqChatCompletion = async (
           content: text,
         })),
       ],
-      model: "meta-llama/llama-4-scout-17b-16e-instruct",
-      temperature: 0.6,
+      model: "gpt-5-nano",
       max_completion_tokens: maxTokens,
-      top_p: 0.7,
-      stop: [],
       stream: true,
     });
+
 
     return chatCompletion;
   } catch (error) {
     console.error("❌ Error fetching AI response:", error);
+
+    // Handle OpenAI-specific errors
+    if (error instanceof OpenAI.APIError) {
+      console.error("OpenAI API Error:", {
+        status: error.status,
+        message: error.message,
+        code: error.code,
+        type: error.type,
+      });
+
+      // Handle rate limits (429 errors)
+      if (error.status === 429) {
+        console.error("Rate limit exceeded. Please try again later.");
+      }
+
+      // Handle authentication errors
+      if (error.status === 401) {
+        console.error("Invalid API key. Please check your VITE_OPENAI_API_KEY.");
+      }
+    }
+
     return null;
   }
 };
 
-export default getGroqChatCompletion;
+export default getOpenAIChatCompletion;

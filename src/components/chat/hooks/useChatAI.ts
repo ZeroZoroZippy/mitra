@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react';
 import { User } from 'firebase/auth';
 import { ChatMessage } from '../../../types/chat';
 import { saveMessage, decryptMessage } from '../../../utils/firebaseDb';
-import { getGroqChatCompletion, getRecentMessages } from '../../../utils/getGroqChatCompletion';
+import { getOpenAIChatCompletion, getRecentMessages } from '../../../utils/getOpenAIChatCompletion';
 import { isCreator } from '../../../utils/firebaseAuth';
 import { trackMessage } from '../../../utils/analytics';
 
@@ -69,7 +69,7 @@ export const useChatAI = (activeChatId: number, user: User | null, addMessage: (
       return;
     }
 
-    // 2. Fetch response from Groq API
+    // 2. Fetch response from OpenAI API
     try {
       const contextMessages = [...messageHistory].map(msg => ({
         ...msg,
@@ -78,8 +78,8 @@ export const useChatAI = (activeChatId: number, user: User | null, addMessage: (
 
       const recentMessagesResult = getRecentMessages(contextMessages);
       const adminContext = (activeChatId === 7 && isCreator()) ? "Yuvaan" : undefined;
-      
-      const chatCompletionStream = await getGroqChatCompletion(recentMessagesResult.messages, activeChatId, adminContext);
+
+      const chatCompletionStream = await getOpenAIChatCompletion(recentMessagesResult.messages, activeChatId, adminContext);
 
       if (!chatCompletionStream) {
         setIsGenerating(false);

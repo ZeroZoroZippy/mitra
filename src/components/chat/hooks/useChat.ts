@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { User } from 'firebase/auth';
 import { ChatMessage } from '../../../types/chat';
 import { getMessages, saveMessage, updateLikeStatus, decryptMessage } from '../../../utils/firebaseDb';
-import { getGroqChatCompletion, getRecentMessages } from '../../../utils/getGroqChatCompletion';
+import { getOpenAIChatCompletion, getRecentMessages } from '../../../utils/getOpenAIChatCompletion';
 import { isCreator } from '../../../utils/firebaseAuth';
 import { trackMessage } from '../../../utils/analytics';
 
@@ -81,7 +81,7 @@ export const useChat = (activeChatId: number, user: User | null) => {
         try {
             const contextMessages = currentMessageHistory.map(msg => ({...msg, text: msg.encrypted ? decryptMessage(msg.text, true) : msg.text}));
             const recentMessagesResult = getRecentMessages(contextMessages);
-            const chatCompletionStream = await getGroqChatCompletion(recentMessagesResult.messages, activeChatId);
+            const chatCompletionStream = await getOpenAIChatCompletion(recentMessagesResult.messages, activeChatId);
             
             if (!chatCompletionStream) { 
                 setIsGenerating(false); 
