@@ -16,7 +16,7 @@ import decision_making from '../../assets/images/concepts/decision-making.webp';
 import climate_change from '../../assets/images/concepts/climate-change.webp';
 import ai from '../../assets/images/concepts/ai.webp';
 import universe from '../../assets/images/concepts/universe.webp';
-import { auth } from '../../utils/firebaseAuth';
+import { getAuth } from '../../utils/firebaseAuth';
 import { getUserProfile } from '../../utils/firebaseDb';
 
 interface DiscoverModalProps {
@@ -61,7 +61,13 @@ const DiscoverModal: React.FC<DiscoverModalProps> = ({ isOpen, onClose, onSelect
     };
     
     setTimeBasedGreeting();
-    
+
+    const auth = getAuth();
+    if (!auth) {
+      setUserName('Explorer');
+      return;
+    }
+
     const unsubscribe = auth.onAuthStateChanged((user) => {
       if (user) {
         getUserProfile(user.uid).then((userData) => {
@@ -76,7 +82,7 @@ const DiscoverModal: React.FC<DiscoverModalProps> = ({ isOpen, onClose, onSelect
         setUserName('Explorer');
       }
     });
-    
+
     return () => unsubscribe();
   }, []);
 

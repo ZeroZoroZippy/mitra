@@ -1,5 +1,5 @@
 import { collection, getDocs, onSnapshot, updateDoc, doc } from "firebase/firestore";
-import { db } from "./firebaseDb";
+import { db } from "./firebaseConfig";
 
 const GOOGLE_SHEETS_SCRIPT_URL =
   "https://script.google.com/macros/s/AKfycbyYgyUrioU0wd6bWj13pt_6xwlovq3B6mXQlAxdtr0iIS0IFvMxqqmx1sPBPKUaqiGC8A/exec"; // ✅ Replace with actual URL

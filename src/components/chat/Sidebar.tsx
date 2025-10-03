@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { signOut, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
 import "./Sidebar.css";
-import { auth } from "../../utils/firebaseAuth";
+import { getAuth } from "../../utils/firebaseAuth";
 
 interface Chat {
   id: number;
@@ -31,6 +31,12 @@ const Sidebar: React.FC<SidebarProps> = ({
 
   const handleLogout = async () => {
     try {
+      const auth = getAuth();
+      if (!auth) {
+        console.error("Firebase Auth not initialized");
+        return;
+      }
+
       await signOut(auth);
       localStorage.clear();
       sessionStorage.clear();
@@ -111,19 +117,25 @@ const Sidebar: React.FC<SidebarProps> = ({
             </button>
             <h3>Room Access Limited</h3>
             <p>Sign in to unlock all conversation rooms!</p>
-            <button 
+            <button
               className="sign-in-button"
               onClick={() => {
+                const auth = getAuth();
+                if (!auth) {
+                  console.error("Firebase Auth not initialized");
+                  return;
+                }
+
                 const provider = new GoogleAuthProvider();
                 signInWithPopup(auth, provider)
                   .then(() => {
                     // Clear guest status
                     localStorage.removeItem("isGuestUser");
                     localStorage.removeItem("guestMessageCount");
-                    
+
                     // Close modal
                     setShowRoomLimitModal(false);
-                    
+
                     // If you need to refresh state
                     window.location.reload();
                   })

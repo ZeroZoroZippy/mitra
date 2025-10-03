@@ -1,6 +1,5 @@
 import CryptoJS from "crypto-js";
 import {
-  getFirestore,
   collection,
   addDoc,
   query,
@@ -15,11 +14,8 @@ import {
   Timestamp,
   orderBy,
 } from "firebase/firestore";
-import { app } from "./firebaseConfig";
+import { db, auth } from "./firebaseConfig";
 import type { User } from "firebase/auth";
-import { auth } from "./firebaseConfig";
-
-const db = getFirestore(app);
 const ENCRYPTION_KEY = import.meta.env.VITE_ENCRYPTION_KEY;
 
 interface Message {
@@ -183,4 +179,3 @@ export const updateLikeStatus = async (
   }
 };
 
-export { db };

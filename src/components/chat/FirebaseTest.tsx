@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { signInWithPopup, GoogleAuthProvider, signOut } from "firebase/auth";
-import { auth } from "../../../../utils/firebaseAuth";
+import { getAuth } from "../../../../utils/firebaseAuth";
 
 const FirebaseTest: React.FC = () => {
   
@@ -10,6 +10,12 @@ const FirebaseTest: React.FC = () => {
   }, []);
 
   const checkAuthState = () => {
+    const auth = getAuth();
+    if (!auth) {
+      console.error("Firebase Auth not initialized");
+      return;
+    }
+
     auth.onAuthStateChanged((user) => {
       if (user) {
         // console.log("✅ User is logged in:", user);
@@ -20,6 +26,12 @@ const FirebaseTest: React.FC = () => {
   };
 
   const handleGoogleSignIn = async () => {
+    const auth = getAuth();
+    if (!auth) {
+      console.error("Firebase Auth not initialized");
+      return;
+    }
+
     const provider = new GoogleAuthProvider();
     try {
       const result = await signInWithPopup(auth, provider);
@@ -30,6 +42,12 @@ const FirebaseTest: React.FC = () => {
   };
 
   const handleSignOut = async () => {
+    const auth = getAuth();
+    if (!auth) {
+      console.error("Firebase Auth not initialized");
+      return;
+    }
+
     try {
       await signOut(auth);
         // console.log("✅ Signed out successfully");

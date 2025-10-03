@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import "./ChatHeader.css";
 import { getUserProfile } from "../../utils/firebaseDb";
-import { auth } from "../../utils/firebaseAuth";
+import { getAuth } from "../../utils/firebaseAuth";
 import { FaUserCircle, FaBars } from "react-icons/fa";
 import { signOut } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
@@ -20,6 +20,12 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({ isSidebarOpen, onToggleSidebar,
 
   // Fetch user profile (photo + display name)
   useEffect(() => {
+    const auth = getAuth();
+    if (!auth) {
+      console.error("Firebase Auth not initialized");
+      return;
+    }
+
     const unsubscribe = auth.onAuthStateChanged((user) => {
       if (user) {
         // getUserProfile already decrypts the displayName & email
@@ -58,6 +64,11 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({ isSidebarOpen, onToggleSidebar,
   // Handle Logout
   const handleLogout = async () => {
     try {
+      const auth = getAuth();
+      if (!auth) {
+        console.error("Firebase Auth not initialized");
+        return;
+      }
       await signOut(auth);
       localStorage.clear();
       sessionStorage.clear();

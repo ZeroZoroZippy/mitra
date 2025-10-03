@@ -76,10 +76,10 @@ export const useChatAI = (activeChatId: number, user: User | null, addMessage: (
         text: msg.encrypted ? decryptMessage(msg.text, true) : msg.text,
       }));
 
-      const recentMessagesResult = getRecentMessages(contextMessages);
+      const recentMessages = getRecentMessages(contextMessages);
       const adminContext = (activeChatId === 7 && isCreator()) ? "Yuvaan" : undefined;
 
-      const chatCompletionStream = await getOpenAIChatCompletion(recentMessagesResult.messages, activeChatId, adminContext);
+      const chatCompletionStream = await getOpenAIChatCompletion(recentMessages, activeChatId, adminContext);
 
       if (!chatCompletionStream) {
         setIsGenerating(false);

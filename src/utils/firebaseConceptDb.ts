@@ -1,5 +1,4 @@
 import {
-    getFirestore,
     collection,
     addDoc,
     query,
@@ -16,9 +15,7 @@ import {
     arrayUnion,
     deleteDoc
 } from "firebase/firestore";
-import { auth } from "./firebaseConfig";
-
-const db = getFirestore();
+import { auth, db } from "./firebaseConfig";
 
 /**
  * Interface for concept messages
@@ -479,4 +476,3 @@ export const deleteConceptMessage = async (messageId: string): Promise<boolean> 
   }
 };
 
-export { db };

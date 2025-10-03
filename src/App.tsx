@@ -1,8 +1,9 @@
 import React, { useRef, useEffect, useState } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { onAuthStateChanged } from "firebase/auth";
-import { auth } from "./utils/firebaseAuth";
+import { getAuth } from "./utils/firebaseAuth";
 import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
+import { useNetworkStatus, retryWithBackoff } from "./utils/networkUtils";
 import LandingPage from "./pages/LandingPage";
 import ChatLayout from "./components/chat/ChatLayout";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
@@ -14,22 +15,29 @@ import AdminDashboard from "./pages/AdminDashboard";
 // Define current app version - update this when releasing new versions
 export const APP_VERSION = "3.0.10";
 
-// Initialize the guest analytics function
+// Initialize the guest analytics function with error handling
 export const initializeGuestAnalytics = async () => {
-  const db = getFirestore();
-  const statsRef = doc(db, "statistics", "guestUsage");
-  
-  // Check if document exists first
-  const statsDoc = await getDoc(statsRef);
-  
-  if (!statsDoc.exists()) {
-    // Initialize the statistics document
-    await setDoc(statsRef, {
-      totalGuestMessages: 0,
-      totalGuestAccounts: 0,
-      conversions: 0,
-      lastUpdated: serverTimestamp()
-    });
+  try {
+    const db = getFirestore();
+    const statsRef = doc(db, "statistics", "guestUsage");
+
+    // Check if document exists first
+    const statsDoc = await getDoc(statsRef);
+
+    if (!statsDoc.exists()) {
+      // Initialize the statistics document
+      await setDoc(statsRef, {
+        totalGuestMessages: 0,
+        totalGuestAccounts: 0,
+        conversions: 0,
+        lastUpdated: serverTimestamp()
+      });
+      console.log('Guest analytics initialized successfully');
+    }
+  } catch (error) {
+    console.warn('Failed to initialize guest analytics:', error);
+    // Analytics failure should not block app functionality
+    // We'll continue without analytics tracking
   }
 };
 
@@ -37,6 +45,13 @@ const ProtectedRoute: React.FC<{ element: JSX.Element }> = ({ element }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
 
   useEffect(() => {
+    const auth = getAuth();
+    if (!auth) {
+      console.error("Firebase Auth not initialized");
+      setIsAuthenticated(false);
+      return;
+    }
+
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setIsAuthenticated(!!user);
     });
@@ -242,39 +257,68 @@ function showUpdateModal() {
 const App: React.FC = () => {
   const featuresRef = useRef<HTMLDivElement>(null);
   const [updateChecked, setUpdateChecked] = useState(false);
+  const networkStatus = useNetworkStatus();
 
   useEffect(() => {
-    // Initialize guest analytics tracking
-    initializeGuestAnalytics().catch(err => 
+    // Initialize guest analytics tracking with network awareness
+    const initAnalytics = async () => {
+      if (networkStatus.isFirebaseConnected) {
+        await initializeGuestAnalytics();
+      } else {
+        console.log('Skipping analytics initialization - Firebase not connected');
+      }
+    };
+
+    initAnalytics().catch(err =>
       console.error("Error initializing guest analytics:", err)
     );
     
     // Check for updates when app loads and after Firebase is initialized
     const checkForUpdates = async () => {
       try {
-        const db = getFirestore();
-        const configRef = doc(db, "config", "appVersion");
-        const configSnap = await getDoc(configRef);
-        
-        if (!configSnap.exists()) {
+        // Skip update check if not connected
+        if (!networkStatus.isFirebaseConnected) {
+          console.log('Skipping update check - Firebase not connected');
+          setUpdateChecked(true);
           return;
         }
-        
+
+        const db = getFirestore();
+        const configRef = doc(db, "config", "appVersion");
+
+        // Use retry with backoff for better reliability
+        const configSnap = await retryWithBackoff(async () => {
+          const timeoutPromise = new Promise((_, reject) => {
+            setTimeout(() => reject(new Error('Update check timeout')), 10000);
+          });
+
+          return await Promise.race([
+            getDoc(configRef),
+            timeoutPromise
+          ]) as any;
+        }, 2, 2000);
+
+        if (!configSnap.exists()) {
+          console.log('No server version configuration found');
+          setUpdateChecked(true);
+          return;
+        }
+
         const serverVersion = configSnap.data().version;
-        
+
         // Only show update if server version is newer
         if (isNewerVersion(serverVersion, APP_VERSION)) {
           // Check if it's a major update to determine notification type
           const isMajorUpdate = serverVersion.split('.')[0] > APP_VERSION.split('.')[0];
-          
+
           // Get last update prompt timestamp
           const lastPrompt = localStorage.getItem("last_update_prompt");
           const now = Date.now();
-          
+
           // Show update notification if no recent prompt (within 2 hours)
           if (!lastPrompt || now - parseInt(lastPrompt) > 7200000) {
             localStorage.setItem("last_update_prompt", now.toString());
-            
+
             if (isMajorUpdate) {
               showUpdateModal();
             } else {
@@ -282,28 +326,43 @@ const App: React.FC = () => {
             }
           }
         }
-        
+
+        console.log('Update check completed successfully');
         setUpdateChecked(true);
       } catch (error) {
-        console.error("Update check failed:", error);
+        console.warn("Update check failed:", error);
+        // Store that we've attempted the check to avoid repeated failures
+        localStorage.setItem("last_update_check_attempt", Date.now().toString());
         setUpdateChecked(true);
+        // Continue app functionality despite update check failure
       }
     };
 
     // Wait for auth to initialize before checking for updates
+    const auth = getAuth();
+    if (!auth) {
+      console.warn("Firebase Auth not initialized, skipping update check");
+      setUpdateChecked(true);
+      return;
+    }
+
     const unsubscribe = onAuthStateChanged(auth, () => {
       // We're just using this to ensure Firebase is initialized
       checkForUpdates();
     });
-    
+
     // Set up periodic checks (every 15 minutes)
-    const intervalId = setInterval(checkForUpdates, 900000);
-    
+    const intervalId = setInterval(() => {
+      if (networkStatus.isFirebaseConnected) {
+        checkForUpdates();
+      }
+    }, 900000);
+
     return () => {
       unsubscribe();
       clearInterval(intervalId);
     };
-  }, []);
+  }, [networkStatus.isFirebaseConnected]); // Re-run when Firebase connection changes
 
   return (
     <Routes>

@@ -8,7 +8,7 @@ import {
   FiHeart
 } from 'react-icons/fi';
 import mixpanel from '../utils/mixpanel';          // ← Mixpanel import
-import { auth } from '../utils/firebaseAuth';      // ← to get current user
+import { getAuth } from '../utils/firebaseAuth';      // ← to get current user
 
 const ExperienceHub: React.FC = () => {
   const navigate = useNavigate();
@@ -17,8 +17,9 @@ const ExperienceHub: React.FC = () => {
 
   // 1. Track page view when component mounts
   useEffect(() => {
+    const auth = getAuth();
     mixpanel.track('Experience Hub Viewed', {
-      distinct_id: auth.currentUser?.uid || 'anonymous',
+      distinct_id: auth?.currentUser?.uid || 'anonymous',
       timestamp: new Date().toISOString()
     });
 
@@ -33,8 +34,9 @@ const ExperienceHub: React.FC = () => {
 
   // 2. Handle Emotional Companion selection
   const handleEmotionalCompanion = () => {
+    const auth = getAuth();
     mixpanel.track('Experience Selected', {
-      distinct_id: auth.currentUser?.uid || 'anonymous',
+      distinct_id: auth?.currentUser?.uid || 'anonymous',
       experience: 'Emotional Companion',
       timestamp: new Date().toISOString()
     });

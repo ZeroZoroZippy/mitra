@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { FaTimes } from 'react-icons/fa';
 import './DiscoverScreen.css';
-import { auth } from '../../utils/firebaseAuth';
+import { getAuth } from '../../utils/firebaseAuth';
 import { getUserProfile } from '../../utils/firebaseDb';
 import biology_aging from '../../assets/images/concepts/bio-aging.webp';
 import joy_of_cooking from '../../assets/images/concepts/joy-of-cooking.webp';
@@ -87,6 +87,12 @@ const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
       setTimeBasedGreeting();
       
       // Get user profile
+      const auth = getAuth();
+      if (!auth) {
+        setUserName('Explorer');
+        return;
+      }
+
       const unsubscribe = auth.onAuthStateChanged((user) => {
         if (user) {
           getUserProfile(user.uid).then((userData) => {

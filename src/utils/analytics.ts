@@ -1,5 +1,4 @@
 import {
-    getFirestore,
     collection,
     doc,
     getDoc,
@@ -14,8 +13,8 @@ import {
     increment,
     Timestamp
   } from "firebase/firestore";
-  import { db, getUserProfile } from "./firebaseDb";
-  import { auth } from "./firebaseConfig";
+  import { getUserProfile } from "./firebaseDb";
+  import { auth, db } from "./firebaseConfig";
   
   // Data structures
   export interface UserAnalytics {

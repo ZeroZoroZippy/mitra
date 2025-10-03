@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from 'react-router-dom';
 import { signOut } from "firebase/auth";
-import { auth } from "../../utils/firebaseAuth";
+import { getAuth } from "../../utils/firebaseAuth";
 import { getUserProfile } from "../../utils/firebaseDb";
 import { FaUserCircle } from "react-icons/fa";
 import { FaRegPenToSquare } from "react-icons/fa6";
@@ -45,6 +45,12 @@ const ConceptsHeader: React.FC<ConceptsHeaderProps> = ({
   }, []);
 
   useEffect(() => {
+    const auth = getAuth();
+    if (!auth) {
+      console.error("Firebase Auth not initialized");
+      return;
+    }
+
     const unsubscribe = auth.onAuthStateChanged((user) => {
       if (user) {
         getUserProfile(user.uid).then((userData) => {
@@ -84,6 +90,11 @@ const ConceptsHeader: React.FC<ConceptsHeaderProps> = ({
 
   const handleLogout = async () => {
     try {
+      const auth = getAuth();
+      if (!auth) {
+        console.error("Firebase Auth not initialized");
+        return;
+      }
       await signOut(auth);
       localStorage.clear();
       sessionStorage.clear();

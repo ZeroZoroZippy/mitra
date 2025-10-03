@@ -2,9 +2,9 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { onAuthStateChanged } from "firebase/auth";
-import { signInWithGoogle, auth } from "../utils/firebaseAuth";
+import { signInWithGoogle, getAuth } from "../utils/firebaseAuth";
 import { storeUserDetails } from "../utils/firebaseDb";
-import { analytics } from "../utils/firebaseConfig";
+import { getFirebaseAnalytics } from "../utils/firebaseConfig";
 import { logEvent } from "firebase/analytics";
 import mixpanel from "../utils/mixpanel";                // ← Mixpanel import
 import { Helmet } from "react-helmet-async";
@@ -36,8 +36,11 @@ const LandingPage: React.FC<LandingPageProps> = ({ featuresRef }) => {
 
   // 1. Page view + visibility tracking
   useEffect(() => {
-    // Firebase Analytics
-    logEvent(analytics, "page_view", { page_path: location.pathname });
+    // Firebase Analytics (with null check)
+    const analytics = getFirebaseAnalytics();
+    if (analytics) {
+      logEvent(analytics, "page_view", { page_path: location.pathname });
+    }
     // Mixpanel
     mixpanel.track("Page Viewed", { page: location.pathname });
 
@@ -64,6 +67,12 @@ const LandingPage: React.FC<LandingPageProps> = ({ featuresRef }) => {
 
   // 2. Handle authentication state and redirect
   useEffect(() => {
+    const auth = getAuth();
+    if (!auth) {
+      console.error("Firebase Auth not initialized");
+      return;
+    }
+
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setIsAuthenticated(!!user);
 
@@ -129,16 +138,22 @@ const LandingPage: React.FC<LandingPageProps> = ({ featuresRef }) => {
 
   // 5. Dynamic CTA button functionality
   const handleCTAClick = () => {
+    const analytics = getFirebaseAnalytics();
+
     if (isAuthenticated) {
       // Firebase Analytics
-      logEvent(analytics, "cta_clicked", { button: "Continue Chat" });
+      if (analytics) {
+        logEvent(analytics, "cta_clicked", { button: "Continue Chat" });
+      }
       // Mixpanel
       mixpanel.track("CTA Clicked", { button: "Continue Chat" });
 
       navigate("/chat");
     } else {
       // Firebase Analytics
-      logEvent(analytics, "cta_clicked", { button: "Start Talking" });
+      if (analytics) {
+        logEvent(analytics, "cta_clicked", { button: "Start Talking" });
+      }
       // Mixpanel
       mixpanel.track("CTA Clicked", { button: "Start Talking" });
       mixpanel.track("Auth Modal Opened");

@@ -80,8 +80,8 @@ export const useChat = (activeChatId: number, user: User | null) => {
 
         try {
             const contextMessages = currentMessageHistory.map(msg => ({...msg, text: msg.encrypted ? decryptMessage(msg.text, true) : msg.text}));
-            const recentMessagesResult = getRecentMessages(contextMessages);
-            const chatCompletionStream = await getOpenAIChatCompletion(recentMessagesResult.messages, activeChatId);
+            const recentMessages = getRecentMessages(contextMessages);
+            const chatCompletionStream = await getOpenAIChatCompletion(recentMessages, activeChatId);
             
             if (!chatCompletionStream) { 
                 setIsGenerating(false); 

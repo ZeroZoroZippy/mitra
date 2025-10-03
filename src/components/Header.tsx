@@ -3,7 +3,7 @@
 import React, { useState, RefObject, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import "./Header.css";
-import { signInWithGoogle, signInAsGuest, auth } from "../utils/firebaseAuth";
+import { signInWithGoogle, signInAsGuest, getAuth } from "../utils/firebaseAuth";
 import { onAuthStateChanged } from "firebase/auth";
 import mixpanel from "../utils/mixpanel";               // ← Mixpanel import
 import { FcGoogle } from "react-icons/fc";
@@ -21,6 +21,12 @@ const Header: React.FC<HeaderProps> = ({ featuresRef }) => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    const auth = getAuth();
+    if (!auth) {
+      console.error("Firebase Auth not initialized");
+      return;
+    }
+
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setIsAuthenticated(!!user);
     });

@@ -1,5 +1,5 @@
 import { collection, query, where, getDocs, deleteDoc, doc } from "firebase/firestore";
-import { db } from "../utils/firebaseDb"; // ✅ Adjust the path if needed
+import { db } from "../utils/firebaseConfig"; // ✅ Adjust the path if needed
 
 /**
  * ✅ Function to Delete All Messages for a Specific User

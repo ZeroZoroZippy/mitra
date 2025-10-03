@@ -13,7 +13,7 @@ import {
   where,
   Timestamp
 } from 'firebase/firestore';
-import { db } from '../utils/firebaseDb';
+import { getFirebaseDb } from '../utils/firebaseConfig';
 import { getUserActivityProfile } from '../utils/analytics';
 import './AdminDashboard.css';
 
@@ -52,12 +52,19 @@ const AdminDashboard: React.FC = () => {
   
   // Load dashboard with real-time listeners
   useEffect(() => {
+    const db = getFirebaseDb();
+    if (!db) {
+      console.error("Firebase Firestore not initialized");
+      setIsLoading(false);
+      return;
+    }
+
     setIsLoading(true);
-    
+
     // Real-time listener for last active user
     const lastActiveQuery = query(
-      collection(db, "userAnalytics"), 
-      orderBy("lastActive", "desc"), 
+      collection(db, "userAnalytics"),
+      orderBy("lastActive", "desc"),
       limit(1)
     );
     
