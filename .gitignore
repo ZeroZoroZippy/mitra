@@ -13,6 +13,11 @@ dist-ssr
 *.local
 .npm-cache
 
+# Never commit built files to public/ (Firebase uses dist/)
+public/assets
+public/index.html
+public/vite.svg
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
