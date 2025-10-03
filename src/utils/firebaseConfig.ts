@@ -67,6 +67,15 @@ const resolveFirebaseConfig = (): { config: FirebaseOptions; useEmulator: boolea
   const missingKeys = REQUIRED_KEYS.filter((key) => !resolvedEntries[key]);
   const shouldUseEmulator = missingKeys.length > 0 && import.meta.env.DEV;
 
+  // Log configuration status (only in development)
+  if (import.meta.env.DEV && (missingKeys.length > 0 || !resolvedEntries.projectId)) {
+    console.warn("[Firebase Config] Configuration check:", {
+      missingKeys: missingKeys.length > 0 ? missingKeys : "none",
+      useEmulator: shouldUseEmulator,
+      projectId: resolvedEntries.projectId || "NOT SET"
+    });
+  }
+
   if (missingKeys.length > 0 && !shouldUseEmulator) {
     const missingEnvVars = missingKeys.map((key) => ENV_VAR_MAP[key]).join(", ");
     console.error("Missing Firebase environment variables:", missingEnvVars);

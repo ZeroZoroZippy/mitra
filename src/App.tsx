@@ -9,7 +9,6 @@ import ChatLayout from "./components/chat/ChatLayout";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import ConceptsLayout from "./components/concepts/ConceptsLayout";
 import DiscoverScreen from "./components/discover/DiscoverScreen";
-import ThreadsScreen from "./components/threads/ThreadsScreen";
 import AdminDashboard from "./pages/AdminDashboard";
 
 // Define current app version - update this when releasing new versions
@@ -371,7 +370,6 @@ const App: React.FC = () => {
       <Route path="/concepts" element={<ProtectedRoute element={<ConceptsLayout />} />} />
       <Route path="/privacy-policy" element={<PrivacyPolicy />} />
       <Route path="/discover" element={<ProtectedRoute element={<DiscoverScreen />} />} />
-      <Route path="/threads" element={<ProtectedRoute element={<ThreadsScreen />} />} />
       <Route path="/home" element={<Navigate replace to="/chat" />} />
       <Route path="/experience" element={<Navigate replace to="/chat" />} />
       <Route path="/admin/dashboard" element={<ProtectedRoute element={<AdminDashboard />} />} />

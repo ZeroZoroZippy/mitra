@@ -29,7 +29,7 @@ const MAX_INPUT_TOKENS = 7500; // Maximum tokens for input messages
 const MAX_MESSAGES = 5; // Maximum number of messages to include
 const MAX_CONCEPT_COMPLETION_TOKENS = 1000; // Maximum tokens for AI response
 const TOTAL_TOKEN_BUDGET = 8000; // Total budget including input + output
-const OPENAI_MODEL = "gpt-4o-mini"; // OpenAI model to use for concept explanations
+const OPENAI_MODEL = "gpt-5-nano"; // OpenAI model to use for concept explanations
 
 // Resolve OpenAI credentials with fallback for legacy env naming.
 const conceptOpenAIApiKey =

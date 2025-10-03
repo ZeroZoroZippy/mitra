@@ -79,19 +79,9 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({ isSidebarOpen, onToggleSidebar,
     }
   };
 
-  // Mapping of thread IDs to chat titles for all threads
-  const chatTitles: { [key: number]: string } = {
-    1: "Companion",
-    2: "Love & Connections",
-    3: "Dreams & Manifestations",
-    4: "Healing & Emotional Release",
-    5: "Purpose & Ambition",
-    6: "Mental Well-Being",
-    7: "Admin Dashboard",
-  };
-
+  // Get the title based on chat ID - simplified for single companion mode
   const getChatTitle = (chatId: number) => {
-    return chatTitles[chatId] || "Chat";
+    return chatId === 7 ? "Admin Dashboard" : "Saarth";
   };
 
   return (
