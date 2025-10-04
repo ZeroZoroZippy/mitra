@@ -1,8 +1,8 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { User } from 'firebase/auth';
 import { ChatMessage } from '../../../types/chat';
-import { getMessages, saveMessage, updateLikeStatus, decryptMessage } from '../../../utils/firebaseDb';
-import { getOpenAIChatCompletion, getRecentMessages } from '../../../utils/getOpenAIChatCompletion';
+import { getMessages, saveMessage, updateLikeStatus, decryptMessage, getChatMessages, saveChatMessage, updateChatTitle, Chat } from '../../../utils/firebaseDb';
+import { getOpenAIChatCompletion, getRecentMessages, generateChatTitle } from '../../../utils/getOpenAIChatCompletion';
 import { isCreator } from '../../../utils/firebaseAuth';
 import { trackMessage } from '../../../utils/analytics';
 
@@ -32,24 +32,40 @@ const getHardcodedResponse = (userMessage: string): string | null => {
   return normalizedResponses[normalizeText(userMessage)] ?? null;
 };
 
-export const useChat = (activeChatId: number, user: User | null) => {
+export const useChat = (
+    activeChatId: number,
+    user: User | null,
+    activeChat: Chat | null,
+    onUpdateChatTitle?: (chatId: string, newTitle: string) => void
+) => {
     const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [isGenerating, setIsGenerating] = useState(false);
-    
+    const titleGeneratedRef = useRef(false);
+
     useEffect(() => {
-        if (!user) {
+        if (!user || !activeChat) {
             setMessages([]);
             return;
         }
         setIsLoading(true);
-        getMessages(user.uid, activeChatId)
+        titleGeneratedRef.current = false;
+
+        // Load messages from the specific chat
+        getChatMessages(user.uid, activeChat.id, activeChatId)
             .then(loadedMessages => {
                 setMessages(loadedMessages.map((msg: any) => ({ ...msg, threadID: activeChatId })) as ChatMessage[]);
+
+                // Check if title generation should have happened
+                if (loadedMessages.length >= 2 && activeChat.title === "New Chat") {
+                    titleGeneratedRef.current = false;
+                } else if (loadedMessages.length >= 2) {
+                    titleGeneratedRef.current = true;
+                }
             })
             .catch(console.error)
             .finally(() => setIsLoading(false));
-    }, [activeChatId, user]);
+    }, [activeChatId, user, activeChat]);
 
     const createMessage = (text: string, sender: "user" | "assistant"): ChatMessage => ({
         id: crypto.randomUUID(), text, sender, timestamp: new Date().toISOString(),
@@ -57,13 +73,16 @@ export const useChat = (activeChatId: number, user: User | null) => {
     });
 
     const sendUserMessage = useCallback(async (text: string) => {
-        if (!text.trim() || !user) return;
+        if (!text.trim() || !user || !activeChat) return;
 
         setIsGenerating(true);
         const userMessage = createMessage(text, "user");
-        
+        const isFirstUserMessage = messages.filter(m => m.sender === "user").length === 0;
+
         setMessages(prev => [...prev, userMessage]);
-        await saveMessage(text, "user", null, activeChatId);
+
+        // Save to chat-specific collection
+        await saveChatMessage(activeChat.id, text, "user", null, activeChatId);
 
         const currentMessageHistory = [...messages, userMessage];
 
@@ -71,9 +90,19 @@ export const useChat = (activeChatId: number, user: User | null) => {
         if (hardcodedResponse) {
             setTimeout(async () => {
                 const aiMessage = createMessage(hardcodedResponse, "assistant");
-                await saveMessage(hardcodedResponse, "assistant", null, activeChatId);
+                await saveChatMessage(activeChat.id, hardcodedResponse, "assistant", null, activeChatId);
                 setMessages(prev => [...prev, aiMessage]);
                 setIsGenerating(false);
+
+                // Generate title after first exchange
+                if (isFirstUserMessage && !titleGeneratedRef.current && activeChat.title === "New Chat") {
+                    titleGeneratedRef.current = true;
+                    const newTitle = await generateChatTitle(text);
+                    await updateChatTitle(user.uid, activeChat.id, newTitle);
+                    if (onUpdateChatTitle) {
+                        onUpdateChatTitle(activeChat.id, newTitle);
+                    }
+                }
             }, 1500);
             return;
         }
@@ -82,29 +111,53 @@ export const useChat = (activeChatId: number, user: User | null) => {
             const contextMessages = currentMessageHistory.map(msg => ({...msg, text: msg.encrypted ? decryptMessage(msg.text, true) : msg.text}));
             const recentMessages = getRecentMessages(contextMessages);
             const chatCompletionStream = await getOpenAIChatCompletion(recentMessages, activeChatId);
-            
-            if (!chatCompletionStream) { 
-                setIsGenerating(false); 
-                return; 
+
+            if (!chatCompletionStream) {
+                setIsGenerating(false);
+                return;
             }
+
+            // Create a placeholder AI message that will be updated during streaming
+            const tempMessageId = crypto.randomUUID();
+            const placeholderMessage = createMessage("", "assistant");
+            placeholderMessage.id = tempMessageId;
+
+            // Add the placeholder to state immediately
+            setMessages(prev => [...prev, placeholderMessage]);
 
             let streamedMessage = "";
             for await (const chunk of chatCompletionStream) {
-                streamedMessage += chunk.choices?.[0]?.delta?.content || "";
+                const content = chunk.choices?.[0]?.delta?.content || "";
+                streamedMessage += content;
+
+                // Update the message in real-time as content streams in
+                setMessages(prev => prev.map(msg =>
+                    msg.id === tempMessageId
+                        ? { ...msg, text: streamedMessage }
+                        : msg
+                ));
             }
 
-            const aiMessage = createMessage(streamedMessage, "assistant");
-            await saveMessage(streamedMessage, "assistant", null, activeChatId);
+            // Save the complete message to Firestore
+            await saveChatMessage(activeChat.id, streamedMessage, "assistant", null, activeChatId);
             if (user) trackMessage(user.uid, activeChatId, streamedMessage);
-            
-            setMessages(prev => [...prev, aiMessage]);
+
+            // Generate title after first exchange
+            if (isFirstUserMessage && !titleGeneratedRef.current && activeChat.title === "New Chat") {
+                titleGeneratedRef.current = true;
+                const newTitle = await generateChatTitle(text);
+                await updateChatTitle(user.uid, activeChat.id, newTitle);
+                if (onUpdateChatTitle) {
+                    onUpdateChatTitle(activeChat.id, newTitle);
+                }
+            }
 
         } catch (error) {
             console.error("Error generating AI response:", error);
         } finally {
             setIsGenerating(false);
         }
-    }, [user, activeChatId, messages]);
+    }, [user, activeChatId, messages, activeChat, onUpdateChatTitle]);
 
     const likeDislikeMessage = useCallback(async (messageId: string, action: "like" | "dislike") => {
         const currentMessage = messages.find(msg => msg.id === messageId);

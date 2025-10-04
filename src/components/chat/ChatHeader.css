@@ -151,18 +151,22 @@
   color: #007bff; /* Change color on hover */
 }
 
-.new-chat-button {
+.icon-button.menu-toggle {
   background: none;
   border: none;
   color: #fff;
   font-size: 1.25rem;
   cursor: pointer;
-  margin-left: 1rem;
+  padding: 0.5rem;
+  transition: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.new-chat-button:hover {
-  transform: scale(1.1); /* Slight zoom effect on hover */
-  color: #28a745; /* Green for hover effect */
+.icon-button.menu-toggle:hover {
+  color: #fff;
+  background: none;
 }
 
 @media (max-width: 768px) {

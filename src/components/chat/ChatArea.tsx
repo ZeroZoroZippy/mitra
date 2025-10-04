@@ -11,6 +11,8 @@ import ChatInputBar from "./ChatInputBar";
 import WelcomeScreen from "./WelcomeScreen";
 import MessageList from "./MessageList"; // Import the final component
 
+import { Chat } from "../../utils/firebaseDb";
+
 interface ChatAreaProps {
   activeChatId: number;
   isChatFullScreen: boolean;
@@ -18,18 +20,22 @@ interface ChatAreaProps {
   isSidebarOpen: boolean;
   onNewChat: () => void;
   onToggleSidebar: () => void;
+  activeChat: Chat | null;
+  onUpdateChatTitle: (chatId: string, newTitle: string) => void;
 }
 
 const ChatArea: React.FC<ChatAreaProps> = ({
   activeChatId,
   isSidebarOpen,
-  onToggleSidebar
+  onToggleSidebar,
+  activeChat,
+  onUpdateChatTitle
 }) => {
   const [isWelcomeActive, setIsWelcomeActive] = useState(true);
   const [firstName, setFirstName] = useState<string>("friend");
   const [user, setUser] = useState<User | null>(auth.currentUser);
 
-  const { messages, isLoading, isGenerating, sendUserMessage, likeDislikeMessage } = useChat(activeChatId, user);
+  const { messages, isLoading, isGenerating, sendUserMessage, likeDislikeMessage } = useChat(activeChatId, user, activeChat, onUpdateChatTitle);
   const { isGuest, remainingMessages, showLimitModal, setShowLimitModal, handleGuestMessageSend, handleSignIn } = useGuestUser();
   
   const isInputDisabled = isGenerating || (isGuest && remainingMessages <= 0);

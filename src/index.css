@@ -115,9 +115,6 @@ textarea {
     bottom: env(safe-area-inset-bottom); /* ✅ Prevent overlap */
   }
 
-  .messages-container {
-    padding-bottom: 120px; /* Default padding */
-  }
   
   .keyboard-open .messages-container {
     padding-bottom: calc(var(--vh, 1vh) * 12); /* ✅ Adds space when keyboard opens */

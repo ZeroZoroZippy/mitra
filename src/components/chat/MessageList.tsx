@@ -1,5 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
+import rehypeRaw from 'rehype-raw';
+import DOMPurify from 'dompurify';
 import { IoCopyOutline } from 'react-icons/io5';
 import { AiFillLike, AiFillDislike, AiOutlineLike, AiOutlineDislike } from "react-icons/ai";
 import { ChatMessage } from '../../types/chat';
@@ -41,6 +43,25 @@ const groupMessagesByDate = (messages: ChatMessage[]) => {
   return groups;
 };
 
+// Process <gita> tags to wrap them in styled spans with sanitization
+const processGitaTags = (text: string): string => {
+  // Sanitize the entire text first to prevent XSS
+  const sanitized = DOMPurify.sanitize(text, {
+    ALLOWED_TAGS: ['gita'], // Only allow gita tags initially
+    KEEP_CONTENT: true
+  });
+
+  // Replace <gita>...</gita> with markdown that ReactMarkdown can style
+  return sanitized.replace(/<gita>(.*?)<\/gita>/gs, (_, content) => {
+    // Sanitize the content inside gita tags
+    const cleanContent = DOMPurify.sanitize(content, {
+      ALLOWED_TAGS: [], // No HTML tags allowed inside
+      KEEP_CONTENT: true
+    });
+    return `*<span class="gita-reference">${cleanContent}</span>*`;
+  });
+};
+
 
 interface MessageListProps {
   messages: ChatMessage[];
@@ -61,10 +82,17 @@ const MessageList: React.FC<MessageListProps> = ({ messages, isGenerating, onCop
       {Object.entries(groupMessagesByDate(messages)).map(([date, dateMessages]) => (
         <React.Fragment key={date}>
           <div className="date-header"><span className="date-label">{date}</span></div>
-          {dateMessages.map((message) => (
+          {dateMessages.map((message) => {
+            const processedText = message.sender === "assistant"
+              ? processGitaTags(message.text.replace(/\n/g, "\n\n"))
+              : message.text.replace(/\n/g, "\n\n");
+
+            return (
             <div key={message.id || message.timestamp} className="message-container">
               <div className={`message-bubble ${message.sender}-bubble`}>
-                  <ReactMarkdown>{message.text.replace(/\n/g, "\n\n")}</ReactMarkdown>
+                  <ReactMarkdown rehypePlugins={[rehypeRaw]}>
+                    {processedText}
+                  </ReactMarkdown>
               </div>
               <div className={`message-actions ${message.sender === "assistant" && message.id === messages[messages.length - 1]?.id ? "always-visible" : "hover-visible"}`}>
                   <IoCopyOutline className="action-icon" title="Copy Message" onClick={() => onCopy(message.text)} />
@@ -76,7 +104,8 @@ const MessageList: React.FC<MessageListProps> = ({ messages, isGenerating, onCop
                   )}
               </div>
             </div>
-          ))}
+            );
+          })}
         </React.Fragment>
       ))}
       {isGenerating && (

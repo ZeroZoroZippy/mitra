@@ -1,49 +1,46 @@
 import React, { useState } from "react";
-import { signOut, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
-import { useNavigate } from "react-router-dom";
 import "./Sidebar.css";
-import { getAuth } from "../../utils/firebaseAuth";
+import { FaTrash, FaCheck, FaTimes } from "react-icons/fa";
+import { BsPlusCircle } from "react-icons/bs";
+import { Chat } from "../../utils/firebaseDb";
 
 interface SidebarProps {
   onClose: () => void;
   isSidebarOpen: boolean;
+  chats: Chat[];
+  activeChat: Chat | null;
+  onSelectChat: (chat: Chat) => void;
+  onNewChat: () => void;
+  onDeleteChat: (chatId: string) => void;
+  isLoadingChats: boolean;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({
   onClose,
   isSidebarOpen,
+  chats,
+  activeChat,
+  onSelectChat,
+  onNewChat,
+  onDeleteChat,
+  isLoadingChats,
 }) => {
-  const navigate = useNavigate();
+  const [deletingChatId, setDeletingChatId] = useState<string | null>(null);
 
-  const handleLogout = async () => {
-    try {
-      const auth = getAuth();
-      if (!auth) {
-        console.error("Firebase Auth not initialized");
-        return;
-      }
-
-      await signOut(auth);
-      localStorage.clear();
-      sessionStorage.clear();
-      navigate("/");
-      window.location.reload();
-    } catch (error) {
-      console.error("Error signing out:", error);
-    }
+  const handleDeleteClick = (chatId: string, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent chat selection when clicking delete
+    setDeletingChatId(chatId);
   };
 
-  const handleGoToChat = () => {
-    navigate("/chat");
-    // Add slight delay before reload to ensure navigation completes
-    setTimeout(() => {
-      window.location.reload();
-    }, 100);
+  const handleConfirmDelete = (chatId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    onDeleteChat(chatId);
+    setDeletingChatId(null);
   };
 
-  const handleFeedback = () => {
-    window.location.href =
-      "mailto:feedbackforsaarth@gmail.com?subject=Feedback for Saarth&body=Hello, I'd like to share some feedback...";
+  const handleCancelDelete = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setDeletingChatId(null);
   };
 
   return (
@@ -54,16 +51,73 @@ const Sidebar: React.FC<SidebarProps> = ({
         </button>
       </div>
 
-      <div className="sidebar-nav">
-        <button className="home-button" onClick={handleGoToChat}>
-          🏠 Chat Home
-        </button>
-        <button className="sidebar-button feedback-button" onClick={handleFeedback}>
-          ✉️ Feedback
-        </button>
-        <button className="sidebar-button logout-button" onClick={handleLogout}>
-          🚪 Logout
-        </button>
+      <button className="new-chat-button" onClick={onNewChat}>
+        <BsPlusCircle className="new-chat-icon" />
+        <span>New Chat</span>
+      </button>
+
+      <hr className="chat-divider" />
+
+      <div className="chat-list">
+        {isLoadingChats ? (
+          <div className="chat-loading">Loading chats...</div>
+        ) : chats.length === 0 ? (
+          <div className="no-chats">No chats yet. Start a new conversation!</div>
+        ) : (
+          chats.map((chat) => (
+            <button
+              key={chat.id}
+              className={`chat-item ${activeChat?.id === chat.id ? "active" : ""}`}
+              onClick={() => onSelectChat(chat)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  onSelectChat(chat);
+                }
+              }}
+              aria-label={`Select chat: ${chat.title}`}
+              aria-current={activeChat?.id === chat.id ? "true" : "false"}
+            >
+              <div className="chat-item-content">
+                <span className="chat-item-title">{chat.title}</span>
+                <div className="chat-item-actions">
+                  {deletingChatId === chat.id ? (
+                    <>
+                      <button
+                        className="confirm-delete-btn"
+                        onClick={(e) => handleConfirmDelete(chat.id, e)}
+                        onKeyDown={(e) => e.stopPropagation()}
+                        title="Confirm delete"
+                        aria-label="Confirm delete chat"
+                      >
+                        <FaCheck />
+                      </button>
+                      <button
+                        className="cancel-delete-btn"
+                        onClick={handleCancelDelete}
+                        onKeyDown={(e) => e.stopPropagation()}
+                        title="Cancel"
+                        aria-label="Cancel delete"
+                      >
+                        <FaTimes />
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      className="delete-chat-btn"
+                      onClick={(e) => handleDeleteClick(chat.id, e)}
+                      onKeyDown={(e) => e.stopPropagation()}
+                      title="Delete chat"
+                      aria-label={`Delete chat: ${chat.title}`}
+                    >
+                      <FaTrash />
+                    </button>
+                  )}
+                </div>
+              </div>
+            </button>
+          ))
+        )}
       </div>
     </div>
   );

@@ -30,15 +30,25 @@ type SystemPrompt = {
   tone: string;
   divine_influence: string;
   response_style: string;
+  formatting_rule?: string;
+  do?: string[];
+  dont?: string[];
 };
 
 const systemPrompt: SystemPrompt = {
   name: "Saarth",
-  persona: "Your wise friend who adapts to what you need",
-  backstory: "Saarth grew up in Mumbai, learning ancient wisdom from his grandmother while navigating modern life as a young professional. He understands loneliness in the digital age and offers perspective without preaching.",
-  tone: "Warm, honest, adaptive—sometimes challenging, sometimes comforting, always real",
-  divine_influence: "Krishna's balanced wisdom—knowing when to comfort and when to challenge",
-  response_style: "Listen deeply. Adapt to their emotional state. Offer wisdom when appropriate. Keep it conversational and concise. No emotes. Reference past conversations when relevant."
+  persona: "The Wise Friend",
+  backstory: "Saarth is an old soul in a modern world. Born and raised in the vibrant streets of Mumbai, he grew up steeped in ancient wisdom, thanks to his grandmother's enchanting stories. Now, as a young professional navigating the tech industry, Saarth brings a unique blend of timeless insight and contemporary savvy to every conversation. He carries Krishna’s spark — playful, piercing, and wise — more like a friend who laughs at your fears and then shows you the way.",
+  tone: "Playful, witty, and cheerful — never heavy with sympathy. When needed, his words sharpen into clarity, but he always keeps things light, human, and alive.",
+  divine_influence: "Krishna’s presence is his compass: mischief + depth, playfulness + piercing clarity. He never indulges in shallow comfort, but guides with wit, cheer, and truth.",
+  response_style: `
+    Begin with playfulness or a sharp observation — avoid empty empathy phrases like 'I understand' or 'Ah, the classic...'.
+    Treat small worries with light teasing, and flip assumptions through quick, piercing questions.
+    Keep responses short, lively, and concrete (1–3 short paragraphs).
+    Use no more than two questions at once, and when it helps, suggest one simple next step.
+    Bring in the Bhagavad Gita with <gita> ... </gita> only when it adds real strength to the moment — keep it natural and occasional.
+    The goal is not to soothe but to energize: guide with wit, clarity, and warmth so the user leaves lighter, braver, and clearer.
+  `
 };
 
 const defaultSystemPrompt = systemPrompt;
@@ -47,7 +57,7 @@ const defaultSystemPrompt = systemPrompt;
 const MAX_INPUT_TOKENS = 7500; // Maximum tokens for input messages
 const MAX_MESSAGES = 5; // Maximum number of messages to include
 const TOTAL_TOKEN_BUDGET = 8000; // Total budget including input + output
-const OPENAI_MODEL = "gpt-5-nano"; // OpenAI model to use for chat completions
+const OPENAI_MODEL = "gpt-4o-mini"; // OpenAI model to use for chat completions
 
 // Moderate max token limits for balanced response length
 const INITIAL_MAX_COMPLETION_TOKENS_DEFAULT = 600;
@@ -247,6 +257,42 @@ export const getOpenAIChatCompletion = async (
     }
 
     return null;
+  }
+};
+
+/**
+ * Generate a concise chat title based on the first user message
+ * @param firstUserMessage - The first message sent by the user
+ * @returns A 3-5 word title, or "New Chat" on error
+ */
+export const generateChatTitle = async (firstUserMessage: string): Promise<string> => {
+  try {
+    console.log("Generating chat title for:", firstUserMessage);
+
+    const chatCompletion = await openai.chat.completions.create({
+      messages: [
+        {
+          role: "system",
+          content: "You are a title generator. Generate only a short 3-5 word title. Return ONLY the title, no quotes, no extra text, no punctuation at the end.",
+        },
+        {
+          role: "user",
+          content: `Generate a short 3-5 word title for a conversation that starts with: "${firstUserMessage}"`,
+        },
+      ],
+      model: "gpt-4o-mini", // Using faster, cheaper model for title generation
+      max_completion_tokens: 20,
+      temperature: 0.7,
+    });
+
+    const title = chatCompletion.choices[0]?.message?.content?.trim() || "New Chat";
+    console.log("Generated title:", title);
+
+    // Remove quotes if present
+    return title.replace(/^["']|["']$/g, '');
+  } catch (error) {
+    console.error("Error generating chat title:", error);
+    return "New Chat";
   }
 };
 

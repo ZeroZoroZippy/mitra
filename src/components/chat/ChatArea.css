@@ -20,7 +20,13 @@ html, body {
   transition: all 0.4s ease-in-out;
   height: 100vh;
   overflow: hidden;
-  padding-bottom: 50px;
+  padding-bottom: 80px;
+}
+
+@media (max-width: 768px) {
+  .chat-area {
+    padding-bottom: 10px;
+  }
 }
 
 .chat-area.fullscreen {

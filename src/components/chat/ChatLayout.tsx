@@ -7,12 +7,7 @@ import { isCreator } from "../../utils/firebaseAuth";
 import { auth } from "../../utils/firebaseConfig";
 import mixpanel from "../../utils/mixpanel";
 import { trackSessionStart, trackSessionEnd } from "../../utils/analytics";
-
-interface Chat {
-  id: number;
-  title: string;
-  timestamp: string;
-}
+import { getChats, createChat, deleteChat, Chat } from "../../utils/firebaseDb";
 
 const ChatLayout: React.FC = () => {
   /* ──────────────────────────────  User + room state  ─────────────────────────────── */
@@ -23,6 +18,11 @@ const ChatLayout: React.FC = () => {
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isChatFullScreen, setIsChatFullScreen] = useState(true);
+
+  // Chat management state
+  const [chats, setChats] = useState<Chat[]>([]);
+  const [activeChat, setActiveChat] = useState<Chat | null>(null);
+  const [isLoadingChats, setIsLoadingChats] = useState(true);
 
   /* Map ID ⇒ title for analytics */
   const roomLabels: Record<number, string> = {
@@ -110,9 +110,111 @@ const ChatLayout: React.FC = () => {
 
   const toggleSidebar = () => setIsSidebarOpen(p => !p);
 
-  const handleNewChat = () => {
-    // Refresh the page to clear chat history
-    window.location.reload();
+  /* ──────────────────────────────  Load chats on mount  ─────────────────────────────── */
+  useEffect(() => {
+    const loadChats = async () => {
+      const user = auth.currentUser;
+      if (!user) {
+        setIsLoadingChats(false);
+        return;
+      }
+
+      setIsLoadingChats(true);
+      try {
+        const userChats = await getChats(user.uid);
+        setChats(userChats);
+
+        // If no chats exist, create a new one
+        if (userChats.length === 0) {
+          const newChatId = await createChat(activeChatId);
+          if (newChatId) {
+            const newChat: Chat = {
+              id: newChatId,
+              title: "New Chat",
+              createdAt: new Date(),
+              updatedAt: new Date(),
+              threadId: activeChatId,
+            };
+            setChats([newChat]);
+            setActiveChat(newChat);
+          }
+        } else {
+          // Set the most recent chat as active
+          setActiveChat(userChats[0]);
+        }
+      } catch (error) {
+        console.error("Error loading chats:", error);
+      } finally {
+        setIsLoadingChats(false);
+      }
+    };
+
+    loadChats();
+  }, [activeChatId]);
+
+  const handleNewChat = async () => {
+    const user = auth.currentUser;
+    if (!user) return;
+
+    const newChatId = await createChat(activeChatId);
+    if (newChatId) {
+      const newChat: Chat = {
+        id: newChatId,
+        title: "New Chat",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        threadId: activeChatId,
+      };
+      setChats((prev) => [newChat, ...prev]);
+      setActiveChat(newChat);
+
+      // Close sidebar on mobile after creating new chat
+      if (window.innerWidth <= 768) {
+        setIsSidebarOpen(false);
+      }
+    }
+  };
+
+  const handleSelectChat = (chat: Chat) => {
+    setActiveChat(chat);
+
+    // Close sidebar on mobile after selecting chat
+    if (window.innerWidth <= 768) {
+      setIsSidebarOpen(false);
+    }
+  };
+
+  const handleDeleteChat = async (chatId: string) => {
+    const user = auth.currentUser;
+    if (!user) return;
+
+    try {
+      const success = await deleteChat(user.uid, chatId);
+      if (success) {
+        const updatedChats = chats.filter((chat) => chat.id !== chatId);
+        setChats(updatedChats);
+
+        // If the deleted chat was active, switch to the most recent chat
+        if (activeChat?.id === chatId) {
+          if (updatedChats.length > 0) {
+            setActiveChat(updatedChats[0]);
+          } else {
+            // No chats left, create a new one
+            await handleNewChat();
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Failed to delete chat:", error);
+    }
+  };
+
+  const handleUpdateChatTitle = (chatId: string, newTitle: string) => {
+    setChats((prev) =>
+      prev.map((chat) =>
+        chat.id === chatId ? { ...chat, title: newTitle } : chat
+      )
+    );
   };
 
   /* ─────────────────────────────────  Render  ─────────────────────────────────── */
@@ -127,6 +229,12 @@ const ChatLayout: React.FC = () => {
       <Sidebar
         onClose={toggleSidebar}
         isSidebarOpen={isSidebarOpen}
+        chats={chats}
+        activeChat={activeChat}
+        onSelectChat={handleSelectChat}
+        onNewChat={handleNewChat}
+        onDeleteChat={handleDeleteChat}
+        isLoadingChats={isLoadingChats}
       />
 
       {isSidebarOpen && window.innerWidth <= 768 && (
@@ -140,6 +248,8 @@ const ChatLayout: React.FC = () => {
         isSidebarOpen={isSidebarOpen}
         onNewChat={handleNewChat}
         onToggleSidebar={toggleSidebar}
+        activeChat={activeChat}
+        onUpdateChatTitle={handleUpdateChatTitle}
       />
     </div>
   );

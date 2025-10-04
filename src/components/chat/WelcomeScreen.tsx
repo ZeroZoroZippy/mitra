@@ -27,14 +27,14 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
   return (
     <div className="welcome-screen">
       <div className="welcome-header">
-        <h1>Hey {firstName}, sit with me. Let's talk about anything or nothing at all.</h1>
-        <p>What's on your mind today? You can start by typing below or pick a suggestion.</p>
+        <h1>Hey {firstName}, sit with me. Let's talk about anything.</h1>
+        <p>What's on your mind today?</p>
       </div>
 
       <div className="welcome-input-bar">
         <input
           type="text"
-          placeholder="Manifest a goal, relieve stress, or ask anything..."
+          placeholder="Ask, and let’s see where the question leads."
           onKeyDown={handleKeyDown}
           disabled={isSending}
         />
@@ -49,18 +49,6 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
           disabled={isSending}
         >
           Send
-        </button>
-      </div>
-
-      <div className="welcome-suggestions">
-        <button onClick={() => onSendMessage("I want to relieve some stress")}>
-          Relieve Stress
-        </button>
-        <button onClick={() => onSendMessage("Help me manifest a goal")}>
-          Manifest a Goal
-        </button>
-        <button onClick={() => onSendMessage("How can I improve my focus?")}>
-          Improve Focus
         </button>
       </div>
     </div>

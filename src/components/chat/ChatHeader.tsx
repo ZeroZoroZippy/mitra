@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef } from "react";
 import "./ChatHeader.css";
 import { getUserProfile } from "../../utils/firebaseDb";
 import { getAuth } from "../../utils/firebaseAuth";
-import { FaUserCircle, FaBars } from "react-icons/fa";
+import { FaUserCircle } from "react-icons/fa";
+import { BsLayoutSidebar } from "react-icons/bs";
 import { signOut } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
 
@@ -93,7 +94,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({ isSidebarOpen, onToggleSidebar,
           onClick={onToggleSidebar}
           title={isSidebarOpen ? "Close Menu" : "Open Menu"}
         >
-          <FaBars />
+          <BsLayoutSidebar />
         </button>
       </div>
 
