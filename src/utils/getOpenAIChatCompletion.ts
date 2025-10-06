@@ -50,7 +50,7 @@ const defaultSystemPrompt = systemPrompt;
 const MAX_INPUT_TOKENS = 7500; // Maximum tokens for input messages
 const MAX_MESSAGES = 5; // Maximum number of messages to include
 const TOTAL_TOKEN_BUDGET = 8000; // Total budget including input + output
-const OPENAI_MODEL = "gpt-5-nano-2025-08-07"; // OpenAI model to use for chat completions
+const OPENAI_MODEL = "gpt-4o-mini"; // OpenAI model to use for chat completions
 
 // Moderate max token limits for balanced response length
 const INITIAL_MAX_COMPLETION_TOKENS_DEFAULT = 600;
@@ -273,7 +273,7 @@ export const generateChatTitle = async (firstUserMessage: string): Promise<strin
           content: `Generate a short 3-5 word title for a conversation that starts with: "${firstUserMessage}"`,
         },
       ],
-      model: "gpt-5-nano-2025-08-07", // Using faster, cheaper model for title generation
+      model: "gpt-4o-mini", // Using faster, cheaper model for title generation
       max_completion_tokens: 20,
       temperature: 0.7,
     });
