@@ -44,7 +44,7 @@ npm run logs             # View function logs
 **Chat System:**
 - Thread-based conversations (threadID 1-7, each with different AI personas)
 - Messages stored per-user in Firestore: `users/{userId}/messages`
-- Real-time streaming responses from OpenAI (GPT-5 model)
+- Real-time streaming responses from Groq (llama-3.3-70b-versatile model)
 - Client-side encryption for user messages using `crypto-js`
 - Hook-based architecture: `useChat`, `useMessages`, `useChatAI`, `useGuestUser`
 
@@ -77,11 +77,12 @@ npm run logs             # View function logs
 - `firebaseConceptDb.ts` - Concept-specific storage
 
 **AI Integration:**
-- `getOpenAIChatCompletion.ts` - OpenAI API client with streaming
-- `getOpenAIConceptCompletion.ts` - OpenAI API client for concept explanations
+- `getOpenAIChatCompletion.ts` - Groq API client with streaming
+- `getOpenAIConceptCompletion.ts` - Groq API client for concept explanations
 - System prompts mapped to threadID (1-7 personas)
 - Token management: MAX_TOKENS=7500, MAX_MESSAGES=5
 - Dynamic token limits per conversation type
+- Models: llama-3.3-70b-versatile (chat), llama-3.1-8b-instant (concepts)
 
 **Analytics:**
 - `analytics.ts` - Google Analytics 4 + Mixpanel tracking
@@ -98,7 +99,7 @@ VITE_FIREBASE_STORAGE_BUCKET
 VITE_FIREBASE_MESSAGING_SENDER_ID
 VITE_FIREBASE_APP_ID
 VITE_FIREBASE_MEASUREMENT_ID
-VITE_OPENAI_API_KEY
+VITE_GROQ_API_KEY
 VITE_ENCRYPTION_KEY
 VITE_MIXPANEL_TOKEN
 ```

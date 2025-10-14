@@ -83,35 +83,59 @@ const Sidebar: React.FC<SidebarProps> = ({
                 <div className="chat-item-actions">
                   {deletingChatId === chat.id ? (
                     <>
-                      <button
+                      <div
+                        role="button"
+                        tabIndex={0}
                         className="confirm-delete-btn"
                         onClick={(e) => handleConfirmDelete(chat.id, e)}
-                        onKeyDown={(e) => e.stopPropagation()}
+                        onKeyDown={(e) => {
+                          e.stopPropagation();
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            handleConfirmDelete(chat.id, e as any);
+                          }
+                        }}
                         title="Confirm delete"
                         aria-label="Confirm delete chat"
                       >
                         <FaCheck />
-                      </button>
-                      <button
+                      </div>
+                      <div
+                        role="button"
+                        tabIndex={0}
                         className="cancel-delete-btn"
                         onClick={handleCancelDelete}
-                        onKeyDown={(e) => e.stopPropagation()}
+                        onKeyDown={(e) => {
+                          e.stopPropagation();
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            handleCancelDelete(e as any);
+                          }
+                        }}
                         title="Cancel"
                         aria-label="Cancel delete"
                       >
                         <FaTimes />
-                      </button>
+                      </div>
                     </>
                   ) : (
-                    <button
+                    <div
+                      role="button"
+                      tabIndex={0}
                       className="delete-chat-btn"
                       onClick={(e) => handleDeleteClick(chat.id, e)}
-                      onKeyDown={(e) => e.stopPropagation()}
+                      onKeyDown={(e) => {
+                        e.stopPropagation();
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          handleDeleteClick(chat.id, e as any);
+                        }
+                      }}
                       title="Delete chat"
                       aria-label={`Delete chat: ${chat.title}`}
                     >
                       <FaTrash />
-                    </button>
+                    </div>
                   )}
                 </div>
               </div>

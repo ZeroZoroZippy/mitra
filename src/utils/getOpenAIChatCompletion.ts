@@ -1,4 +1,4 @@
-import OpenAI from "openai";
+import Groq from "groq-sdk";
 
 // Define ChatMessage interface
 interface ChatMessage {
@@ -50,7 +50,7 @@ const defaultSystemPrompt = systemPrompt;
 const MAX_INPUT_TOKENS = 7500; // Maximum tokens for input messages
 const MAX_MESSAGES = 5; // Maximum number of messages to include
 const TOTAL_TOKEN_BUDGET = 8000; // Total budget including input + output
-const OPENAI_MODEL = "gpt-4o-mini"; // OpenAI model to use for chat completions
+const GROQ_MODEL = "llama-3.3-70b-versatile"; // Groq model to use for chat completions
 
 // Moderate max token limits for balanced response length
 const INITIAL_MAX_COMPLETION_TOKENS_DEFAULT = 600;
@@ -123,9 +123,9 @@ export const getRecentMessages = (
   return selectedMessages;
 };
 
-// Initialize OpenAI Client
-const openai = new OpenAI({
-  apiKey: import.meta.env.VITE_OPENAI_API_KEY,
+// Initialize Groq Client
+const groq = new Groq({
+  apiKey: import.meta.env.VITE_GROQ_API_KEY,
   dangerouslyAllowBrowser: true,
 });
 
@@ -208,7 +208,7 @@ export const getOpenAIChatCompletion = async (
 
     console.log(`🚀 Sending AI request with ${totalInputTokens} total input tokens (${estimatedTokens} messages + ${systemPromptTokens} system), max completion: ${maxTokens}...`);
 
-    const chatCompletion = await openai.chat.completions.create({
+    const chatCompletion = await groq.chat.completions.create({
       messages: [
         {
           role: "system",
@@ -219,7 +219,7 @@ export const getOpenAIChatCompletion = async (
           content: text,
         })),
       ],
-      model: OPENAI_MODEL,
+      model: GROQ_MODEL,
       max_completion_tokens: maxTokens,
       stream: true,
     });
@@ -229,9 +229,9 @@ export const getOpenAIChatCompletion = async (
   } catch (error) {
     console.error("❌ Error fetching AI response:", error);
 
-    // Handle OpenAI-specific errors
-    if (error instanceof OpenAI.APIError) {
-      console.error("OpenAI API Error:", {
+    // Handle Groq-specific errors
+    if (error instanceof Groq.APIError) {
+      console.error("Groq API Error:", {
         status: error.status,
         message: error.message,
         code: error.code,
@@ -245,7 +245,7 @@ export const getOpenAIChatCompletion = async (
 
       // Handle authentication errors
       if (error.status === 401) {
-        console.error("Invalid API key. Please check your VITE_OPENAI_API_KEY.");
+        console.error("Invalid API key. Please check your VITE_GROQ_API_KEY.");
       }
     }
 
@@ -262,7 +262,7 @@ export const generateChatTitle = async (firstUserMessage: string): Promise<strin
   try {
     console.log("Generating chat title for:", firstUserMessage);
 
-    const chatCompletion = await openai.chat.completions.create({
+    const chatCompletion = await groq.chat.completions.create({
       messages: [
         {
           role: "system",
@@ -273,7 +273,7 @@ export const generateChatTitle = async (firstUserMessage: string): Promise<strin
           content: `Generate a short 3-5 word title for a conversation that starts with: "${firstUserMessage}"`,
         },
       ],
-      model: "gpt-4o-mini", // Using faster, cheaper model for title generation
+      model: "llama-3.1-8b-instant", // Using faster, smaller model for title generation
       max_completion_tokens: 20,
       temperature: 0.7,
     });
@@ -289,4 +289,4 @@ export const generateChatTitle = async (firstUserMessage: string): Promise<strin
   }
 };
 
-export default getOpenAIChatCompletion;
+export default getOpenAIChatCompletion; // Keeping the export name for backward compatibility

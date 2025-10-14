@@ -26,9 +26,8 @@ VITE_FIREBASE_MEASUREMENT_ID=G-1TN0BWWHD8
 
 ```
 VITE_ENCRYPTION_KEY=ASDFGHJKL:QWERTYUIOP:ZXCVBNM
-VITE_OPENAI_API_KEY=sk-proj-[YOUR_NEW_API_KEY_HERE]
-VITE_GROQ_API_KEY=[YOUR_GROQ_KEY_IF_USING]
-VITE_GROQ_CONCEPT_API_KEY=[YOUR_GROQ_CONCEPT_KEY_IF_USING]
+VITE_GROQ_API_KEY=gsk-[YOUR_GROQ_API_KEY_HERE]
+VITE_GROQ_CONCEPT_API_KEY=[YOUR_GROQ_CONCEPT_KEY_IF_USING_SEPARATE_KEY]
 ```
 
 ### Analytics (PUBLIC)
@@ -71,19 +70,18 @@ Firebase client configuration values are **designed to be public**:
 
 Only keep these as **secrets**:
 - `VITE_ENCRYPTION_KEY` (for encrypting user messages)
-- `VITE_OPENAI_API_KEY` (costs money if exposed)
-- `VITE_GROQ_API_KEY` (if using Groq as backup)
+- `VITE_GROQ_API_KEY` (costs money if exposed)
 
 ## ✅ After Deployment Succeeds
 
 1. Test your production site at your Netlify URL
 2. Verify Firebase authentication works
-3. Test sending messages with OpenAI
+3. Test sending messages with Groq AI
 4. Check browser console for any errors
 
 ## 🚨 Security Reminders
 
 1. **NEVER commit** `.env.production` to git (it's in .gitignore)
-2. **Revoke old OpenAI keys** that were accidentally exposed
+2. **Revoke old API keys** that were accidentally exposed
 3. **Rotate encryption key** if it was ever committed to git
 4. Use Netlify's environment variables UI for all production secrets

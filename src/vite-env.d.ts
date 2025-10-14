@@ -2,8 +2,8 @@
 
 interface ImportMetaEnv {
   readonly VITE_ENCRYPTION_KEY: string;
-  readonly VITE_OPENAI_API_KEY: string;
-  readonly VITE_OPENAI_CONCEPT_API_KEY?: string;
+  readonly VITE_GROQ_API_KEY: string;
+  readonly VITE_GROQ_CONCEPT_API_KEY?: string;
   readonly VITE_FIREBASE_API_KEY: string;
   readonly VITE_FIREBASE_AUTH_DOMAIN: string;
   readonly VITE_FIREBASE_PROJECT_ID: string;

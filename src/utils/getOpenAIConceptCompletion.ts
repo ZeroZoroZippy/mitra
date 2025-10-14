@@ -1,4 +1,4 @@
-import OpenAI from "openai";
+import Groq from "groq-sdk";
 
 // Define ChatMessage interface
 interface ChatMessage {
@@ -29,21 +29,21 @@ const MAX_INPUT_TOKENS = 7500; // Maximum tokens for input messages
 const MAX_MESSAGES = 5; // Maximum number of messages to include
 const MAX_CONCEPT_COMPLETION_TOKENS = 1000; // Maximum tokens for AI response
 const TOTAL_TOKEN_BUDGET = 8000; // Total budget including input + output
-const OPENAI_MODEL = "gpt-5-nano"; // OpenAI model to use for concept explanations
+const GROQ_MODEL = "llama-3.1-8b-instant"; // Groq model to use for concept explanations
 
-// Resolve OpenAI credentials with fallback for legacy env naming.
-const conceptOpenAIApiKey =
-  import.meta.env.VITE_OPENAI_CONCEPT_API_KEY || import.meta.env.VITE_OPENAI_API_KEY;
+// Resolve Groq credentials with fallback for legacy env naming.
+const conceptGroqApiKey =
+  import.meta.env.VITE_GROQ_CONCEPT_API_KEY || import.meta.env.VITE_GROQ_API_KEY;
 
-if (!conceptOpenAIApiKey) {
+if (!conceptGroqApiKey) {
   console.error(
-    "❌ Missing OpenAI API key. Set VITE_OPENAI_CONCEPT_API_KEY or VITE_OPENAI_API_KEY in your environment."
+    "❌ Missing Groq API key. Set VITE_GROQ_CONCEPT_API_KEY or VITE_GROQ_API_KEY in your environment."
   );
 }
 
-// Initialize OpenAI Client
-const conceptOpenAI = new OpenAI({
-  apiKey: conceptOpenAIApiKey,
+// Initialize Groq Client
+const conceptGroq = new Groq({
+  apiKey: conceptGroqApiKey,
   dangerouslyAllowBrowser: true,
 });
 
@@ -229,9 +229,9 @@ export const getOpenAIConceptCompletion = async (
       })),
     ];
 
-    const chatCompletion = await conceptOpenAI.chat.completions.create({
+    const chatCompletion = await conceptGroq.chat.completions.create({
       messages: apiMessages,
-      model: OPENAI_MODEL,
+      model: GROQ_MODEL,
       max_completion_tokens: maxTokens,
       top_p: 0.9,
       stream: true,
@@ -241,9 +241,9 @@ export const getOpenAIConceptCompletion = async (
   } catch (error) {
     console.error("❌ Error fetching AI response:", error);
 
-    // Handle OpenAI-specific errors
-    if (error instanceof OpenAI.APIError) {
-      console.error("OpenAI API Error:", {
+    // Handle Groq-specific errors
+    if (error instanceof Groq.APIError) {
+      console.error("Groq API Error:", {
         status: error.status,
         message: error.message,
         code: error.code,
@@ -257,7 +257,7 @@ export const getOpenAIConceptCompletion = async (
 
       // Handle authentication errors
       if (error.status === 401) {
-        console.error("Invalid API key. Please check your VITE_OPENAI_API_KEY.");
+        console.error("Invalid API key. Please check your VITE_GROQ_API_KEY.");
       }
     }
 
@@ -265,4 +265,4 @@ export const getOpenAIConceptCompletion = async (
   }
 };
 
-export default getOpenAIConceptCompletion;
+export default getOpenAIConceptCompletion; // Keeping the export name for backward compatibility
